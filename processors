@@ -1,0 +1,18 @@
+/drop
+/add       src/crawler/schedule/__init__.py
+/add       src/crawler/schedule/preprocess.py
+/add       src/crawler/schedule/preprocessors/__init__.py
+/add       src/crawler/schedule/preprocessors/announcements.py
+/add       src/crawler/schedule/preprocessors/attachments.py
+/add       src/crawler/schedule/preprocessors/dates.py
+/add       src/crawler/schedule/preprocessors/exceptions.py
+/add       src/crawler/schedule/preprocessors/homework.py
+/add       src/crawler/schedule/preprocessors/lessons.py
+/add       src/crawler/schedule/preprocessors/markdown_output.py
+/add       src/crawler/schedule/preprocessors/marks.py
+/add       src/crawler/schedule/preprocessors/translation.py
+/add       src/crawler/schedule/schedule.py
+/add       src/crawler/schedule/translations.yaml
+/add       tests/preprocessors/test_attachments.py
+/read-only CONVENTIONS.md
+/read-only PYCONVENTIONS.md

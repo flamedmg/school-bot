@@ -1,0 +1,4 @@
+- Prefer httpx over requests for making http requests.
+- Use types everywhere possible.
+- Keep documentation up to date
+- Add tests for new code

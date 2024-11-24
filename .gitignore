@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+.python-version
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Project specific
+poetry.lock
+.aider*
+
+# Logs
+*.log
+logs/
+
+# Test environment
+.env.test

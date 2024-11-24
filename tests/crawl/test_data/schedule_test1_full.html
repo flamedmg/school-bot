@@ -1,0 +1,3710 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <meta http-equiv="refresh" content="7200; url=/LogOut/2" />
+
+    <title>E-klase</title>
+
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="/favicon.ico"
+      sizes="64x64"
+    />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/Presentation/Family/js/SPA/dist/style.117bd7fa2fca01a972e8.css"
+    />
+
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="/Presentation/Family/js/SPA/dist/SPA.3c59e366ea07e3cddce5.css"
+    />
+
+    <script>
+      var banner_id;
+      if (window.innerWidth > 991) banner_id = "607357e8c7b419147";
+      else {
+        banner_id = "939257c7def46cd70";
+      }
+
+      window.inxBXconfig = {
+        config: {
+          emiter: "b.adbox.lv",
+          id: banner_id,
+        },
+        queue: [],
+        placement: function (q) {
+          this.queue.push(q);
+        },
+        ls:
+          typeof window.localStorage !== "undefined" &&
+          window.localStorage != null
+            ? window.localStorage
+            : {
+                setItem: function () {
+                  return '{ "empty": 1 }';
+                },
+                getItem: function () {
+                  return '{ "empty": 1 }';
+                },
+              },
+      };
+
+      if (typeof window.inxBX === "undefined") {
+        window.inxBX = window.inxBXconfig;
+      } else {
+        window.inxBX.config = window.inxBXconfig.config;
+        window.inxBX.queue = window.inxBXconfig.queue;
+        window.inxBX.placement = window.inxBXconfig.placement;
+        window.inxBX.ls =
+          typeof window.localStorage !== "undefined" &&
+          window.localStorage != null
+            ? window.localStorage
+            : {
+                setItem: function () {
+                  return '{ "empty": 1 }';
+                },
+                getItem: function () {
+                  return '{ "empty": 1 }';
+                },
+              };
+      }
+
+      var inxBX = window.inxBX;
+    </script>
+  </head>
+  <body>
+    <style>
+      @media only screen and (max-width: 767px) {
+        select,
+        textarea,
+        input {
+          font-size: 16px !important;
+        }
+
+        .blank-space {
+          height: 30px;
+        }
+      }
+    </style>
+
+    <div class="super-container">
+      <div class="content-wrap">
+        <header>
+          <div class="header-first">
+            <div class="container">
+              <a href="/Family/Home" class="logo"></a>
+
+              <ul class="header-first-menu">
+                <li class="header-first-menu-item item-links sm-no-icon">
+                  <a href="#">Partneri</a>
+                  <div class="header-first-submenu popover bottom">
+                    <div class="arrow"></div>
+                    <ul>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Auth/OAuth/RemoteApp?client_id=A85E2C10-FB73-420A-83E1-85446FF9AC13&amp;profiles=False"
+                          target="_blank"
+                          >Uzdevumi.lv</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Auth/OAuth/RemoteApp?client_id=DF87C97E-FAFC-4903-B8A2-0E66E7213EBC&amp;profiles=False"
+                          target="_blank"
+                          >Soma.lv</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a href="https://eduspace.lv/" target="_blank"
+                          >Eduspace e-mācības</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a href="https://startit.lv/" target="_blank"
+                          >Start(IT)</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Auth/OAuth/RemoteApp?client_id=F188E3B5-37F6-47D4-89F5-2888CFC68AAE&amp;profiles=True"
+                          target="_blank"
+                          >Letonika</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Auth/OAuth/RemoteApp?client_id=D4E498B6-2358-4C50-A8DA-82C0460652DD&amp;redirect_uri=https%3a%2f%2fmaconis.zvaigzne.lv%2fe-klase.php&amp;profiles=True"
+                          target="_blank"
+                          >MĀCONIS Zvaigzne ABC</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a href="https://skolo.lv/" target="_blank">Skolo.lv</a>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="header-first-menu-item item-links sm-no-icon">
+                  <a href="#">Skolas saites</a>
+                  <div class="header-first-submenu popover bottom">
+                    <div class="arrow"></div>
+                    <ul>
+                      <li class="header-first-submenu-item">
+                        <a href="http://www.licejs.lv" target="_blank"
+                          >Skolas mājas lapa</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="https://licejs-my.sharepoint.com/:u:/g/personal/licejs_licejs_lv/Ef2zGHgEDc9Pki2Lib5O-h4BtSQtEskDb-OVjTkXc9W-3A?e=6g7qQf"
+                          target="_blank"
+                          >Pārbaudes darbs</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="https://licejs.lv/stundu-laiki.html"
+                          target="_blank"
+                          >Zvanu saraksts</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+                <li
+                  class="header-first-menu-item item-family-package sm-icon-only"
+                >
+                  <a
+                    href="/Family/FamilyPlanInformation"
+                    class="onclick-spinner"
+                    >Ģimenes komplekts</a
+                  >
+                </li>
+                <li
+                  class="header-first-menu-item item-notifications sm-icon-only"
+                >
+                  <a
+                    href="/Family/Settings/Profiles?id=47a046aa-b710-42a0-816c-5abd0b57d404#notifications"
+                    class="onclick-spinner layout-navigation-notifications"
+                    >Notifikācijas</a
+                  >
+                </li>
+
+                <li
+                  class="header-first-menu-item item-links sm-icon-only item-settings"
+                >
+                  <a href="#">Uzstādījumi</a>
+                  <div class="header-first-submenu popover bottom from-right">
+                    <div class="arrow"></div>
+
+                    <ul>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Family/Settings/Profiles?id=6402603f-bf60-4785-874c-60b572ff3417#profile"
+                          class="onclick-spinner layout-navigation-user"
+                          >Mani dati</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Family/Settings/Profiles?id=75b254ea-6c68-4a2c-a6e8-89a816902179#password"
+                          class="onclick-spinner layout-navigation-user"
+                          >Mainīt paroli</a
+                        >
+                      </li>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Family/Settings/Profiles"
+                          class="onclick-spinner layout-navigation-user"
+                          >Ģimenes uzstādījumi</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+
+                <li
+                  class="header-first-menu-item item-help sm-icon-only item-links"
+                >
+                  <a href="#">Palīdzība</a>
+                  <div class="header-first-submenu popover bottom from-right">
+                    <div class="arrow"></div>
+                    <ul>
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Family/TechnicalSupport"
+                          class="onclick-spinner"
+                          >Tehniskais atbalsts</a
+                        >
+                      </li>
+
+                      <li class="header-first-submenu-item">
+                        <a
+                          href="/Family/FAQ/Student"
+                          style="font-size: 13px"
+                          class="onclick-spinner"
+                          >Biežāk uzdotie jautājumi</a
+                        >
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+
+                <li
+                  class="header-first-menu-item current-user hidden-xs hidden-sm"
+                >
+                  <a href="/Family/UserLoginProfile" class="onclick-spinner">
+                    <div class="current-user-image student-other"></div>
+                    <div class="current-user-title">skolēns</div>
+                  </a>
+
+                  <a href="/LogOut" class="logout hidden-xs hidden-md hidden-lg"
+                    >Iziet</a
+                  >
+                </li>
+
+                <li class="header-first-menu-item item-langs"></li>
+
+                <li class="header-first-menu-item item-logout hidden-sm">
+                  <a href="/LogOut" class="logout">Iziet</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="header-second">
+            <div class="header-second-inner">
+              <div class="container">
+                <div
+                  class="toggle-mobile-menu visible-xs-block mobile-menu-touch-zone"
+                >
+                  <a href="#" class="toggle-mobile-menu visible-xs-block">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </a>
+                </div>
+
+                <div class="row">
+                  <div class="col-sm-7">
+                    <ul class="header-second-menu hidden-xs">
+                      <li class="header-second-menu-item item-home">
+                        <a class="onclick-spinner" href="/Family/Home">
+                          Sākums
+                        </a>
+                      </li>
+                      <li class="header-second-menu-item item-journal active">
+                        <a class="onclick-spinner" href="/Family/Diary">
+                          Dienasgrāmata
+                        </a>
+                      </li>
+
+                      <li
+                        class="header-second-menu-item item-links item-messages has-notifications"
+                      >
+                        <a href="/SPA/Family#/mail">
+                          <span class="notifications-count">88</span>
+
+                          Saziņa
+                        </a>
+
+                        <div class="header-second-submenu popover bottom">
+                          <div class="arrow"></div>
+
+                          <ul>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_Mail"
+                            >
+                              <span class="notifications-count">88</span>
+                              <a href="/SPA/Family#/mail">E-Klases pasts</a>
+                            </li>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_VideoMeetings"
+                            >
+                              <a href="/SPA/Family#/todos/planned/video"
+                                >Video saziņa</a
+                              >
+                            </li>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_Surveys"
+                            >
+                              <a href="/SPA/Family#/todos/planned/surveys"
+                                >Aptaujas</a
+                              >
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+
+                      <li
+                        class="header-second-menu-item item-links item-analytics"
+                      >
+                        <a href="/Family/ReportMarkRatings/Get"> Pārskati </a>
+
+                        <div class="header-second-submenu popover bottom">
+                          <div class="arrow"></div>
+
+                          <ul>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_MarkRatings"
+                            >
+                              <a
+                                href="/Family/ReportMarkRatings/Get"
+                                class="onclick-spinner"
+                                >Sekmju reitingi</a
+                              >
+                            </li>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_MarkTable"
+                            >
+                              <a
+                                href="/Family/ReportMarkTable"
+                                class="onclick-spinner"
+                                >Žurnāli</a
+                              >
+                            </li>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_NonAttendances"
+                            >
+                              <a
+                                href="/Family/ReportNonAttendances"
+                                class="onclick-spinner"
+                                >Kavējumi</a
+                              >
+                            </li>
+                            <li
+                              class="header-second-submenu-item SchMgmt_Family_PupilMarks"
+                            >
+                              <a
+                                href="/Family/ReportPupilMarks/Get"
+                                class="onclick-spinner"
+                                >Sekmju izraksts</a
+                              >
+                            </li>
+                          </ul>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="col-sm-4 col-sm-offset-1">
+                    <div class="current-student">
+                      <div class="name">Gavrovska Darjana</div>
+                      <div class="school">
+                        3.b, Daugavpils Tehnoloģiju vidusskola - licejs
+                      </div>
+                    </div>
+
+                    <div class="current-user hidden-md hidden-lg">
+                      <a
+                        href="/Family/UserLoginProfile"
+                        class="onclick-spinner"
+                      >
+                        <div class="current-user-image student-other"></div>
+                        <div class="current-user-title">skolēns</div>
+                      </a>
+
+                      <a
+                        href="/LogOut"
+                        class="logout hidden-xs hidden-md hidden-lg"
+                        >Iziet</a
+                      >
+                    </div>
+
+                    <div class="student-selector hidden-xs">
+                      <a
+                        href="/Family/UserLoginProfile"
+                        class="student-switch-link"
+                      >
+                      </a>
+                      <script>
+                        var student_selector_data = [
+                          {
+                            Name: "Gavrovska Darjana",
+                            Description:
+                              "3.b, Daugavpils Tehnoloģiju vidusskola - licejs",
+                            Id: "3507448",
+                            NotificationCount: "0",
+                            ClassId: "0",
+                            RedirectUrl: "/Family/Home",
+                            RenderNotifications: false,
+                          },
+                        ];
+                        var student_selector_value = 3507448;
+                        var selected_school = 363;
+                      </script>
+                      <form
+                        action="/Family/UserLoginProfile"
+                        method="POST"
+                        class="onclick-spinner"
+                      >
+                        <div class="student-selector-label hidden-sm">
+                          Skolēns:
+                        </div>
+
+                        <select class="select-student hidden"></select>
+
+                        <div id="student_selector_data">
+                          <input
+                            name="pf_id"
+                            type="hidden"
+                            class="switch-pf-id"
+                          />
+                          <input
+                            type="hidden"
+                            name="RedirectUrl"
+                            class="switch-redirect-url"
+                          />
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="print-main-info center container-fluid">
+          <h1>Gavrovska Darjana</h1>
+          <h2>3.b, Daugavpils Tehnoloģiju vidusskola - licejs</h2>
+        </div>
+
+        <div class="current-page visible-xs mobile-page-title">
+          <h1>Dienasgrāmata</h1>
+        </div>
+
+        <div id="overlay"></div>
+
+        <div id="loading-info" class="loading-info">
+          Ielādējas...
+          <div class="loading-spinner"></div>
+        </div>
+
+        <div class="main-eklase-content">
+          <div class="top-controls">
+            <div class="container">
+              <div class="students-journal-header">
+                <div class="week-selector clearfix">
+                  <a
+                    href="/Family/Diary?Date=10.11.2024."
+                    aria-label="Ielādēt iepriekšējo nedēļu"
+                    class="week-selector-prev hidden-xs onclick-spinner"
+                  ></a>
+
+                  <div class="visible-xs text-right">
+                    <a href="#" class="open-lesson-times xs-diary-lesson-times"
+                      >Stundu laiki</a
+                    >
+                    <div class="selected-period-mobile calendar-toggle">
+                      <a href="#" class="cal-icon"></a>
+                    </div>
+                  </div>
+
+                  <div class="selected-period hidden-xs">11.11. - 17.11.</div>
+
+                  <a href="#" class="calendar-icon hidden-xs"></a>
+                  <a
+                    href="/Family/Diary?Date=18.11.2024."
+                    aria-label="Ielādēt nākamo nedēļu"
+                    class="week-selector-next hidden-xs onclick-spinner"
+                  ></a>
+
+                  <div class="calendar-holder popover bottom"></div>
+                </div>
+
+                <div class="students-journal-header-links hidden-xs">
+                  <a href="#" class="open-lesson-times"> Stundu laiki </a>
+                  <a href="#" class="hidden-xs print print-diary">Drukāt</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="student-journal-lessons">
+            <div class="container">
+              <div
+                class="student-journal-lessons-table-holder hidden-xs"
+                data-print="1"
+                data-printurl="//my.e-klase.lv/Family/Diary/PrintDiary"
+                data-lessontimesurl="//my.e-klase.lv/Family/LessonTimes"
+              >
+                <h2>11.11.24. pirmdiena <span class="hide-in-print"></span></h2>
+
+                <table class="lessons-table">
+                  <thead>
+                    <tr>
+                      <td class="first-column">Priekšmets un telpa</td>
+                      <td class="subject">Tēma</td>
+                      <td class="hometask">Uzdots</td>
+                      <td class="score">Atzīme</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">2. </span>
+                          <span class="title">
+                            Latviešu valoda un literatūra
+                            <span class="room">403</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Gatavošanās pārbaudes darbam.SR:atkārto mācīto
+                            materiālu un gatavojas pārbaudes darbam.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="08.11.2024. 7:32: Seņkova Anastasija (labots 08.11.2024. 7:33)"
+                          ><p>
+                            Turpināt gatavoties pārbaudes darbam (sk.pielikumu).
+                          </p></span
+                        >
+                        <a
+                          href="/Attachment/Get/e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"
+                          class="file"
+                          >atkārtot p_d__uz 12_11_2024_.pptx</a
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345388761"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">3. </span>
+                          <span class="title">
+                            Dizains un tehnoloģijas
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Kā stiprina kopā dažādus dabas materiālus?</p>
+                          <p>SR: prot veidot rotājumu no sērkociniem&nbsp;</p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="07.11.2024. 15:25: Ovčiņņikova Jeļena (labots 10.11.2024. 14:06)"
+                          ><p>VASKADRĀNA, PVA līme (kam ir)</p></span
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1346353718"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">4. </span>
+                          <span class="title">
+                            Matemātika
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Kā saskaita un atņem 100 apjomā?</p>
+                          <p>
+                            SR: raiti aprēķina summu un starpību; pielieto
+                            aprēķinu paņēmienus teksta uzdevumu risināšanā.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345384707"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">5. </span>
+                          <span class="title">
+                            Dabaszinības
+                            <span class="room">304</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Kāda ir Zemes virsma?</p>
+                          <p>
+                            SR: raksturo Zemes virsmu, izmantojot atbilstošus
+                            jēdzienus (Zemes garoza, kalni, līdzenumi, pauguri,
+                            ielejas, kāpas utt.)
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="06.11.2024. 12:30: Vojevodova Jeļena (labots 06.11.2024. 13:01)"
+                          ><p>
+                            izmantojot shematisko attēlu, prast nosaukt siltuma
+                            joslas (sk. pierakstus burtnīcā vai stundas
+                            prezentāciju)
+                          </p></span
+                        >
+                        <a
+                          href="/Attachment/Get/52c3d3f4-c9c9-4c2b-a0be-7652fabccff6"
+                          class="file"
+                          >3kl_15_siltuma_joslas1_2024_2025.ppt</a
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345325424"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">6. </span>
+                          <span class="title">
+                            Mazākumtautību valoda un literatūra (krievu)
+                            <span class="room">205</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Pārbaudes darba uzdevumu analīze.&nbsp;
+                            Kontrolraksts.&nbsp;
+                          </p>
+                          <p>
+                            &nbsp;S.R.: analizē savas kļūdas, novērtē savu
+                            darbu, noraksta tekstu&nbsp; pēc parauga.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345477346"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">7. </span>
+                          <span class="title">
+                            Dejas un ritmika (F)
+                            <span class="room">az</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Darbs diagonālē. S.R.: Deju soli, pagriezieni,
+                            lēcieni.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345678374"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">
+                            <span class="number--lessonNotInDay">&middot;</span>
+                          </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room"></span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Latviešu deja „Kur tad tu?”. S.R.: Mugurdancis.</p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345680382"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+
+                    <tr class="info">
+                      <td class="first-column">Ziņojumi dienasgrāmatā:</td>
+                      <td colspan="3" class="info-content">
+                        <p title="Izveidots 07.11.2024. 10:36">
+                          11.11. notiks LR proklamēšanas dienai veltīta Svinīga
+                          līnija. (plkst.12.10 aktu zālē). Skolas parādes formā.
+                          (07.11., Demida Ludmila)
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <h2>12.11.24. otrdiena <span class="hide-in-print"></span></h2>
+
+                <table class="lessons-table">
+                  <thead>
+                    <tr>
+                      <td class="first-column">Priekšmets un telpa</td>
+                      <td class="subject">Tēma</td>
+                      <td class="hometask">Uzdots</td>
+                      <td class="score">Atzīme</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">1. </span>
+                          <span class="title">
+                            Matemātika
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Kāda ir darbību secība izteiksmēs?</p>
+                          <p>
+                            SR: nosauc darbību secību pēc kārtas; atrisina
+                            izteiksmes pēc parauga.
+                          </p>
+                          <p><strong>Formatīvās vērtēšanas darbs </strong></p>
+                          <p><strong>"Kas ir izteiksme?"</strong></p>
+                          <p>
+                            SR: uzraksta izteiksmi pēc apraksta; salīdzina
+                            izteiksmes; veic aprēķinus par tik mazāk un tik
+                            reizes mazāk.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="08.11.2024. 11:24: Elksniņa Svetlana (labots 11.11.2024. 9:08)"
+                          ><p>G. 140. lpp., 42., 44*. uzd.</p>
+                          <p></p
+                        ></span>
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1346638895"
+                          >88,89%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">2. </span>
+                          <span class="title">
+                            Svešvaloda 1 (angļu)
+                            <span class="room">201</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            <strong>Es pats</strong>. Kā runāt par savu ārējo
+                            izskatu un jūtām? SR: izmanto darbības vārdus "have
+                            got" /"to be" teikumos un jautājumos FV: Ārējais
+                            izskats un jūtas. SR: prot izmantot darbības vārdus
+                            "have got" /"to be" apraksta ārējo izskatu
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="11.11.2024. 11:54: Vetrine Julija (labots 12.11.2024. 9:35)"
+                          ><p>
+                            FV - būs darbs % Atkārtot vārdus - jūtas un ārejais
+                            izskats un darbības vārdus "to be" un "have got"
+                            Skat. pielikumu
+                          </p></span
+                        >
+                        <a
+                          href="/Attachment/Get/3c9aae57-9f27-4376-bc68-ee30d9a94191"
+                          class="file"
+                          >Mini test F3.pptx</a
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1345860070"
+                          >100%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">3. </span>
+                          <span class="title">
+                            Latviešu valoda un literatūra
+                            <span class="room">10</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Pārbaudes darbs "Rakstura īpašības. Īpašības vārda
+                            salīdzināmās pakāpes".
+                          </p>
+                        </div>
+                        <a
+                          href="/Attachment/Get/9e26604f-3df9-492e-b9e9-3885d53bf369"
+                          class="file"
+                          >Vērtēšanas kritēriji.docx</a
+                        >
+                      </td>
+                      <td class="hometask">
+                        <span title="11.11.2024. 7:33: Seņkova Anastasija"
+                          ><p>
+                            Sagatavoties rakstīt pārbaudes darbu (sk.pielikumu).
+                          </p></span
+                        >
+                        <a
+                          href="/Attachment/Get/1c0912a3-79f7-49aa-84a6-1caab219ef09"
+                          class="file"
+                          >atkārtot p_d__uz 12_11_2024_.pptx</a
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1346155527"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155530"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346868525"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155552"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155557"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155561"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155562"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">4. </span>
+                          <span class="title">
+                            Sports un veselība
+                            <span class="room">mz</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Pilsoniskuma nedēļa - Stiprs, vesels, patriotisks!
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">5. </span>
+                          <span class="title">
+                            Sports un veselība
+                            <span class="room">mz</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            <strong
+                              >Kā spēlējot dažādas komandu spēles, veidojas
+                              pozitīvas sociālās saskarsmes un sadarbības
+                              prasmes?</strong
+                            >
+                          </p>
+                          <p>
+                            SR: Analizē sev nepieciešamo vispārējās fiziskās
+                            sagatavošanas vingrinājumu slodzi atbilstoši savām
+                            darba spējām un veselībai.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">6. </span>
+                          <span class="title">
+                            Matemātika F (F)
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Krāsošanas uzdevumi.</p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">6. </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room">az</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latviešu deja „Kur tad tu?”. S.R.: Kāju krustošana.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">7. </span>
+                          <span class="title">
+                            Pasaku pasaulē (krievu valoda) (I)
+                            <span class="room">205</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Krievu tautas brīnumu pasaka „Morozko”.</p>
+                          <p>
+                            S.R.: lasa pasaku, atbild uz jautājumiem, raksturo
+                            un salīdzina pasakas varoņus, nosaka brīnumu pasakas
+                            īpatnības, sakārto pasakas&nbsp; notikumus&nbsp;
+                            pareizā secībā.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+
+                    <tr class="info">
+                      <td class="first-column">Uzvedības ieraksti:</td>
+                      <td colspan="3" class="info-content">
+                        <p title="Izveidots 12.11.2024. 11:44">
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (12.11., Svešvaloda 1 (angļu) - 4, Vetrine Julija)
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <h2>13.11.24. trešdiena <span class="hide-in-print"></span></h2>
+
+                <table class="lessons-table">
+                  <thead>
+                    <tr>
+                      <td class="first-column">Priekšmets un telpa</td>
+                      <td class="subject">Tēma</td>
+                      <td class="hometask">Uzdots</td>
+                      <td class="score">Atzīme</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">1. </span>
+                          <span class="title">
+                            Latviešu valoda un literatūra
+                            <span class="room">409</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latvju zīmes.SR:uzzina, kas ir latvju zīmes, kādas
+                            tās ir, ko nozīmē;atšifrē latvju zīmes
+                            nosaukumus;uzzina, ko nozīmē galvenās latvju
+                            zīmes;zīmē latvju zīmes;izdomā un uzzīmē savu zīmi.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">2. </span>
+                          <span class="title">
+                            Svešvaloda 1 (angļu)
+                            <span class="room">202</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            <strong>Es pats</strong>. Kā runāt par savu ārējo
+                            izskatu un jūtām? SR: prot izmantot ​to be un have
+                            got​ lai runāt par cilvēku ārējo izskatu; zin
+                            16&nbsp; vārdus, lai aprakstīt sevi un citus.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">3. </span>
+                          <span class="title">
+                            Mazākumtautību valoda un literatūra (krievu)
+                            <span class="room">205</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Praktiskais darbs<strong> </strong>«Veidojam no
+                            morfēmām jaunus vārdus un jaunas vārdu formas ».
+                          </p>
+                          <p>
+                            S.R.: nosauca vārda morfēmas,&nbsp; veido jaunus
+                            vārdus no morfēmām.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">4. </span>
+                          <span class="title">
+                            Vizuālā māksla
+                            <span class="room">203</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Kā attēlot svētku noskaņu sižetiskā kompozīcijā? SR:
+                            prot pielietot grafiskos izteiksmes līdzekļus un
+                            krāsu laukumus radošās ieceres īstenošanā.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="11.11.2024. 20:37: Volonte Ilze (labots 13.11.2024. 16:09)"
+                          ><p>
+                            Vaska drāna, A4 formāts, krāsainie zīmuļi,
+                            flomāsteri.
+                          </p></span
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">5. </span>
+                          <span class="title">
+                            Dabaszinības
+                            <span class="room">304</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Kāda ir Zemes virsma?</p>
+                          <p>
+                            SR: izmantojot karti, izpēta pasaules un Latvijas
+                            zemes virsmu (reljefu).
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="08.11.2024. 13:47: Vojevodova Jeļena (labots 11.11.2024. 11:14)"
+                          ><p>
+                            prast atbildēt uz jautājumiem: Kas ir Zemes garoza?,
+                            No kā sastāv Zemes garoza?, Kādas ir Zemes virsmas
+                            formas?, Kā raksturot Latvijas zemes virsmu? (lasi
+                            tekstu gr.70.-71. lpp vai skaties stundas
+                            prezentāciju)
+                          </p>
+                          <p>Stundas prezentācija pielikumā!</p></span
+                        >
+                        <a
+                          href="/Attachment/Get/b3124534-f10e-4c1b-95f5-0c0c748e0061"
+                          class="file"
+                          >3kl_1_zemes_garoza_virsmas_formas_m_2024_2025.ppt</a
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">7. </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room">az</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject"></td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">
+                            <span class="number--lessonNotInDay">&middot;</span>
+                          </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room"></span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latviešu deja „Kur tad tu?”. S.R.: Papēdis –
+                            pirkstgals.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+
+                    <tr class="info">
+                      <td class="first-column">Uzvedības ieraksti:</td>
+                      <td colspan="3" class="info-content">
+                        <p title="Izveidots 13.11.2024. 10:25">
+                          Centīgs: kārtīgi izpildīts mājas darbs (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Mazākumtautību valoda un literatūra
+                          (krievu), Petroviča Tatjana)
+                        </p>
+                        <p title="Izveidots 13.11.2024. 11:22">
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Vizuālā māksla, Volonte Ilze)
+                        </p>
+                        <p title="Izveidots 13.11.2024. 12:17">
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Dabaszinības, Vojevodova Jeļena)
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <h2>
+                  14.11.24. ceturtdiena <span class="hide-in-print"></span>
+                </h2>
+
+                <table class="lessons-table">
+                  <thead>
+                    <tr>
+                      <td class="first-column">Priekšmets un telpa</td>
+                      <td class="subject">Tēma</td>
+                      <td class="hometask">Uzdots</td>
+                      <td class="score">Atzīme</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">1. </span>
+                          <span class="title">
+                            Sports un veselība
+                            <span class="room">sz</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            <strong
+                              >Kā izmantot radošās domāšanas stratēģijas
+                              rotaļās?</strong
+                            >
+                            (SR: ar skolotāja atbalstu sadarbojoties pārī vai
+                            mazā grupā, rada jaunas idejas spēlēm, to
+                            nosacījumiem un kopīgi izvēlas labāko risinājumu
+                            uzdevuma veikšanai.)
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">2. </span>
+                          <span class="title">
+                            Matemātika
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Kādi ir saskaitīšanas un atņemšanas darbības
+                            locekļi?
+                          </p>
+                          <p>
+                            SR: nosauc saskaitīšanas darbības locekļus; aprēķina
+                            summu, pārvietojot vai savienojot saskaitāmos.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="08.11.2024. 11:27: Elksniņa Svetlana (labots 12.11.2024. 8:28)"
+                          ><p><strong>Darba burtnīca 1. daļa:</strong></p>
+                          <p>44. lpp. ( 1., 2*.; 3. uzd.)</p>
+                          <p></p
+                        ></span>
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">3. </span>
+                          <span class="title">
+                            Mazākumtautību valoda un literatūra (krievu)
+                            <span class="room">205</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>Latviešu&nbsp; tautas pasakas.</p>
+                          <p>
+                            S.R.: lasa&nbsp; un klausās latviešu pasakas, atbild
+                            uz jautājumiem, pamato&nbsp; atbildi ar citātiem no
+                            teksta, veido stāstu par dzirdēto.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">4. </span>
+                          <span class="title">
+                            Latviešu valoda un literatūra
+                            <span class="room">403</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Mūsu latvju zīmes.Krustvārdu mīkla "Tavs daiļums,
+                            Latvija, ir pilsētās".SR:prezentē savu Latvju
+                            zīmi;noskatās video par Latviju un atceras faktus
+                            par Latviju;atrisina krustvārdu mīklu par
+                            Latviju;paplašina savas zināšana par Latviju.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="13.11.2024. 8:41: Seņkova Anastasija (labots 13.11.2024. 9:17)"
+                          ><p>
+                            Uz A4 lapas uzzīmēt savu zīmi un aprakstīt to
+                            (nosaukums, kā izskatās, ko nozīmē, kur vai uz kā
+                            attēlo).
+                          </p></span
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">5. </span>
+                          <span class="title">
+                            Mūzika
+                            <span class="room">115</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Kā komponisti apzīmē tempu?
+                            <strong>SR:</strong> Paskaidro jēdzienu “temps” un
+                            zina tempa apzīmējumus. Prot izteiksmīgi dziedāt
+                            dziesmu " Skaista ir mana Latvija".
+                          </p>
+                          <p>
+                            prezentācija stundai:
+                            <a
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              href="https://prezi.com/view/lngRvAWU5tZ9u7Z8MmNZ/"
+                              >https://prezi.com/view/lngRvAWU5tZ9u7Z8MmNZ/</a
+                            >
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="06.11.2024. 19:30: Likova Inna (labots 07.11.2024. 11:17)"
+                          ><p>
+                            Prezentācija stundai:
+                            <a
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              href="https://prezi.com/view/AenZE9InlMncuUlPQvAZ/"
+                              >https://prezi.com/view/AenZE9InlMncuUlPQvAZ/</a
+                            >
+                          </p>
+                          <p>
+                            Nedēļas laikā dziedam dziesmu "Skaista ir mana
+                            Latvija"
+                          </p></span
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">8. </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room">az</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latviešu deja „Kur tad tu?”. S.R.: Papēdis un
+                            slotiņa.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">
+                            <span class="number--lessonNotInDay">&middot;</span>
+                          </span>
+                          <span class="title">
+                            Tautas dejas kol. &#39;Balaguri&#39; (I)
+                            <span class="room"></span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latviešu deja „Kur tad tu?”. S.R.: Plaukstiņpolka.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask"></td>
+                      <td class="score"></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <h2>
+                  15.11.24. piektdiena
+                  <span class="hide-in-print">(aizvakar)</span>
+                </h2>
+
+                <table class="lessons-table">
+                  <thead>
+                    <tr>
+                      <td class="first-column">Priekšmets un telpa</td>
+                      <td class="subject">Tēma</td>
+                      <td class="hometask">Uzdots</td>
+                      <td class="score">Atzīme</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">1. </span>
+                          <span class="title">
+                            Sociālās zinības
+                            <span class="room">410</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Formatīvā vērtēšana. Kāda ir Latvijas valsts? SR:
+                            zina būtiskākās valsts pazīmes.
+                            <strong>&nbsp;&nbsp;</strong>
+                          </p>
+                          <p>
+                            Kādi ir Latvijas valsts simboli?<strong
+                            > </strong>SR:<strong> </strong>zina Latvijas valsts
+                            simbolus un noskaidro, kur un kā tos lieto.
+                          </p>
+                        </div>
+                        <a
+                          href="/Attachment/Get/9bf92f18-aa21-46cf-a7e8-da50dc895033"
+                          class="file"
+                          >3_2_2 Latvijas valsts simboli.pptx</a
+                        >
+                        <a
+                          href="/Attachment/Get/fa952162-9b90-4343-905e-51e2247c30b9"
+                          class="file"
+                          >3_2_2_ Latvijas Valsts simboli_.docx</a
+                        >
+                      </td>
+                      <td class="hometask">
+                        <span
+                          title="08.11.2024. 10:45: Demida Ludmila (labots 09.11.2024. 13:22)"
+                          ><p>Darba lapa. Kāda ir Latvijas valsts?</p></span
+                        >
+                        <a
+                          href="/Attachment/Get/7be01119-5c94-42d7-b91f-d09af9c28805"
+                          class="file"
+                          >3_2_1__Mājās uzdevums_Latvijas valsts pazīmes —
+                          копия.docx</a
+                        >
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1347316111"
+                          >100%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">2. </span>
+                          <span class="title">
+                            Angļu valoda F (F)
+                            <span class="room">407</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject"></td>
+                      <td class="hometask">
+                        <span title="13.11.2024. 13:35: Vetrine Julija"
+                          ><p>
+                            Izmantojot paraugu pēdējā slaidā uzrakstīt par sevi.
+                          </p></span
+                        >
+                        <a
+                          href="/Attachment/Get/1cc4e0a7-f41e-4b3e-9cae-01321a41c35f"
+                          class="file"
+                          >HT 13_11.pptx</a
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">3. </span>
+                          <span class="title">
+                            Klases stunda
+                            <span class="room">410</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Kādi ir Latvijas valsts simboli?<strong
+                            > </strong>SR:<strong> </strong>zina Latvijas valsts
+                            simbolus un Latvijas valsts nacionālus simbolus.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span title="14.11.2024. 14:00: Demida Ludmila"
+                          ><p>krāsainie zīmuļi</p></span
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">4. </span>
+                          <span class="title">
+                            Latviešu valoda un literatūra
+                            <span class="room">403</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Latvija teikās un tautasdziesmās.SR:iepazīstas ar
+                            latviešu kultūras mantojumu, atjauno tautasdziesmas,
+                            ieraksta izlaistos burtus, daudzveidīgi strādā ar
+                            teikām, raksta īpašvārdus alfabēta secībā.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <span title="14.11.2024. 10:24: Seņkova Anastasija"
+                          ><p>Pabeigt krustvārdu mīklu (sk.kopiju).</p></span
+                        >
+                        <a
+                          href="/Attachment/Get/370a29c4-2a3d-4078-b5f5-062c4a8d270b"
+                          class="file"
+                          >Krustvārdu mīkla.pdf</a
+                        >
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">5. </span>
+                          <span class="title">
+                            Matemātika
+                            <span class="room">210</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Teksta uzdevumi "Mana Latvija". SR: risina teksta
+                            uzdevumus.
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <div
+                          class="ThirdPartyEvent ThirdPartyEvent--uzdevumi active timeless"
+                        >
+                          <div class="ThirdPartyEvent__Header">
+                            <span
+                              class="ThirdPartyEvent__LogoTextContainer"
+                              title="Elksniņa Svetlana 14.11.2024. 8:25"
+                            >
+                              <span class="ThirdPartyEvent__Logo"></span>
+                              <span class="ThirdPartyEvent__Text"
+                                >uzdevumi.lv</span
+                              >
+                            </span>
+                            <div class="ThirdPartyEvent__Info">
+                              <a
+                                class="ThirdPartyEvent__Status"
+                                href="/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13&amp;profiles=False&amp;destination_uri=https%3a%2f%2fwww.uzdevumi.lv%2fTestWork%2fInfo%2f4649268"
+                                target="_blank"
+                              >
+                                <span class="Status__Text">Atvērt</span>
+                              </a>
+                            </div>
+                          </div>
+                          <div
+                            class="ThirdPartyEvent__Content"
+                            title="Elksniņa Svetlana 14.11.2024. 8:25"
+                          >
+                            <span class="ThirdPartyEvent__EventName"
+                              >Mājasdarbs: Skaitliskas izteiksmes</span
+                            >
+                            <span class="ThirdPartyEvent__Icon hidden"></span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="score"></td>
+                    </tr>
+                    <tr>
+                      <td class="first-column">
+                        <div>
+                          <span class="number">6. </span>
+                          <span class="title">
+                            Dizains un tehnoloģijas (datorika)
+                            <span class="room">309</span>
+                          </span>
+                        </div>
+                      </td>
+                      <td class="subject">
+                        <div class="                                    ">
+                          <p>
+                            Praktiskais darbs “Teksta formatēšana tekstapstrādes
+                            lietotnē.” SR: Veic pieteikšanos tīmekļvietnē ar
+                            autorizāciju, ievērojot drošības noteikumus. Dublē
+                            tekstu. Formatē tekstu . Veido teksta pirmās rindas
+                            atkāpi<strong><em>.</em></strong>
+                          </p>
+                        </div>
+                      </td>
+                      <td class="hometask">
+                        <div class="home-task-answer-widget-container">
+                          <div
+                            class="home-task-answer-widget"
+                            data-home-task-id="110759677"
+                            data-home-task-attachments="[]"
+                            data-has-answer="false"
+                            data-title="14.11.2024. 13:44: Zimņika Olga (labots 15.11.2024. 9:24)"
+                          >
+                            <p>
+                              Paņem līdzi burtnīcu un paroles (e-klase un Teams)
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="score">
+                        <span class="score open-mark-file" data-id="1347208591"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                      </td>
+                    </tr>
+
+                    <tr class="info">
+                      <td class="first-column">Uzvedības ieraksti:</td>
+                      <td colspan="3" class="info-content">
+                        <p title="Izveidots 15.11.2024. 13:39">
+                          Mērķtiecīgs: aktīvs darbs stundā (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (15.11., Sociālās zinības, Demida Ludmila)
+                        </p>
+                        <p title="Izveidots 15.11.2024. 13:42">
+                          Mērķtiecīgs: aktīvs darbs stundā (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (15.11., Klases stunda, Demida Ludmila)
+                        </p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="tab-content visible-xs">
+                <div
+                  class="section-switch-item tab-pane"
+                  role="tabpanel"
+                  id="section_1111"
+                >
+                  <div class="journal-nav">
+                    <h2 class="mobile-date">
+                      <a href="#" class="mobile-lessons-prev prev-week"></a>
+                      11.11.24. pirmdiena
+                      <a href="#" class="mobile-lessons-next"></a>
+                    </h2>
+                  </div>
+
+                  <div class="actual-lessons-items">
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 2. </span>
+                        <span class="title">
+                          Latviešu valoda un literatūra
+                        </span>
+                        <span class="room"> 403 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Gatavošanās pārbaudes darbam.SR:atkārto mācīto
+                              materiālu un gatavojas pārbaudes darbam.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="08.11.2024. 7:32: Seņkova Anastasija (labots 08.11.2024. 7:33)"
+                            ><p>
+                              Turpināt gatavoties pārbaudes darbam
+                              (sk.pielikumu).
+                            </p></span
+                          >
+                          <a
+                            href="/Attachment/Get/e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"
+                            class="file"
+                            >atkārtot p_d__uz 12_11_2024_.pptx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345388761"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 3. </span>
+                        <span class="title"> Dizains un tehnoloģijas </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Kā stiprina kopā dažādus dabas materiālus?</p>
+                            <p>SR: prot veidot rotājumu no sērkociniem&nbsp;</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="07.11.2024. 15:25: Ovčiņņikova Jeļena (labots 10.11.2024. 14:06)"
+                            ><p>VASKADRĀNA, PVA līme (kam ir)</p></span
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1346353718"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 4. </span>
+                        <span class="title"> Matemātika </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Kā saskaita un atņem 100 apjomā?</p>
+                            <p>
+                              SR: raiti aprēķina summu un starpību; pielieto
+                              aprēķinu paņēmienus teksta uzdevumu risināšanā.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345384707"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 5. </span>
+                        <span class="title"> Dabaszinības </span>
+                        <span class="room"> 304 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Kāda ir Zemes virsma?</p>
+                            <p>
+                              SR: raksturo Zemes virsmu, izmantojot atbilstošus
+                              jēdzienus (Zemes garoza, kalni, līdzenumi,
+                              pauguri, ielejas, kāpas utt.)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="06.11.2024. 12:30: Vojevodova Jeļena (labots 06.11.2024. 13:01)"
+                            ><p>
+                              izmantojot shematisko attēlu, prast nosaukt
+                              siltuma joslas (sk. pierakstus burtnīcā vai
+                              stundas prezentāciju)
+                            </p></span
+                          >
+                          <a
+                            href="/Attachment/Get/52c3d3f4-c9c9-4c2b-a0be-7652fabccff6"
+                            class="file"
+                            >3kl_15_siltuma_joslas1_2024_2025.ppt</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345325424"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 6. </span>
+                        <span class="title">
+                          Mazākumtautību valoda un literatūra (krievu)
+                        </span>
+                        <span class="room"> 205 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Pārbaudes darba uzdevumu analīze.&nbsp;
+                              Kontrolraksts.&nbsp;
+                            </p>
+                            <p>
+                              &nbsp;S.R.: analizē savas kļūdas, novērtē savu
+                              darbu, noraksta tekstu&nbsp; pēc parauga.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345477346"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 7. </span>
+                        <span class="title"> Dejas un ritmika (F) </span>
+                        <span class="room"> az </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Darbs diagonālē. S.R.: Deju soli, pagriezieni,
+                              lēcieni.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345678374"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number">
+                          <span class="number--lessonNotInDay">&middot;</span>
+                        </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latviešu deja „Kur tad tu?”. S.R.: Mugurdancis.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345680382"
+                          >n<sup>c</sup>
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="other-info">
+                    <div class="info-item">
+                      <div class="title">Ziņojumi dienasgrāmatā:</div>
+                      <div class="description">
+                        <p title="Izveidots 07.11.2024. 10:36">
+                          11.11. notiks LR proklamēšanas dienai veltīta Svinīga
+                          līnija. (plkst.12.10 aktu zālē). Skolas parādes formā.
+                          (07.11., Demida Ludmila)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="diary-bottom-mobile-nav">
+                    <div class="journal-nav">
+                      <h2 class="mobile-date">
+                        <a href="#" class="mobile-lessons-prev prev-week"></a>
+                        11.11.24. pirmdiena
+                        <a href="#" class="mobile-lessons-next"></a>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="section-switch-item tab-pane"
+                  role="tabpanel"
+                  id="section_1211"
+                >
+                  <div class="journal-nav">
+                    <h2 class="mobile-date">
+                      <a href="#" class="mobile-lessons-prev"></a>
+                      12.11.24. otrdiena
+                      <a href="#" class="mobile-lessons-next"></a>
+                    </h2>
+                  </div>
+
+                  <div class="actual-lessons-items">
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 1. </span>
+                        <span class="title"> Matemātika </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Kāda ir darbību secība izteiksmēs?</p>
+                            <p>
+                              SR: nosauc darbību secību pēc kārtas; atrisina
+                              izteiksmes pēc parauga.
+                            </p>
+                            <p><strong>Formatīvās vērtēšanas darbs </strong></p>
+                            <p><strong>"Kas ir izteiksme?"</strong></p>
+                            <p>
+                              SR: uzraksta izteiksmi pēc apraksta; salīdzina
+                              izteiksmes; veic aprēķinus par tik mazāk un tik
+                              reizes mazāk.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="08.11.2024. 11:24: Elksniņa Svetlana (labots 11.11.2024. 9:08)"
+                            ><p>G. 140. lpp., 42., 44*. uzd.</p>
+                            <p></p
+                          ></span>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1346638895"
+                          >88,89%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 2. </span>
+                        <span class="title"> Svešvaloda 1 (angļu) </span>
+                        <span class="room"> 201 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              <strong>Es pats</strong>. Kā runāt par savu ārējo
+                              izskatu un jūtām? SR: izmanto darbības vārdus
+                              "have got" /"to be" teikumos un jautājumos FV:
+                              Ārējais izskats un jūtas. SR: prot izmantot
+                              darbības vārdus "have got" /"to be" apraksta ārējo
+                              izskatu
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="11.11.2024. 11:54: Vetrine Julija (labots 12.11.2024. 9:35)"
+                            ><p>
+                              FV - būs darbs % Atkārtot vārdus - jūtas un
+                              ārejais izskats un darbības vārdus "to be" un
+                              "have got" Skat. pielikumu
+                            </p></span
+                          >
+                          <a
+                            href="/Attachment/Get/3c9aae57-9f27-4376-bc68-ee30d9a94191"
+                            class="file"
+                            >Mini test F3.pptx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1345860070"
+                          >100%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 3. </span>
+                        <span class="title">
+                          Latviešu valoda un literatūra
+                        </span>
+                        <span class="room"> 10 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Pārbaudes darbs "Rakstura īpašības. Īpašības vārda
+                              salīdzināmās pakāpes".
+                            </p>
+                          </div>
+                          <a
+                            href="/Attachment/Get/9e26604f-3df9-492e-b9e9-3885d53bf369"
+                            class="file"
+                            >Vērtēšanas kritēriji.docx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span title="11.11.2024. 7:33: Seņkova Anastasija"
+                            ><p>
+                              Sagatavoties rakstīt pārbaudes darbu
+                              (sk.pielikumu).
+                            </p></span
+                          >
+                          <a
+                            href="/Attachment/Get/1c0912a3-79f7-49aa-84a6-1caab219ef09"
+                            class="file"
+                            >atkārtot p_d__uz 12_11_2024_.pptx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1346155527"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155530"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346868525"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155552"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155557"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155561"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                        <span class="score open-mark-file" data-id="1346155562"
+                          >A
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 4. </span>
+                        <span class="title"> Sports un veselība </span>
+                        <span class="room"> mz </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Pilsoniskuma nedēļa - Stiprs, vesels, patriotisks!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 5. </span>
+                        <span class="title"> Sports un veselība </span>
+                        <span class="room"> mz </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              <strong
+                                >Kā spēlējot dažādas komandu spēles, veidojas
+                                pozitīvas sociālās saskarsmes un sadarbības
+                                prasmes?</strong
+                              >
+                            </p>
+                            <p>
+                              SR: Analizē sev nepieciešamo vispārējās fiziskās
+                              sagatavošanas vingrinājumu slodzi atbilstoši savām
+                              darba spējām un veselībai.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 6. </span>
+                        <span class="title"> Matemātika F (F) </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Krāsošanas uzdevumi.</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 6. </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> az </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latviešu deja „Kur tad tu?”. S.R.: Kāju
+                              krustošana.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 7. </span>
+                        <span class="title">
+                          Pasaku pasaulē (krievu valoda) (I)
+                        </span>
+                        <span class="room"> 205 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Krievu tautas brīnumu pasaka „Morozko”.</p>
+                            <p>
+                              S.R.: lasa pasaku, atbild uz jautājumiem, raksturo
+                              un salīdzina pasakas varoņus, nosaka brīnumu
+                              pasakas īpatnības, sakārto pasakas&nbsp;
+                              notikumus&nbsp; pareizā secībā.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="other-info">
+                    <div class="info-item">
+                      <div class="title">Uzvedības ieraksti:</div>
+                      <div class="description">
+                        <p
+                          title="Centīgs darbs stundā. (<span class='dr-positive'>pozitīvs</span>) (12.11., Svešvaloda 1 (angļu) - 4, Vetrine Julija)"
+                        >
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (12.11., Svešvaloda 1 (angļu) - 4, Vetrine Julija)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="diary-bottom-mobile-nav">
+                    <div class="journal-nav">
+                      <h2 class="mobile-date">
+                        <a href="#" class="mobile-lessons-prev"></a>
+                        12.11.24. otrdiena
+                        <a href="#" class="mobile-lessons-next"></a>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="section-switch-item tab-pane"
+                  role="tabpanel"
+                  id="section_1311"
+                >
+                  <div class="journal-nav">
+                    <h2 class="mobile-date">
+                      <a href="#" class="mobile-lessons-prev"></a>
+                      13.11.24. trešdiena
+                      <a href="#" class="mobile-lessons-next"></a>
+                    </h2>
+                  </div>
+
+                  <div class="actual-lessons-items">
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 1. </span>
+                        <span class="title">
+                          Latviešu valoda un literatūra
+                        </span>
+                        <span class="room"> 409 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latvju zīmes.SR:uzzina, kas ir latvju zīmes, kādas
+                              tās ir, ko nozīmē;atšifrē latvju zīmes
+                              nosaukumus;uzzina, ko nozīmē galvenās latvju
+                              zīmes;zīmē latvju zīmes;izdomā un uzzīmē savu
+                              zīmi.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 2. </span>
+                        <span class="title"> Svešvaloda 1 (angļu) </span>
+                        <span class="room"> 202 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              <strong>Es pats</strong>. Kā runāt par savu ārējo
+                              izskatu un jūtām? SR: prot izmantot ​to be un have
+                              got​ lai runāt par cilvēku ārējo izskatu; zin
+                              16&nbsp; vārdus, lai aprakstīt sevi un citus.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 3. </span>
+                        <span class="title">
+                          Mazākumtautību valoda un literatūra (krievu)
+                        </span>
+                        <span class="room"> 205 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Praktiskais darbs<strong> </strong>«Veidojam no
+                              morfēmām jaunus vārdus un jaunas vārdu formas ».
+                            </p>
+                            <p>
+                              S.R.: nosauca vārda morfēmas,&nbsp; veido jaunus
+                              vārdus no morfēmām.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 4. </span>
+                        <span class="title"> Vizuālā māksla </span>
+                        <span class="room"> 203 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Kā attēlot svētku noskaņu sižetiskā kompozīcijā?
+                              SR: prot pielietot grafiskos izteiksmes līdzekļus
+                              un krāsu laukumus radošās ieceres īstenošanā.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="11.11.2024. 20:37: Volonte Ilze (labots 13.11.2024. 16:09)"
+                            ><p>
+                              Vaska drāna, A4 formāts, krāsainie zīmuļi,
+                              flomāsteri.
+                            </p></span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 5. </span>
+                        <span class="title"> Dabaszinības </span>
+                        <span class="room"> 304 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Kāda ir Zemes virsma?</p>
+                            <p>
+                              SR: izmantojot karti, izpēta pasaules un Latvijas
+                              zemes virsmu (reljefu).
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="08.11.2024. 13:47: Vojevodova Jeļena (labots 11.11.2024. 11:14)"
+                            ><p>
+                              prast atbildēt uz jautājumiem: Kas ir Zemes
+                              garoza?, No kā sastāv Zemes garoza?, Kādas ir
+                              Zemes virsmas formas?, Kā raksturot Latvijas zemes
+                              virsmu? (lasi tekstu gr.70.-71. lpp vai skaties
+                              stundas prezentāciju)
+                            </p>
+                            <p>Stundas prezentācija pielikumā!</p></span
+                          >
+                          <a
+                            href="/Attachment/Get/b3124534-f10e-4c1b-95f5-0c0c748e0061"
+                            class="file"
+                            >3kl_1_zemes_garoza_virsmas_formas_m_2024_2025.ppt</a
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content">
+                      <div class="lesson-title">
+                        <span class="number"> 7. </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> az </span>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number">
+                          <span class="number--lessonNotInDay">&middot;</span>
+                        </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latviešu deja „Kur tad tu?”. S.R.: Papēdis –
+                              pirkstgals.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="other-info">
+                    <div class="info-item">
+                      <div class="title">Uzvedības ieraksti:</div>
+                      <div class="description">
+                        <p
+                          title="Centīgs: kārtīgi izpildīts mājas darbs (<span class='dr-positive'>pozitīvs</span>) (13.11., Mazākumtautību valoda un literatūra (krievu), Petroviča Tatjana)"
+                        >
+                          Centīgs: kārtīgi izpildīts mājas darbs (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Mazākumtautību valoda un literatūra
+                          (krievu), Petroviča Tatjana)
+                        </p>
+                        <p
+                          title="Centīgs darbs stundā. (<span class='dr-positive'>pozitīvs</span>) (13.11., Vizuālā māksla, Volonte Ilze)"
+                        >
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Vizuālā māksla, Volonte Ilze)
+                        </p>
+                        <p
+                          title="Centīgs darbs stundā. (<span class='dr-positive'>pozitīvs</span>) (13.11., Dabaszinības, Vojevodova Jeļena)"
+                        >
+                          Centīgs darbs stundā. (<span class="dr-positive"
+                            >pozitīvs</span
+                          >) (13.11., Dabaszinības, Vojevodova Jeļena)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="diary-bottom-mobile-nav">
+                    <div class="journal-nav">
+                      <h2 class="mobile-date">
+                        <a href="#" class="mobile-lessons-prev"></a>
+                        13.11.24. trešdiena
+                        <a href="#" class="mobile-lessons-next"></a>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="section-switch-item tab-pane"
+                  role="tabpanel"
+                  id="section_1411"
+                >
+                  <div class="journal-nav">
+                    <h2 class="mobile-date">
+                      <a href="#" class="mobile-lessons-prev"></a>
+                      14.11.24. ceturtdiena
+                      <a href="#" class="mobile-lessons-next"></a>
+                    </h2>
+                  </div>
+
+                  <div class="actual-lessons-items">
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 1. </span>
+                        <span class="title"> Sports un veselība </span>
+                        <span class="room"> sz </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              <strong
+                                >Kā izmantot radošās domāšanas stratēģijas
+                                rotaļās?</strong
+                              >
+                              (SR: ar skolotāja atbalstu sadarbojoties pārī vai
+                              mazā grupā, rada jaunas idejas spēlēm, to
+                              nosacījumiem un kopīgi izvēlas labāko risinājumu
+                              uzdevuma veikšanai.)
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 2. </span>
+                        <span class="title"> Matemātika </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Kādi ir saskaitīšanas un atņemšanas darbības
+                              locekļi?
+                            </p>
+                            <p>
+                              SR: nosauc saskaitīšanas darbības locekļus;
+                              aprēķina summu, pārvietojot vai savienojot
+                              saskaitāmos.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="08.11.2024. 11:27: Elksniņa Svetlana (labots 12.11.2024. 8:28)"
+                            ><p><strong>Darba burtnīca 1. daļa:</strong></p>
+                            <p>44. lpp. ( 1., 2*.; 3. uzd.)</p>
+                            <p></p
+                          ></span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 3. </span>
+                        <span class="title">
+                          Mazākumtautību valoda un literatūra (krievu)
+                        </span>
+                        <span class="room"> 205 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>Latviešu&nbsp; tautas pasakas.</p>
+                            <p>
+                              S.R.: lasa&nbsp; un klausās latviešu pasakas,
+                              atbild uz jautājumiem, pamato&nbsp; atbildi ar
+                              citātiem no teksta, veido stāstu par dzirdēto.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 4. </span>
+                        <span class="title">
+                          Latviešu valoda un literatūra
+                        </span>
+                        <span class="room"> 403 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Mūsu latvju zīmes.Krustvārdu mīkla "Tavs daiļums,
+                              Latvija, ir pilsētās".SR:prezentē savu Latvju
+                              zīmi;noskatās video par Latviju un atceras faktus
+                              par Latviju;atrisina krustvārdu mīklu par
+                              Latviju;paplašina savas zināšana par Latviju.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="13.11.2024. 8:41: Seņkova Anastasija (labots 13.11.2024. 9:17)"
+                            ><p>
+                              Uz A4 lapas uzzīmēt savu zīmi un aprakstīt to
+                              (nosaukums, kā izskatās, ko nozīmē, kur vai uz kā
+                              attēlo).
+                            </p></span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 5. </span>
+                        <span class="title"> Mūzika </span>
+                        <span class="room"> 115 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Kā komponisti apzīmē tempu?
+                              <strong>SR:</strong> Paskaidro jēdzienu “temps” un
+                              zina tempa apzīmējumus. Prot izteiksmīgi dziedāt
+                              dziesmu " Skaista ir mana Latvija".
+                            </p>
+                            <p>
+                              prezentācija stundai:
+                              <a
+                                target="_blank"
+                                rel="noopener noreferrer nofollow"
+                                href="https://prezi.com/view/lngRvAWU5tZ9u7Z8MmNZ/"
+                                >https://prezi.com/view/lngRvAWU5tZ9u7Z8MmNZ/</a
+                              >
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="06.11.2024. 19:30: Likova Inna (labots 07.11.2024. 11:17)"
+                            ><p>
+                              Prezentācija stundai:
+                              <a
+                                target="_blank"
+                                rel="noopener noreferrer nofollow"
+                                href="https://prezi.com/view/AenZE9InlMncuUlPQvAZ/"
+                                >https://prezi.com/view/AenZE9InlMncuUlPQvAZ/</a
+                              >
+                            </p>
+                            <p>
+                              Nedēļas laikā dziedam dziesmu "Skaista ir mana
+                              Latvija"
+                            </p></span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 8. </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> az </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latviešu deja „Kur tad tu?”. S.R.: Papēdis un
+                              slotiņa.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number">
+                          <span class="number--lessonNotInDay">&middot;</span>
+                        </span>
+                        <span class="title">
+                          Tautas dejas kol. &#39;Balaguri&#39; (I)
+                        </span>
+                        <span class="room"> </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latviešu deja „Kur tad tu?”. S.R.: Plaukstiņpolka.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="diary-bottom-mobile-nav">
+                    <div class="journal-nav">
+                      <h2 class="mobile-date">
+                        <a href="#" class="mobile-lessons-prev"></a>
+                        14.11.24. ceturtdiena
+                        <a href="#" class="mobile-lessons-next"></a>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="section-switch-item tab-pane active"
+                  role="tabpanel"
+                  id="section_1511"
+                >
+                  <div class="journal-nav">
+                    <h2 class="mobile-date">
+                      <a href="#" class="mobile-lessons-prev"></a>
+                      15.11.24. piektdiena (aizvakar)
+                      <a href="#" class="mobile-lessons-next next-week"></a>
+                    </h2>
+                  </div>
+
+                  <div class="actual-lessons-items">
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 1. </span>
+                        <span class="title"> Sociālās zinības </span>
+                        <span class="room"> 410 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Formatīvā vērtēšana. Kāda ir Latvijas valsts? SR:
+                              zina būtiskākās valsts pazīmes.
+                              <strong>&nbsp;&nbsp;</strong>
+                            </p>
+                            <p>
+                              Kādi ir Latvijas valsts simboli?<strong
+                              > </strong>SR:<strong> </strong>zina Latvijas
+                              valsts simbolus un noskaidro, kur un kā tos lieto.
+                            </p>
+                          </div>
+                          <a
+                            href="/Attachment/Get/9bf92f18-aa21-46cf-a7e8-da50dc895033"
+                            class="file"
+                            >3_2_2 Latvijas valsts simboli.pptx</a
+                          >
+                          <a
+                            href="/Attachment/Get/fa952162-9b90-4343-905e-51e2247c30b9"
+                            class="file"
+                            >3_2_2_ Latvijas Valsts simboli_.docx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span
+                            title="08.11.2024. 10:45: Demida Ludmila (labots 09.11.2024. 13:22)"
+                            ><p>Darba lapa. Kāda ir Latvijas valsts?</p></span
+                          >
+                          <a
+                            href="/Attachment/Get/7be01119-5c94-42d7-b91f-d09af9c28805"
+                            class="file"
+                            >3_2_1__Mājās uzdevums_Latvijas valsts pazīmes —
+                            копия.docx</a
+                          >
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1347316111"
+                          >100%
+                          <div class="test-icon"></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 2. </span>
+                        <span class="title"> Angļu valoda F (F) </span>
+                        <span class="room"> 407 </span>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span title="13.11.2024. 13:35: Vetrine Julija"
+                            ><p>
+                              Izmantojot paraugu pēdējā slaidā uzrakstīt par
+                              sevi.
+                            </p></span
+                          >
+                          <a
+                            href="/Attachment/Get/1cc4e0a7-f41e-4b3e-9cae-01321a41c35f"
+                            class="file"
+                            >HT 13_11.pptx</a
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 3. </span>
+                        <span class="title"> Klases stunda </span>
+                        <span class="room"> 410 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Kādi ir Latvijas valsts simboli?<strong
+                              > </strong>SR:<strong> </strong>zina Latvijas
+                              valsts simbolus un Latvijas valsts nacionālus
+                              simbolus.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span title="14.11.2024. 14:00: Demida Ludmila"
+                            ><p>krāsainie zīmuļi</p></span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 4. </span>
+                        <span class="title">
+                          Latviešu valoda un literatūra
+                        </span>
+                        <span class="room"> 403 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Latvija teikās un tautasdziesmās.SR:iepazīstas ar
+                              latviešu kultūras mantojumu, atjauno
+                              tautasdziesmas, ieraksta izlaistos burtus,
+                              daudzveidīgi strādā ar teikām, raksta īpašvārdus
+                              alfabēta secībā.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <span title="14.11.2024. 10:24: Seņkova Anastasija"
+                            ><p>Pabeigt krustvārdu mīklu (sk.kopiju).</p></span
+                          >
+                          <a
+                            href="/Attachment/Get/370a29c4-2a3d-4078-b5f5-062c4a8d270b"
+                            class="file"
+                            >Krustvārdu mīkla.pdf</a
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 5. </span>
+                        <span class="title"> Matemātika </span>
+                        <span class="room"> 210 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Teksta uzdevumi "Mana Latvija". SR: risina teksta
+                              uzdevumus.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description"></div>
+
+                        <div
+                          class="ThirdPartyEvent ThirdPartyEvent--uzdevumi active timeless"
+                        >
+                          <div class="ThirdPartyEvent__Header">
+                            <span class="ThirdPartyEvent__Logo"></span>
+                            <span class="ThirdPartyEvent__Text"
+                              >uzdevumi.lv</span
+                            >
+                            <div class="ThirdPartyEvent__Info">
+                              <a
+                                class="ThirdPartyEvent__Status"
+                                href="/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13&amp;profiles=False&amp;destination_uri=https%3a%2f%2fwww.uzdevumi.lv%2fTestWork%2fInfo%2f4649268"
+                                target="_blank"
+                              >
+                                <span class="Status__Text">Atvērt</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          <div class="ThirdPartyEvent__Content">
+                            <span class="ThirdPartyEvent__EventName"
+                              >Mājasdarbs: Skaitliskas izteiksmes</span
+                            >
+                            <span class="ThirdPartyEvent__Icon hidden"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="actual-lessons-item has-content open">
+                      <div class="lesson-title">
+                        <span class="number"> 6. </span>
+                        <span class="title">
+                          Dizains un tehnoloģijas (datorika)
+                        </span>
+                        <span class="room"> 309 </span>
+                      </div>
+                      <div class="lesson-subitem subject">
+                        <div class="title">Tēma:</div>
+                        <div class="description">
+                          <div class="                                        ">
+                            <p>
+                              Praktiskais darbs “Teksta formatēšana
+                              tekstapstrādes lietotnē.” SR: Veic pieteikšanos
+                              tīmekļvietnē ar autorizāciju, ievērojot drošības
+                              noteikumus. Dublē tekstu. Formatē tekstu . Veido
+                              teksta pirmās rindas atkāpi<strong
+                                ><em>.</em></strong
+                              >
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Uzdots:</div>
+                        <div class="description">
+                          <div class="home-task-answer-widget-container">
+                            <div
+                              class="home-task-answer-widget"
+                              data-home-task-id="110759677"
+                              data-home-task-attachments="[]"
+                              data-has-answer="false"
+                              data-title="14.11.2024. 13:44: Zimņika Olga (labots 15.11.2024. 9:24)"
+                            >
+                              <p>
+                                Paņem līdzi burtnīcu un paroles (e-klase un
+                                Teams)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="lesson-subitem">
+                        <div class="title">Vērtējums:</div>
+
+                        <span class="score open-mark-file" data-id="1347208591"
+                          >P
+                          <div class=""></div></span
+                        >&nbsp;
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="other-info">
+                    <div class="info-item">
+                      <div class="title">Uzvedības ieraksti:</div>
+                      <div class="description">
+                        <p
+                          title="Mērķtiecīgs: aktīvs darbs stundā (<span class='dr-positive'>pozitīvs</span>) (15.11., Sociālās zinības, Demida Ludmila)"
+                        >
+                          Mērķtiecīgs: aktīvs darbs stundā (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (15.11., Sociālās zinības, Demida Ludmila)
+                        </p>
+                        <p
+                          title="Mērķtiecīgs: aktīvs darbs stundā (<span class='dr-positive'>pozitīvs</span>) (15.11., Klases stunda, Demida Ludmila)"
+                        >
+                          Mērķtiecīgs: aktīvs darbs stundā (<span
+                            class="dr-positive"
+                            >pozitīvs</span
+                          >) (15.11., Klases stunda, Demida Ludmila)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="diary-bottom-mobile-nav">
+                    <div class="journal-nav">
+                      <h2 class="mobile-date">
+                        <a href="#" class="mobile-lessons-prev"></a>
+                        15.11.24. piektdiena (aizvakar)
+                        <a href="#" class="mobile-lessons-next next-week"></a>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="container journal-dots">
+              <ul class="students-journal-mobile-tabs fixed" data-tabs="tabs">
+                <li class="invisible-tab-nav">
+                  <a href="#section_1111" data-toggle="tab"></a>
+                </li>
+                <li class="invisible-tab-nav">
+                  <a href="#section_1211" data-toggle="tab"></a>
+                </li>
+                <li class="invisible-tab-nav">
+                  <a href="#section_1311" data-toggle="tab"></a>
+                </li>
+                <li class="invisible-tab-nav">
+                  <a href="#section_1411" data-toggle="tab"></a>
+                </li>
+                <li class="invisible-tab-nav active">
+                  <a href="#section_1511" data-toggle="tab"></a>
+                </li>
+              </ul>
+            </div>
+            <div class="hidden-xs bottom-controls">
+              <div class="container">
+                <div class="students-journal-header">
+                  <div class="week-selector clearfix">
+                    <a
+                      href="/Family/Diary?Date=10.11.2024."
+                      aria-label="Ielādēt iepriekšējo nedēļu"
+                      class="week-selector-prev hidden-xs onclick-spinner"
+                    ></a>
+
+                    <div class="visible-xs text-right">
+                      <a
+                        href="#"
+                        class="open-lesson-times xs-diary-lesson-times"
+                        >Stundu laiki</a
+                      >
+                      <div class="selected-period-mobile calendar-toggle">
+                        <a href="#" class="cal-icon"></a>
+                      </div>
+                    </div>
+
+                    <div class="selected-period hidden-xs">11.11. - 17.11.</div>
+
+                    <a href="#" class="calendar-icon hidden-xs"></a>
+                    <a
+                      href="/Family/Diary?Date=18.11.2024."
+                      aria-label="Ielādēt nākamo nedēļu"
+                      class="week-selector-next hidden-xs onclick-spinner"
+                    ></a>
+
+                    <div class="calendar-holder popover bottom"></div>
+                  </div>
+
+                  <div class="students-journal-header-links hidden-xs">
+                    <a href="#" class="open-lesson-times"> Stundu laiki </a>
+                    <a href="#" class="hidden-xs print print-diary">Drukāt</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div id="PreschoolPlans"></div>
+        </div>
+
+        <footer>
+          <div class="container">
+            <nav class="footer-nav">
+              <ul>
+                <li class="footer-nav-item">
+                  <a href="#" class="open-lesson-times">Stundu laiki</a>
+                </li>
+                <li class="footer-nav-item">
+                  <a
+                    href="#"
+                    class="open-terms-and-abbreviations"
+                    data-url="/Family/TermsAndAbbreviations"
+                    >Apzīmējumi</a
+                  >
+                </li>
+              </ul>
+            </nav>
+
+            <div class="copyright">
+              SIA “Izglītības sistēmas” 2004-2024:54
+              <br />
+              <i>Bezmaksas komplekts</i>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <div class="mobile-menu-underlay"></div>
+    <div class="mobile-menu">
+      <div class="mobile-menu-header">
+        <div class="mobile-menu-student-selector">
+          <div
+            class="toggle-mobile-menu visible-xs-block mobile-menu-touch-zone"
+          >
+            <a href="#" class="toggle-mobile-menu visible-xs-block">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </a>
+          </div>
+
+          <div class="mobile-student-profile-switcher">
+            <div class="name">Gavrovska Darjana</div>
+            <div class="school">
+              3.b, Daugavpils Tehnoloģiju vidusskola - licejs
+            </div>
+          </div>
+
+          <div class="current-student-profile-arrow"></div>
+
+          <script>
+            var urlToUserLoginProfileSelection = "/Family/UserLoginProfile";
+          </script>
+        </div>
+      </div>
+
+      <ul class="mobile-second-menu">
+        <li class="mobile-second-menu-item item-home">
+          <a href="/Family/Home" class="onclick-spinner">Sākums</a>
+        </li>
+        <li class="mobile-second-menu-item item-journal active">
+          <a href="/Family/Diary" class="onclick-spinner">Dienasgrāmata</a>
+        </li>
+        <li
+          class="mobile-second-menu-item has-sub-items item-messages has-notifications"
+        >
+          <a href="#">Saziņa</a>
+
+          <ul class="mobile-second-menu-sub">
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/SPA/Family#/mail"
+                class="spa-nav-item SchMgmt_Family_Mail"
+              >
+                <span class="notifications-count">88</span>
+                E-Klases pasts
+              </a>
+            </li>
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/SPA/Family#/todos/planned/video"
+                class="spa-nav-item SchMgmt_Family_VideoMeetings"
+              >
+                Video saziņa
+              </a>
+            </li>
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/SPA/Family#/todos/planned/surveys"
+                class="spa-nav-item SchMgmt_Family_Surveys"
+              >
+                Aptaujas
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li class="mobile-second-menu-item has-sub-items item-analytics">
+          <a href="#">Pārskati</a>
+
+          <ul class="mobile-second-menu-sub">
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/Family/ReportMarkRatings/Get"
+                class="onclick-spinner SchMgmt_Family_MarkRatings"
+              >
+                Sekmju reitingi
+              </a>
+            </li>
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/Family/ReportMarkTable"
+                class="onclick-spinner SchMgmt_Family_MarkTable"
+              >
+                Žurnāli
+              </a>
+            </li>
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/Family/ReportNonAttendances"
+                class="onclick-spinner SchMgmt_Family_NonAttendances"
+              >
+                Kavējumi
+              </a>
+            </li>
+            <li class="mobile-second-menu-sub-item">
+              <a
+                href="/Family/ReportPupilMarks/Get"
+                class="onclick-spinner SchMgmt_Family_PupilMarks"
+              >
+                Sekmju izraksts
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <ul class="mobile-first-menu">
+        <li class="mobile-first-menu-item item-notifications sm-icon-only">
+          <a
+            href="/Family/Settings/Profiles?id=b2b240f1-7ea4-4bcd-a0b7-0fd09399c48f#notifications"
+            class="onclick-spinner layout-navigation-notifications"
+          >
+            Notifikācijas</a
+          >
+        </li>
+
+        <li class="mobile-first-menu-item item-links sm-no-icon has-sub-items">
+          <a href="#"> Skolas saites </a>
+
+          <ul class="mobile-first-menu-sub">
+            <li class="mobile-first-menu-sub-item">
+              <a href="http://www.licejs.lv" target="_blank"
+                >Skolas mājas lapa</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="https://licejs-my.sharepoint.com/:u:/g/personal/licejs_licejs_lv/Ef2zGHgEDc9Pki2Lib5O-h4BtSQtEskDb-OVjTkXc9W-3A?e=6g7qQf"
+                target="_blank"
+                >Pārbaudes darbs</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="https://licejs.lv/stundu-laiki.html" target="_blank"
+                >Zvanu saraksts</a
+              >
+            </li>
+          </ul>
+        </li>
+
+        <li class="mobile-first-menu-item item-links sm-no-icon has-sub-items">
+          <a href="#"> Partneri</a>
+
+          <ul class="mobile-first-menu-sub">
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Auth/OAuth/RemoteApp?client_id=A85E2C10-FB73-420A-83E1-85446FF9AC13&amp;profiles=False"
+                target="_blank"
+                >Uzdevumi.lv</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Auth/OAuth/RemoteApp?client_id=DF87C97E-FAFC-4903-B8A2-0E66E7213EBC&amp;profiles=False"
+                target="_blank"
+                >Soma.lv</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="https://eduspace.lv/" target="_blank"
+                >Eduspace e-mācības</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="https://startit.lv/" target="_blank">Start(IT)</a>
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Auth/OAuth/RemoteApp?client_id=F188E3B5-37F6-47D4-89F5-2888CFC68AAE&amp;profiles=True"
+                target="_blank"
+                >Letonika</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Auth/OAuth/RemoteApp?client_id=D4E498B6-2358-4C50-A8DA-82C0460652DD&amp;redirect_uri=https%3a%2f%2fmaconis.zvaigzne.lv%2fe-klase.php&amp;profiles=True"
+                target="_blank"
+                >MĀCONIS Zvaigzne ABC</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="https://skolo.lv/" target="_blank">Skolo.lv</a>
+            </li>
+          </ul>
+        </li>
+        <li class="mobile-first-menu-item item-family-package sm-icon-onlyr">
+          <a href="/Family/FamilyPlanInformation" class="onclick-spinner">
+            Ģimenes komplekts</a
+          >
+        </li>
+
+        <li
+          class="mobile-first-menu-item item-help sm-icon-only item-links has-sub-items"
+        >
+          <a href="#">Uzstādījumi</a>
+          <ul class="mobile-first-menu-sub">
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Family/Settings/Profiles?id=6402603f-bf60-4785-874c-60b572ff3417#profile"
+                class="onclick-spinner"
+                >Mani dati</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a
+                href="/Family/Settings/Profiles?id=75b254ea-6c68-4a2c-a6e8-89a816902179#password"
+                class="onclick-spinner"
+                >Mainīt paroli</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="/Family/Settings/Profiles" class="onclick-spinner"
+                >Ģimenes uzstādījumi</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="/Family/ActionLog" class="onclick-spinner"
+                >Darbību vēsture</a
+              >
+            </li>
+            <li class="mobile-first-menu-sub-item">
+              <a href="/Family/MessageLog" class="onclick-spinner"
+                >Ziņojumu vēsture</a
+              >
+            </li>
+          </ul>
+        </li>
+
+        <li
+          class="mobile-first-menu-item item-help sm-icon-only item-links has-sub-items"
+        >
+          <a href="#">Palīdzība</a>
+          <ul class="mobile-first-menu-sub">
+            <li class="mobile-first-menu-sub-item">
+              <a href="/Family/TechnicalSupport" class="onclick-spinner"
+                >Tehniskais atbalsts</a
+              >
+            </li>
+
+            <li class="mobile-first-menu-sub-item">
+              <a href="/Family/FAQ/Student" class="onclick-spinner"
+                >Biežāk uzdotie jautājumi</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="mobile-first-menu-item item-help sm-icon-only">
+          <a href="/LogOut">Iziet</a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="device-xs visible-xs"></div>
+    <div class="device-sm visible-sm"></div>
+    <div class="device-md visible-md"></div>
+    <div class="device-lg visible-lg"></div>
+
+    <div id="error-modals-container"></div>
+
+    <div id="modal-mark"></div>
+
+    <script type="text/javascript">
+      var markToInvalidateMarksCache = "/Family/Home/InvalidateMarksCache";
+      var markFileModalCloseTag =
+        '<a href="#" class="modal-close close-mark-file" data-dismiss="modal"></a>';
+    </script>
+
+    <div class="home-task-answer-modal-container">
+      <div id="home-task-answer-modal"></div>
+    </div>
+
+    <div
+      class="modal modal-technical lesson-times-modal"
+      id="myModal3"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="myModalLabel"
+    >
+      <div class="modal-dialog timetable-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <a href="#" class="modal-close" data-dismiss="modal"></a>
+
+            <h1 class="default-lesson-times-heading">Stundu laiki</h1>
+
+            <div
+              class="timetable lesson-times-table loading-animation-container"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var urlToToLessonTimes = "/Family/LessonTimes";
+    </script>
+
+    <div
+      class="modal modal-technical terms-and-abbreviations-modal"
+      id="myModal4"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="myModalLabel"
+      data-loading="Lūdzu uzgaidiet..."
+    >
+      <div class="modal-dialog legend-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <a href="#" class="modal-close" data-dismiss="modal"></a>
+
+            <h1 class="align-left">Izmantotie apzīmējumi</h1>
+
+            <br />
+
+            <div
+              class="container legend terms-and-abbreviations-modal-content loading-animation-container"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal modal-technical"
+      id="errorModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="myModalLabel"
+    >
+      <div class="modal-dialog timetable-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body">
+            <a href="#" class="modal-close" data-dismiss="modal"></a>
+
+            <h1 class="default-lesson-times-heading">Notikusi kļūda!</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var errorLoggerConfig = {
+        tags: { serverName: "54", val2: 363 },
+        user: { id: 3507448 },
+      };
+    </script>
+    <script src="/Presentation/Family/js/SPA/dist/errorLogger.881da9b179f4019af53f.js"></script>
+
+    <script>
+      var overlayElement = document.getElementById("overlay");
+      var loadingInfoElement = document.getElementById("loading-info");
+
+      if (typeof overlayElement !== "undefined" && overlayElement !== null) {
+        overlayElement.className += " hidden"; //IE9 supported
+      }
+
+      if (
+        typeof loadingInfoElement !== "undefined" &&
+        loadingInfoElement !== null
+      ) {
+        loadingInfoElement.className += " hidden"; //IE9 supported
+      }
+    </script>
+
+    <script>
+      var genuineUserAgentOs = null;
+      var genuineUserAgent = null;
+    </script>
+
+    <script>
+      var shouldRenderDiary = false;
+    </script>
+
+    <script>
+      var tenantId = "IDACC-ORG-20130901-285DCC3B";
+    </script>
+
+    <script type="text/javascript">
+      var urlToDiary = "/Family/Diary";
+      var dateParamName = "Date";
+      var urlToDiaryNextWeek = "/Family/Diary?Date=18.11.2024.";
+      var urlToDiaryPrevWeek = "/Family/Diary?Date=10.11.2024.";
+
+      var urlToNextDay =
+        "/Family/Diary/GetOneDayOfFullDiary?Date=16.11.2024.&DaySwitchDirection=next";
+      var urlToPreviousDay =
+        "/Family/Diary/GetOneDayOfFullDiary?Date=14.11.2024.&DaySwitchDirection=previous";
+      var currentDate = null;
+      var datePeriod = null;
+      currentDate = "2024-11-17";
+      datePeriod = {
+        from: "2024-11-11",
+        to: "2024-11-15",
+      };
+
+      shouldRenderDiary = false;
+
+      //$(function() {
+      //    $('.calendar-holder').datepicker()
+      //});
+    </script>
+
+    <script>
+      var familyUrlConfig = {
+        urlToAttachmentDirectory: "/Attachment/Get/",
+        urlToUploadAttachment: "/FileUpload/UploadAttachment",
+        urlToCommunicationNotifications:
+          "/api/family/Notifications/Communication/IDACC-ORG-20130901-285DCC3B",
+      };
+    </script>
+
+    <script src="/Presentation/Family/js/SPA/dist/vendor.f8bf7f77b4c36c1041be.js"></script>
+
+    <script src="/Presentation/Family/js/SPA/dist/scripts.289cf7684d0aac7d998c.js"></script>
+
+    <script src="/Presentation/Family/js/SPA/dist/style.ef232e45fbbb2240206d.js"></script>
+  </body>
+</html>
