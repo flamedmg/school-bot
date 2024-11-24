@@ -60,10 +60,10 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             if not isinstance(day, dict):
                 continue
 
-            lessons = day.get("lessons", [])
-            total_lessons += len(lessons)
+            day_lessons = day.get("lessons", [])
+            total_lessons += len(day_lessons)
 
-            for lesson in lessons:
+            for lesson in day_lessons:
                 if not isinstance(lesson, dict):
                     continue
 
@@ -71,7 +71,7 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     subject = lesson["subject"]
                     if subject:
                         total_subjects += 1
-                        # Extract subject name using clean_subject function
+                        # Extract subject name using clean_subject function from the lessons module
                         subject_name, _ = lessons.clean_subject(subject)
                         if subject_name:
                             # Translate the subject name

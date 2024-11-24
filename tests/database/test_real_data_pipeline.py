@@ -29,6 +29,9 @@ def test_real_data_pipeline_and_changes(db_session):
     pipeline = create_default_pipeline()
     schedule_data = pipeline.execute(raw_data)
 
+    # Add nickname to schedule data
+    schedule_data[0]["nickname"] = "Gavrovska Darjana"
+
     # Convert to Schedule model
     initial_schedule = Schedule(**schedule_data[0])
 
@@ -40,7 +43,7 @@ def test_real_data_pipeline_and_changes(db_session):
 
     # Save to database and get it back to verify the save worked
     db_schedule = repository.save_schedule(initial_schedule)
-    saved_schedule = repository.get_schedule_by_unique_id(db_schedule.unique_id)
+    saved_schedule = repository.get_schedule_by_unique_id(db_schedule.unique_id, initial_schedule.nickname)
     assert saved_schedule is not None
     assert len(saved_schedule.days) == len(initial_schedule.days)
 
@@ -109,7 +112,7 @@ def test_real_data_pipeline_and_changes(db_session):
     repository.save_schedule(modified_schedule)
 
     # Load and verify modified schedule
-    loaded_modified = repository.get_schedule_by_unique_id(modified_schedule.unique_id)
+    loaded_modified = repository.get_schedule_by_unique_id(modified_schedule.unique_id, modified_schedule.nickname)
     assert loaded_modified is not None
 
     # Verify modifications were saved correctly

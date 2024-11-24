@@ -16,10 +16,11 @@ class ScheduleCrawler:
     BASE_URL = "https://www.e-klase.lv"
     SCHEDULE_URL = "https://my.e-klase.lv/Family/Diary"
 
-    def __init__(self, email: str, password: str):
+    def __init__(self, email: str, password: str, nickname: str):
         self.email = email
         self.password = password
         self.cookies = None
+        self.nickname = nickname
         logger.info("Initialized ScheduleCrawler")
 
     async def login(self) -> List[Dict]:
@@ -115,7 +116,9 @@ class ScheduleCrawler:
     async def get_schedule_for_week(self, date: datetime) -> List[Dict]:
         """Fetch schedule HTML for a specific week"""
         strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
-        pipeline = create_default_pipeline(markdown_output_path=None)
+        pipeline = create_default_pipeline(
+            nickname=self.nickname, markdown_output_path=None
+        )
         try:
             formatted_date = date.strftime("%d.%m.%Y.")
             url = f"{self.SCHEDULE_URL}?Date={formatted_date}"
@@ -128,16 +131,15 @@ class ScheduleCrawler:
             async with AsyncWebCrawler(
                 cookies=self.cookies,
             ) as crawler:
-                result = await crawler.arun(
-                    url=url,
-                    extraction_strategy=strategy,
-                )
+                result = await crawler.arun(url=url)
 
-            # Execute pipeline without capturing output
-            logger.debug("Executing processing pipeline...")
-            final_data = pipeline.execute(result.extracted_content)
-            logger.info(f"Successfully processed schedule for {formatted_date}")
-            return final_data
+                strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
+                raw_data = strategy.extract(html=result.html, url=url)
+                 # Execute pipeline without capturing output
+                logger.debug("Executing processing pipeline...")
+                final_data = pipeline.execute(raw_data)
+                logger.info(f"Successfully processed schedule for {formatted_date}")
+                return final_data
 
         except Exception as e:
             logger.error(f"Error fetching schedule for {date}: {str(e)}")

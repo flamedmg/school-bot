@@ -24,8 +24,9 @@ class PipelineStep:
 
 
 class PreprocessingPipeline:
-    def __init__(self):
+    def __init__(self, nickname: Optional[str] = None):
         self.steps: List[PipelineStep] = []
+        self.nickname = nickname
 
     def add_step(self, name: str, function: Callable) -> "PreprocessingPipeline":
         self.steps.append(PipelineStep(name=name, function=function))
@@ -61,13 +62,26 @@ class PreprocessingPipeline:
                 )
                 raise
 
+        # Add nickname to final result if provided
+        if self.nickname and isinstance(result, list) and len(result) > 0:
+            if isinstance(result[0], dict):
+                result[0]["nickname"] = self.nickname
+
         logger.info("Preprocessing pipeline completed successfully")
         return result
 
 
-def create_default_pipeline(markdown_output_path: Optional[Union[str, Path]] = None):
-    """Create the default preprocessing pipeline with all steps"""
-    pipeline = PreprocessingPipeline()
+def create_default_pipeline(
+    markdown_output_path: Optional[Union[str, Path]] = None,
+    nickname: Optional[str] = None
+):
+    """Create the default preprocessing pipeline with all steps
+
+    Args:
+        markdown_output_path: Optional path for markdown output
+        nickname: Optional nickname to identify which student this schedule belongs to
+    """
+    pipeline = PreprocessingPipeline(nickname=nickname)
 
     # Add all preprocessing steps
     pipeline = (

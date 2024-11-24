@@ -51,28 +51,36 @@ def sample_day():
 @pytest.fixture
 def sample_schedule(sample_day):
     """Create a sample schedule with one day"""
-    return ScheduleModel(days=[sample_day])
+    return ScheduleModel(days=[sample_day], nickname="test_student")
 
 
 @pytest.fixture
 def sample_lesson(sample_day):
     """Create a sample lesson with homework"""
+    homework = Homework(
+        text="Do exercises 1-5",
+        links=[
+            Link(
+                original_url="http://example.com",
+                destination_url="http://final.com",
+            )
+        ],
+        attachments=[Attachment(filename="math.pdf", url="/files/math.pdf")],
+    )
+    # Set parent references for homework and its nested objects
+    homework._day = sample_day
+    for link in homework.links:
+        link._day = sample_day
+    for attachment in homework.attachments:
+        attachment._day = sample_day
+
     lesson = Lesson(
         index=1,
         subject="Math",
         room="101",
         topic="Algebra",
         mark=8,
-        homework=Homework(
-            text="Do exercises 1-5",
-            links=[
-                Link(
-                    original_url="http://example.com",
-                    destination_url="http://final.com",
-                )
-            ],
-            attachments=[Attachment(filename="math.pdf", url="/files/math.pdf")],
-        ),
+        homework=homework,
     )
     lesson._day = sample_day
     return lesson
@@ -190,6 +198,10 @@ def test_create_homework(repository, sample_schedule, sample_day, sample_lesson)
 
     homework = sample_lesson.homework
     homework._day = sample_day
+    for link in homework.links:
+        link._day = sample_day
+    for attachment in homework.attachments:
+        attachment._day = sample_day
     db_homework = repository._create_homework(homework)
     db_lesson.homework = db_homework
     repository.session.flush()
@@ -257,6 +269,13 @@ def test_create_announcement(
 def test_process_lessons(repository, sample_day, sample_lesson):
     """Test processing multiple lessons"""
     sample_day.lessons = []  # Clear any existing lessons
+    sample_lesson._day = sample_day
+    if sample_lesson.homework:
+        sample_lesson.homework._day = sample_day
+        for link in sample_lesson.homework.links:
+            link._day = sample_day
+        for attachment in sample_lesson.homework.attachments:
+            attachment._day = sample_day
     sample_day.lessons.append(sample_lesson)
     db_day = repository._create_day(sample_day)
 
@@ -282,6 +301,12 @@ def test_update_day(repository, sample_day, sample_lesson, sample_announcement):
 
     # Add lesson and announcement
     sample_lesson._day = sample_day
+    if sample_lesson.homework:
+        sample_lesson.homework._day = sample_day
+        for link in sample_lesson.homework.links:
+            link._day = sample_day
+        for attachment in sample_lesson.homework.attachments:
+            attachment._day = sample_day
     sample_announcement._day = sample_day
     sample_day.lessons = [sample_lesson]
     sample_day.announcements = [sample_announcement]
@@ -298,7 +323,7 @@ def test_update_day(repository, sample_day, sample_lesson, sample_announcement):
 def test_update_schedule(repository):
     """Test updating complete schedule"""
     # Create initial schedule
-    initial_schedule = ScheduleModel(days=[SchoolDay(date=datetime(2024, 1, 1))])
+    initial_schedule = ScheduleModel(days=[SchoolDay(date=datetime(2024, 1, 1))], nickname="test_student")
     db_schedule = repository._create_schedule(initial_schedule)
 
     # Create updated schedule with a general announcement
@@ -316,7 +341,7 @@ def test_update_schedule(repository):
     announcement._day = day
     day.lessons = [lesson]
     day.announcements = [announcement]
-    updated_schedule = ScheduleModel(days=[day])
+    updated_schedule = ScheduleModel(days=[day], nickname="test_student")
 
     # Update schedule
     repository._update_schedule(db_schedule, updated_schedule)

@@ -13,35 +13,52 @@ class AnnouncementType(str, Enum):
 class Attachment(BaseModel):
     filename: str
     url: str
+    _day: Optional["SchoolDay"] = None
 
     @property
     def unique_id(self) -> str:
         """Generate unique ID based on filename and url"""
+        if not self._day:
+            raise ValueError("Attachment must be associated with a day")
         content = f"{self.filename}:{self.url}"
-        return hashlib.md5(content.encode()).hexdigest()
+        return f"{self._day.unique_id}_{hashlib.md5(content.encode()).hexdigest()[:6]}"
 
 
 class Link(BaseModel):
     original_url: str
     destination_url: Optional[str] = None
+    _day: Optional["SchoolDay"] = None
 
     @property
     def unique_id(self) -> str:
         """Generate unique ID based on URLs"""
+        if not self._day:
+            raise ValueError("Link must be associated with a day")
         content = f"{self.original_url}:{self.destination_url or ''}"
-        return hashlib.md5(content.encode()).hexdigest()
+        return f"{self._day.unique_id}_{hashlib.md5(content.encode()).hexdigest()[:6]}"
 
 
 class Homework(BaseModel):
     text: Optional[str] = None
     links: List[Link] = Field(default_factory=list)
     attachments: List[Attachment] = Field(default_factory=list)
+    _day: Optional["SchoolDay"] = None
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Set parent reference for links and attachments
+        for link in self.links:
+            link._day = self._day
+        for attachment in self.attachments:
+            attachment._day = self._day
 
     @property
     def unique_id(self) -> str:
         """Generate unique ID based on content"""
+        if not self._day:
+            raise ValueError("Homework must be associated with a day")
         content = f"{self.text or ''}:{[link.unique_id for link in self.links]}:{[att.unique_id for att in self.attachments]}"
-        return hashlib.md5(content.encode()).hexdigest()
+        return f"{self._day.unique_id}_{hashlib.md5(content.encode()).hexdigest()[:6]}"
 
 
 class Lesson(BaseModel):
@@ -52,6 +69,11 @@ class Lesson(BaseModel):
     homework: Optional[Homework] = None
     mark: Optional[int] = None
     _day: Optional["SchoolDay"] = None
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if self.homework:
+            self.homework._day = self._day
 
     @validator("subject")
     def validate_subject(cls, v):
@@ -103,8 +125,9 @@ class Announcement(BaseModel):
         if not self._day:
             raise ValueError("Announcement must be associated with a day")
         content = f"{self.type}:{self.text or ''}:{self.behavior_type or ''}:{self.description or ''}"
-        content_hash = hashlib.md5(content.encode()).hexdigest()
-        return f"{self._day.unique_id}_{self.type}_{content_hash}"
+        content_hash = hashlib.md5(content.encode()).hexdigest()[:6]
+        type_prefix = "b" if self.type == AnnouncementType.BEHAVIOR else "g"
+        return f"{self._day.unique_id}_{type_prefix}{content_hash}"
 
 
 class SchoolDay(BaseModel):
@@ -117,8 +140,32 @@ class SchoolDay(BaseModel):
         # Set parent reference for lessons and announcements
         for lesson in self.lessons:
             lesson._day = self
+            if lesson.homework:
+                lesson.homework._day = self
+                # Set parent reference for homework attachments and links
+                for attachment in lesson.homework.attachments:
+                    attachment._day = self
+                for link in lesson.homework.links:
+                    link._day = self
         for announcement in self.announcements:
             announcement._day = self
+
+    def append_lesson(self, lesson: Lesson):
+        """Add a lesson to the day"""
+        lesson._day = self
+        if lesson.homework:
+            lesson.homework._day = self
+            # Set parent reference for homework attachments and links
+            for attachment in lesson.homework.attachments:
+                attachment._day = self
+            for link in lesson.homework.links:
+                link._day = self
+        self.lessons.append(lesson)
+
+    def append_announcement(self, announcement: Announcement):
+        """Add an announcement to the day"""
+        announcement._day = self
+        self.announcements.append(announcement)
 
     @property
     def unique_id(self) -> str:
@@ -132,6 +179,12 @@ class Schedule(BaseModel):
     )
     days: List[SchoolDay]
     attachments: List[Attachment] = Field(default_factory=list)
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # Set parent reference for schedule attachments
+        for attachment in self.attachments:
+            attachment._day = self.days[0] if self.days else None
 
     @validator("days")
     def validate_days(cls, v):
@@ -153,4 +206,4 @@ class Schedule(BaseModel):
         first_day = self.days[0].date
         year = first_day.isocalendar()[0]
         week = first_day.isocalendar()[1]
-        return f"{year}{week}"
+        return f"{year}{week:02d}"  # Year (4 digits) + Week (2 digits padded) = 6 characters

@@ -24,14 +24,13 @@ def test_schedule_pipeline_output(capsys):
     html = load_test_file("schedule_test1_full.html", base_dir="test_data")
     raw_data = strategy.extract(html=html, url="https://test.com")
 
-    # Add nickname to raw data for testing
-    if isinstance(raw_data, list) and len(raw_data) > 0:
-        raw_data[0]["nickname"] = "test_student"
-
-    # Create pipeline with markdown output
+    # Create pipeline with markdown output and nickname
     output_dir = Path(__file__).parent / "test_data"
     test_output_path = output_dir / "schedule_test_output.md"
-    pipeline = create_default_pipeline(markdown_output_path=test_output_path)
+    pipeline = create_default_pipeline(
+        markdown_output_path=test_output_path,
+        nickname="test_student"
+    )
 
     # Execute pipeline without capturing output
     with capsys.disabled():
@@ -50,7 +49,7 @@ def test_schedule_pipeline_output(capsys):
         # Validate Schedule
         assert len(schedule.days) > 0
         assert isinstance(schedule.unique_id, str)
-        assert len(schedule.unique_id) == 8  # YYYYWW format
+        assert len(schedule.unique_id) == 6  # YYYYWW format (6 characters)
         assert schedule.nickname == "test_student"  # Validate nickname
 
         # Validate each day

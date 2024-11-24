@@ -56,6 +56,13 @@ def create_lesson(
     )
     if day:
         lesson._day = day
+        # Set day reference for homework and its nested objects if they exist
+        if homework:
+            homework._day = day
+            for link in homework.links:
+                link._day = day
+            for attachment in homework.attachments:
+                attachment._day = day
     return lesson
 
 
@@ -92,18 +99,30 @@ def create_school_day(
     # Set parent references
     for lesson in day.lessons:
         lesson._day = day
+        if lesson.homework:
+            lesson.homework._day = day
+            for link in lesson.homework.links:
+                link._day = day
+            for attachment in lesson.homework.attachments:
+                attachment._day = day
     for announcement in day.announcements:
         announcement._day = day
     return day
 
 
-def create_schedule(days: List[SchoolDay]) -> ScheduleModel:
+def create_schedule(days: List[SchoolDay], nickname: str = "test_student") -> ScheduleModel:
     """Create a schedule with proper parent references"""
-    schedule = ScheduleModel(days=days)
+    schedule = ScheduleModel(days=days, nickname=nickname)
     # Ensure each day's lessons and announcements have proper references
     for day in schedule.days:
         for lesson in day.lessons:
             lesson._day = day
+            if lesson.homework:
+                lesson.homework._day = day
+                for link in lesson.homework.links:
+                    link._day = day
+                for attachment in lesson.homework.attachments:
+                    attachment._day = day
         for announcement in day.announcements:
             announcement._day = day
     return schedule

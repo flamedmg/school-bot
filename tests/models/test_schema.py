@@ -159,17 +159,18 @@ def test_school_day_unique_id():
 def test_schedule_unique_id():
     """Test schedule unique ID generation"""
     schedule = Schedule(
+        nickname="test_student",
         days=[
             SchoolDay(date=datetime(2024, 1, 1)),
             SchoolDay(date=datetime(2024, 1, 2)),
         ]
     )
 
-    assert schedule.unique_id == "20240101"
+    assert schedule.unique_id == "202401"
 
     # Test empty schedule
     with pytest.raises(ValueError, match="Schedule must have at least one day"):
-        Schedule(days=[]).unique_id
+        Schedule(nickname="test_student", days=[]).unique_id
 
 
 def test_announcement_type_validation():

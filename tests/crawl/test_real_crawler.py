@@ -120,7 +120,7 @@ async def test_cookie_reuse(credentials):
 async def test_real_schedule_fetch(credentials):
     """Test fetching real schedules"""
     logger.info("Starting schedule fetch test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"])
+    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
 
     try:
         # Get current week schedule

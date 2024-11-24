@@ -44,13 +44,8 @@ def parse_single_announcement(text: str) -> Dict[str, str]:
                 "subject": subject,
             }
 
-        # Try to parse general announcement starting with date (e.g., "11.11.")
-        general_match = re.match(r"^\d{2}\.\d{2}\.", cleaned_text)
-        if general_match:
-            return {"type": "general", "text": cleaned_text}
-
-        # If no patterns match, raise error
-        raise PreprocessingError("Invalid announcement format", {"text": text})
+        # If not a behavior announcement, treat as general announcement
+        return {"type": "general", "text": cleaned_text}
 
     except Exception as e:
         if isinstance(e, PreprocessingError):
