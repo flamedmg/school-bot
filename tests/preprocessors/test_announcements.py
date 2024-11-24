@@ -1,9 +1,10 @@
 import pytest
-from src.crawler.schedule.preprocessors.announcements import (
+from src.schedule.preprocessors.announcements import (
     parse_single_announcement,
-    preprocess_announcements
+    preprocess_announcements,
 )
-from src.crawler.schedule.preprocessors.exceptions import PreprocessingError
+from src.schedule.preprocessors.exceptions import PreprocessingError
+
 
 def test_parse_single_announcement():
     """Test parsing of individual announcements"""
@@ -27,19 +28,22 @@ def test_parse_single_announcement():
         parse_single_announcement("Invalid announcement")
     assert "Invalid announcement format" in str(exc.value)
 
+
 def test_preprocess_announcements():
     """Test preprocessing of announcements in schedule data"""
-    input_data = [{
-        "date": "13.11.24",
-        "announcements": [
-            {
-                "text": "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) (13.11., Mazākumtautību valoda un literatūra (krievu), Petroviča Tatjana)"
-            },
-            {
-                "text": "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) (15.11., Sociālās zinības, Demida Ludmila)"
-            }
-        ]
-    }]
+    input_data = [
+        {
+            "date": "13.11.24",
+            "announcements": [
+                {
+                    "text": "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) (13.11., Mazākumtautību valoda un literatūra (krievu), Petroviča Tatjana)"
+                },
+                {
+                    "text": "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) (15.11., Sociālās zinības, Demida Ludmila)"
+                },
+            ],
+        }
+    ]
 
     processed = preprocess_announcements(input_data)
     announcements = processed[0]["announcements"]
@@ -51,16 +55,14 @@ def test_preprocess_announcements():
     assert announcements[1]["subject"] == "Sociālās zinības"
 
     # Test with invalid data
-    invalid_data = [{
-        "date": "13.11.24",
-        "announcements": [
-            {"text": "Invalid announcement"}
-        ]
-    }]
+    invalid_data = [
+        {"date": "13.11.24", "announcements": [{"text": "Invalid announcement"}]}
+    ]
 
     with pytest.raises(PreprocessingError) as exc:
         preprocess_announcements(invalid_data)
     assert "Failed to process announcement" in str(exc.value)
+
 
 def test_announcements_edge_cases():
     """Test edge cases in announcement processing"""
@@ -75,12 +77,12 @@ def test_announcements_edge_cases():
     assert "announcements" not in processed[0]
 
     # Test invalid announcement structure
-    data = [{
-        "date": "13.11.24",
-        "announcements": [
-            {"wrong_key": "some text"}  # Missing "text" key
-        ]
-    }]
+    data = [
+        {
+            "date": "13.11.24",
+            "announcements": [{"wrong_key": "some text"}],  # Missing "text" key
+        }
+    ]
     with pytest.raises(PreprocessingError) as exc:
         preprocess_announcements(data)
     assert "Invalid announcement data structure" in str(exc.value)

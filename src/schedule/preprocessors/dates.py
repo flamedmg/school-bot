@@ -1,6 +1,10 @@
 import json
+import logging
 from datetime import datetime
 from typing import List, Dict
+
+logger = logging.getLogger(__name__)
+
 
 def preprocess_dates_and_merge(data: list) -> list:
     """
@@ -15,9 +19,11 @@ def preprocess_dates_and_merge(data: list) -> list:
     Returns:
         List with processed schedule data
     """
+    total_entries = 0
+    processed_dates = 0
 
     if not data or not isinstance(data, list):
-        print("Warning: Invalid input to dates preprocessor")
+        logger.warning("Invalid input to dates preprocessor")
         return data
 
     # Early return for empty or malformed input
@@ -38,53 +44,59 @@ def preprocess_dates_and_merge(data: list) -> list:
         days = []
         for entry in data:
             if not isinstance(entry, dict):
-                print(f"Warning: Invalid entry type: {type(entry)}")
+                logger.warning(f"Invalid entry type: {type(entry)}")
                 continue
             if "days" not in entry or not isinstance(entry["days"], list):
                 days.append(entry)
                 continue
             days.extend(entry["days"])
 
+    total_entries = len(days)
+    logger.info(f"Processing {total_entries} date entries")
+
     processed_days = []
     i = 0
     while i < len(days):
         if not isinstance(days[i], dict):
-            print(f"Warning: Invalid day type at index {i}: {type(days[i])}")
+            logger.warning(f"Invalid day type at index {i}: {type(days[i])}")
             i += 1
             continue
 
         # Check if we have a date-only entry followed by content
-        if (i + 1 < len(days) and
-            isinstance(days[i+1], dict) and
-            not days[i].get("lessons") and
-            not days[i].get("announcements") and
-            days[i].get("date") and
-            days[i+1].get("date")):
+        if (
+            i + 1 < len(days)
+            and isinstance(days[i + 1], dict)
+            and not days[i].get("lessons")
+            and not days[i].get("announcements")
+            and days[i].get("date")
+            and days[i + 1].get("date")
+        ):
 
-            print(f"Found date-only entry followed by content at index {i}")
+            logger.debug(f"Found date-only entry followed by content at index {i}")
 
             try:
                 # Extract date from first element
                 date_str = days[i]["date"]  # Format: "11.11.24. pirmdiena"
-                print(f"Extracting date from: {date_str}")
+                logger.debug(f"Extracting date from: {date_str}")
 
                 # Remove day name and extra dots
-                clean_date = date_str.split()[0].rstrip('.')
-                print(f"Cleaned date string: {clean_date}")
+                clean_date = date_str.split()[0].rstrip(".")
+                logger.debug(f"Cleaned date string: {clean_date}")
                 date_obj = datetime.strptime(clean_date, "%d.%m.%y")
-                print(f"Parsed date object: {date_obj}")
+                logger.debug(f"Parsed date object: {date_obj}")
 
                 # Create new day entry with proper date
-                day_entry = days[i+1].copy()
+                day_entry = days[i + 1].copy()
                 day_entry["date"] = date_obj
                 processed_days.append(day_entry)
+                processed_dates += 1
 
                 # Skip both entries
                 i += 2
                 continue
 
             except (ValueError, IndexError) as e:
-                print(f"Warning: Failed to process date at index {i}: {e}")
+                logger.warning(f"Failed to process date at index {i}: {e}")
                 processed_days.append(days[i])
                 i += 1
                 continue
@@ -92,6 +104,10 @@ def preprocess_dates_and_merge(data: list) -> list:
         # Handle single entry
         processed_days.append(days[i])
         i += 1
+
+    logger.info(f"Successfully processed dates:")
+    logger.info(f"  - {total_entries} total entries")
+    logger.info(f"  - {processed_dates} dates processed")
 
     # Return in the same format as input
     if all(isinstance(d, dict) and "date" in d for d in data):

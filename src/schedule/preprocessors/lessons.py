@@ -1,12 +1,17 @@
 import json
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+
+logger = logging.getLogger(__name__)
+
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
         return super().default(obj)
+
 
 """
 Lessons Preprocessor
@@ -22,6 +27,7 @@ import re
 from typing import Dict, Any, Optional
 from .exceptions import PreprocessingError
 
+
 def clean_subject(subject: Optional[str]) -> tuple[Optional[str], Optional[str]]:
     """
     Separate subject name from room number and clean up.
@@ -33,36 +39,39 @@ def clean_subject(subject: Optional[str]) -> tuple[Optional[str], Optional[str]]
     subject = subject.replace(" (I)", "").strip()
 
     # Try to extract numeric room number at the end
-    match = re.search(r'(\d{2,3})$', subject)
+    match = re.search(r"(\d{2,3})$", subject)
     if match:
         room = match.group(1)
-        subject_name = subject[:-len(room)].strip()
+        subject_name = subject[: -len(room)].strip()
         return subject_name, room
 
     # Match known room codes
-    known_room_codes = ['sz', 'mz', 'az', 'pz']
+    known_room_codes = ["sz", "mz", "az", "pz"]
     for code in known_room_codes:
         if subject.lower().endswith(code):
-            subject_name = subject[:-len(code)].strip()
+            subject_name = subject[: -len(code)].strip()
             room = code
             return subject_name, room
 
     # If no room found, return subject as is
     return subject, None
 
+
 def clean_lesson_index(number: Optional[str]) -> Optional[int]:
     """
     Convert lesson number string to integer index.
     Returns None for missing or invalid numbers.
-    
+
     Raises:
         PreprocessingError: If the input is invalid (empty string or invalid format)
     """
     if number is None:
         return None
-        
+
     if not isinstance(number, str):
-        raise PreprocessingError(f"Invalid lesson number type: expected string or None, got {type(number)}")
+        raise PreprocessingError(
+            f"Invalid lesson number type: expected string or None, got {type(number)}"
+        )
 
     # Handle empty string case explicitly
     if not number.strip():
@@ -73,7 +82,7 @@ def clean_lesson_index(number: Optional[str]) -> Optional[int]:
         return None
 
     # Try to extract digits
-    cleaned = re.sub(r'[^\d]', '', number)
+    cleaned = re.sub(r"[^\d]", "", number)
     if not cleaned:
         raise PreprocessingError(f"Invalid lesson number format: {number}")
 
@@ -94,18 +103,16 @@ def clean_topic(topic: str) -> Optional[str]:
         return None
 
     # Remove newlines and normalize whitespace while preserving content
-    cleaned = ' '.join(line.strip() for line in topic.splitlines())
+    cleaned = " ".join(line.strip() for line in topic.splitlines())
     # Normalize multiple spaces into single space
-    cleaned = ' '.join(cleaned.split())
+    cleaned = " ".join(cleaned.split())
     return cleaned
+
 
 def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
     """Process a single lesson entry"""
     if not isinstance(lesson, dict):
-        raise PreprocessingError(
-            "Invalid lesson data type",
-            {"lesson": lesson}
-        )
+        raise PreprocessingError("Invalid lesson data type", {"lesson": lesson})
 
     try:
         result = lesson.copy()
@@ -115,9 +122,11 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 index = clean_lesson_index(result["number"])
                 result["index"] = index  # Add new index field
-                del result["number"]     # Remove old number field
+                del result["number"]  # Remove old number field
             except (ValueError, TypeError, AttributeError):
-                raise PreprocessingError(f"Invalid lesson number format", {"lesson": lesson})
+                raise PreprocessingError(
+                    f"Invalid lesson number format", {"lesson": lesson}
+                )
 
         # Clean subject and extract room if needed
         if "subject" in result:
@@ -143,22 +152,29 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
 
     except Exception as e:
         raise PreprocessingError(
-            f"Failed to preprocess lesson data: {str(e)}",
-            {"lesson": lesson}
+            f"Failed to preprocess lesson data: {str(e)}", {"lesson": lesson}
         )
+
 
 def preprocess_lessons(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Process all lessons in the schedule data.
     Cleans and standardizes lesson information.
     """
+    total_days = 0
+    total_lessons = 0
+    processed_lessons = 0
+
     # Handle case where input is a list containing a single dictionary with 'days' key
-    if len(data) == 1 and isinstance(data[0], dict) and 'days' in data[0]:
-        days = data[0]['days']
+    if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
+        days = data[0]["days"]
         wrap_output = True
     else:
         days = data
         wrap_output = False
+
+    total_days = len(days)
+    logger.info(f"Processing lessons for {total_days} days")
 
     for day in days:
         if not isinstance(day, dict):
@@ -168,7 +184,8 @@ def preprocess_lessons(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if not isinstance(lessons, list):
             continue
 
-        processed_lessons = []
+        total_lessons += len(lessons)
+        processed_day_lessons = []
         last_valid_index = 0
 
         # Process all lessons and assign indices
@@ -184,17 +201,22 @@ def preprocess_lessons(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                         # Assign next sequential index after last valid one
                         last_valid_index += 1
                         processed["index"] = last_valid_index
-                processed_lessons.append(processed)
+                processed_day_lessons.append(processed)
+                processed_lessons += 1
             except PreprocessingError:
-                processed_lessons.append(lesson)
+                processed_day_lessons.append(lesson)
 
         # Remove old number field if it exists
-        for lesson in processed_lessons:
+        for lesson in processed_day_lessons:
             lesson.pop("number", None)
 
         # Sort lessons by index to ensure correct order
-        processed_lessons.sort(key=lambda x: x.get("index", float('inf')))
-        day["lessons"] = processed_lessons
+        processed_day_lessons.sort(key=lambda x: x.get("index", float("inf")))
+        day["lessons"] = processed_day_lessons
+
+    logger.info(
+        f"Successfully processed {processed_lessons} lessons across {total_days} days"
+    )
 
     # Return in same format as input
     return [{"days": days}] if wrap_output else days

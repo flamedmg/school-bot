@@ -12,9 +12,13 @@ Modifications:
 - Removed the check that filters out attachments missing the 'filename' key.
 """
 
+import logging
 from typing import Dict, List, Optional, Any
 from urllib.parse import parse_qs, unquote, urlparse
 from .exceptions import PreprocessingError
+
+logger = logging.getLogger(__name__)
+
 
 def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
     """
@@ -32,10 +36,7 @@ def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
     if not isinstance(url, str):
         raise PreprocessingError(f"Invalid URL type: {type(url)}")
 
-    result = {
-        "original_url": url,
-        "destination_url": None
-    }
+    result = {"original_url": url, "destination_url": None}
 
     try:
         # Handle OAuth links with destination_uri parameter
@@ -44,33 +45,36 @@ def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
             if "destination_uri" in params:
                 dest_url = unquote(params["destination_uri"][0])
                 # Ensure the destination_url includes the scheme
-                if not dest_url.startswith(('http://', 'https://')):
-                    dest_url = 'https://' + dest_url
+                if not dest_url.startswith(("http://", "https://")):
+                    dest_url = "https://" + dest_url
                 # Add URL validation
                 parsed_url = urlparse(dest_url)
-                if not parsed_url.netloc or '.' not in parsed_url.netloc:
-                    raise PreprocessingError(f"Invalid destination URL: {dest_url}", {"url": dest_url})
+                if not parsed_url.netloc or "." not in parsed_url.netloc:
+                    raise PreprocessingError(
+                        f"Invalid destination URL: {dest_url}", {"url": dest_url}
+                    )
                 result["destination_url"] = dest_url
             else:
                 # No destination_uri, fall back to original url
                 result["destination_url"] = url
         # Handle attachment URLs
-        elif url.startswith('/Attachment/Get/'):
+        elif url.startswith("/Attachment/Get/"):
             # For attachment URLs, destination_url remains None
             pass
         else:
             # For other URLs, ensure the URL includes the scheme
-            if not url.startswith(('http://', 'https://')):
-                url = 'https://' + url
+            if not url.startswith(("http://", "https://")):
+                url = "https://" + url
             # Add URL validation
             parsed_url = urlparse(url)
-            if not parsed_url.netloc or '.' not in parsed_url.netloc:
+            if not parsed_url.netloc or "." not in parsed_url.netloc:
                 raise PreprocessingError(f"Invalid URL format: {url}", {"url": url})
             result["destination_url"] = url
     except Exception as e:
         raise PreprocessingError(f"Failed to process URL: {str(e)}", {"url": url})
 
     return result
+
 
 def combine_homework_texts(texts: List[str]) -> Optional[str]:
     """
@@ -88,6 +92,7 @@ def combine_homework_texts(texts: List[str]) -> Optional[str]:
     # Join with space
     return " ".join(cleaned)
 
+
 def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
     """
     Process homework data, standardizing format and cleaning content.
@@ -102,11 +107,7 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
         PreprocessingError: If processing fails
     """
     try:
-        result = {
-            "text": None,
-            "links": [],
-            "attachments": []
-        }
+        result = {"text": None, "links": [], "attachments": []}
 
         # Process text
         if "text" in homework:
@@ -123,24 +124,29 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
         # Process attachments
         for attachment in homework.get("attachments", []):
             if not isinstance(attachment, dict) or "url" not in attachment:
-                raise PreprocessingError("Invalid attachment format", {"attachment": attachment})
+                raise PreprocessingError(
+                    "Invalid attachment format", {"attachment": attachment}
+                )
 
-            result["attachments"].append({
-                "filename": attachment.get("filename"),
-                "url": attachment["url"]
-            })
+            result["attachments"].append(
+                {"filename": attachment.get("filename"), "url": attachment["url"]}
+            )
 
         # Deduplicate links based on attachment URLs
         # Create a set of attachment URLs
-        attachment_urls = set(attachment['url'] for attachment in result['attachments'] if 'url' in attachment)
+        attachment_urls = set(
+            attachment["url"]
+            for attachment in result["attachments"]
+            if "url" in attachment
+        )
 
         # Filter out links that have URLs already in attachments
         filtered_links = []
-        for link in result['links']:
-            link_url = link.get('destination_url') or link.get('original_url')
+        for link in result["links"]:
+            link_url = link.get("destination_url") or link.get("original_url")
             if link_url not in attachment_urls:
                 filtered_links.append(link)
-        result['links'] = filtered_links
+        result["links"] = filtered_links
 
         return result
 
@@ -148,9 +154,9 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
         raise
     except Exception as e:
         raise PreprocessingError(
-            f"Failed to process homework data: {str(e)}",
-            {"homework": homework}
+            f"Failed to process homework data: {str(e)}", {"homework": homework}
         )
+
 
 def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
@@ -165,11 +171,21 @@ def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     Raises:
         PreprocessingError: If any homework entry cannot be processed
     """
+    total_days = 0
+    total_homeworks = 0
+    total_links = 0
+    total_attachments = 0
+
     # Handle case where input is a list containing a single dictionary with 'days' key
-    if len(data) == 1 and isinstance(data[0], dict) and 'days' in data[0]:
-        days = data[0]['days']
+    if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
+        days = data[0]["days"]
+        wrap_output = True
     else:
         days = data
+        wrap_output = False
+
+    total_days = len(days)
+    logger.info(f"Processing homework for {total_days} days")
 
     for day in days:
         if not isinstance(day, dict):
@@ -178,12 +194,22 @@ def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         for lesson in day.get("lessons", []):
             if "homework" in lesson:
                 try:
-                    lesson["homework"] = preprocess_homework(lesson["homework"])
+                    total_homeworks += 1
+                    homework = lesson["homework"]
+                    processed = preprocess_homework(homework)
+
+                    # Count links and attachments
+                    total_links += len(processed["links"])
+                    total_attachments += len(processed["attachments"])
+
+                    lesson["homework"] = processed
                 except PreprocessingError:
                     # If processing fails, keep homework unchanged
                     continue
 
+    logger.info(f"Successfully processed {total_homeworks} homework entries:")
+    logger.info(f"  - {total_links} links processed")
+    logger.info(f"  - {total_attachments} attachments processed")
+
     # Return in same format as input
-    if len(data) == 1 and isinstance(data[0], dict) and 'days' in data[0]:
-        return data
-    return [{"days": days}]
+    return [{"days": days}] if wrap_output else days

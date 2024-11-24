@@ -2,14 +2,16 @@ import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, patch, MagicMock
 from crawl4ai import AsyncWebCrawler
-from src.crawler.schedule.crawler import ScheduleCrawler, crawl_schedules
+from src.schedule.crawler import ScheduleCrawler, crawl_schedules
+
 
 @pytest.fixture
 def mock_cookies():
     return [
         {"name": "sessionId", "value": "test123", "domain": ".e-klase.lv"},
-        {"name": "userId", "value": "user123", "domain": ".e-klase.lv"}
+        {"name": "userId", "value": "user123", "domain": ".e-klase.lv"},
     ]
+
 
 @pytest.fixture
 def mock_html():
@@ -23,16 +25,17 @@ def mock_html():
     </html>
     """
 
+
 @pytest.mark.asyncio
 async def test_login_success(mock_cookies):
     """Test successful login and cookie retrieval"""
-    with patch('crawl4ai.AsyncWebCrawler', autospec=True) as MockCrawler:
+    with patch("crawl4ai.AsyncWebCrawler", autospec=True) as MockCrawler:
         # Setup mock crawler
         mock_page = AsyncMock()
         mock_context = AsyncMock()
         mock_context.cookies.return_value = mock_cookies
         mock_context.new_page.return_value = mock_page
-        
+
         mock_crawler_instance = AsyncMock()
         mock_crawler_instance.strategy.context = mock_context
         MockCrawler.return_value.__aenter__.return_value = mock_crawler_instance
@@ -46,21 +49,22 @@ async def test_login_success(mock_cookies):
         assert mock_page.fill.call_count == 2  # Username and password
         assert mock_page.click.called
         assert mock_page.wait_for_navigation.called
-        
+
         # Verify cookies
         assert cookies == mock_cookies
+
 
 @pytest.mark.asyncio
 async def test_login_failure():
     """Test login failure handling"""
-    with patch('crawl4ai.AsyncWebCrawler', autospec=True) as MockCrawler:
+    with patch("crawl4ai.AsyncWebCrawler", autospec=True) as MockCrawler:
         # Setup mock crawler with error element
         mock_page = AsyncMock()
         mock_page.query_selector.return_value = MagicMock()  # Error element exists
-        
+
         mock_context = AsyncMock()
         mock_context.new_page.return_value = mock_page
-        
+
         mock_crawler_instance = AsyncMock()
         mock_crawler_instance.strategy.context = mock_context
         MockCrawler.return_value.__aenter__.return_value = mock_crawler_instance
@@ -70,10 +74,11 @@ async def test_login_failure():
         with pytest.raises(Exception, match="Login failed"):
             await crawler.login()
 
+
 @pytest.mark.asyncio
 async def test_get_schedule_for_week(mock_cookies, mock_html):
     """Test fetching schedule for a specific week"""
-    with patch('crawl4ai.AsyncWebCrawler', autospec=True) as MockCrawler:
+    with patch("crawl4ai.AsyncWebCrawler", autospec=True) as MockCrawler:
         # Setup mock crawler
         mock_crawler_instance = AsyncMock()
         mock_crawler_instance.get_html.return_value = mock_html
@@ -91,10 +96,11 @@ async def test_get_schedule_for_week(mock_cookies, mock_html):
         assert schedule == mock_html
         assert MockCrawler.called_with(cookies=mock_cookies)
 
+
 @pytest.mark.asyncio
 async def test_get_schedules(mock_cookies, mock_html):
     """Test fetching schedules for all three weeks"""
-    with patch('crawl4ai.AsyncWebCrawler', autospec=True) as MockCrawler:
+    with patch("crawl4ai.AsyncWebCrawler", autospec=True) as MockCrawler:
         # Setup mock crawler
         mock_crawler_instance = AsyncMock()
         mock_crawler_instance.get_html.return_value = mock_html
@@ -102,7 +108,7 @@ async def test_get_schedules(mock_cookies, mock_html):
 
         # Setup login mock
         mock_login = AsyncMock(return_value=mock_cookies)
-        
+
         # Create crawler
         crawler = ScheduleCrawler("test@example.com", "password")
         crawler.login = mock_login
@@ -116,10 +122,11 @@ async def test_get_schedules(mock_cookies, mock_html):
         assert mock_login.called_once()  # Login called once
         assert MockCrawler.call_count == 3  # Called for each week
 
+
 @pytest.mark.asyncio
 async def test_crawl_schedules_integration():
     """Test the main crawl_schedules function"""
-    with patch('src.crawler.schedule.crawler.ScheduleCrawler') as MockScheduleCrawler:
+    with patch("src.schedule.crawler.ScheduleCrawler") as MockScheduleCrawler:
         # Setup mock crawler
         mock_crawler_instance = AsyncMock()
         mock_crawler_instance.get_schedules.return_value = ["week1", "week2", "week3"]

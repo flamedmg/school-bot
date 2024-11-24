@@ -12,9 +12,9 @@ from fast_depends import Depends, inject
 from src.config import settings
 from src.database import init_db
 from src.api.app import app as fastapi_app
-from src.bot.bot import setup_handlers
-from src.crawler.schedule.scheduler import CrawlScheduler
-from src.crawler.schedule.handlers import CrawlHandlers
+from src.telegram.bot import setup_handlers
+from src.schedule.scheduler import CrawlScheduler
+from src.schedule.handlers import CrawlHandlers
 from src.dependencies import Dependencies
 
 # Configure logging
@@ -34,10 +34,10 @@ bot = TelegramClient("school_bot", settings.telegram_api_id, settings.telegram_a
 scheduler = CrawlScheduler(broker, stream_app)
 crawl_handlers = CrawlHandlers(broker, stream_app)
 
+
 @inject
 async def send_welcome_message(
-    chat_id: int,
-    bot: TelegramClient = Depends(Dependencies.get_bot)
+    chat_id: int, bot: TelegramClient = Depends(Dependencies.get_bot)
 ):
     """Send welcome message to the specified chat."""
     try:
@@ -49,7 +49,7 @@ async def send_welcome_message(
             "/homework - Check homework assignments\n"
             "/grades - View recent grades\n"
             "/notifications - Manage notification settings\n"
-            "/help - Show help message"
+            "/help - Show help message",
         )
         logger.info(f"Welcome message sent to chat ID: {chat_id}")
     except PeerIdInvalidError:
@@ -65,6 +65,7 @@ async def send_welcome_message(
     except Exception as e:
         logger.error(f"Failed to send welcome message: {str(e)}")
 
+
 @stream_app.on_startup
 async def startup():
     """Startup events for the application."""
@@ -73,29 +74,30 @@ async def startup():
         db_initialized = await init_db()
         if not db_initialized:
             raise RuntimeError("Database initialization failed")
-        
+
         # Connect to Redis broker
         await broker.connect()
         logger.info("Connected to Redis broker")
-        
+
         # Start Telegram client
         await bot.start(bot_token=settings.telegram_bot_token)
-        
+
         # Register bot in dependency system
         Dependencies.set_bot(bot)
-        
+
         # Setup bot handlers
         setup_handlers(bot)
-        
+
         # Send welcome message or instructions for chat ID
         await send_welcome_message(settings.telegram_chat_id)
-        
+
         # Start scheduler
         await scheduler.start()
         logger.info("Application startup complete")
     except Exception as e:
         logger.error(f"Startup failed: {str(e)}")
         raise
+
 
 @stream_app.on_shutdown
 async def shutdown():
@@ -110,6 +112,7 @@ async def shutdown():
         logger.error(f"Shutdown error: {str(e)}")
         raise
 
+
 async def run_fastapi():
     """Run the FastAPI server"""
     config = uvicorn.Config(
@@ -118,10 +121,11 @@ async def run_fastapi():
         port=settings.api_port,
         workers=settings.api_workers,
         reload=True,
-        loop="asyncio"
+        loop="asyncio",
     )
     server = uvicorn.Server(config)
     await server.serve()
+
 
 async def run_faststream():
     """Run the FastStream application"""
@@ -131,16 +135,15 @@ async def run_faststream():
         logger.error(f"FastStream error: {str(e)}")
         raise
 
+
 async def run_all():
     """Run all services concurrently"""
     try:
-        await asyncio.gather(
-            run_fastapi(),
-            run_faststream()
-        )
+        await asyncio.gather(run_fastapi(), run_faststream())
     except Exception as e:
         logger.error(f"Application error: {str(e)}")
         raise
+
 
 if __name__ == "__main__":
     try:
