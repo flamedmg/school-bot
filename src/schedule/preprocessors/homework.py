@@ -12,12 +12,10 @@ Modifications:
 - Removed the check that filters out attachments missing the 'filename' key.
 """
 
-import logging
+from loguru import logger
 from typing import Dict, List, Optional, Any
 from urllib.parse import parse_qs, unquote, urlparse
 from .exceptions import PreprocessingError
-
-logger = logging.getLogger(__name__)
 
 
 def extract_destination_url(url: str) -> Dict[str, Optional[str]]:

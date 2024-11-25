@@ -10,11 +10,9 @@ This preprocessor handles parsing and structuring of announcements:
 """
 
 import re
-import logging
+from loguru import logger
 from typing import Dict, List
 from .exceptions import PreprocessingError
-
-logger = logging.getLogger(__name__)
 
 
 def parse_single_announcement(text: str) -> Dict[str, str]:

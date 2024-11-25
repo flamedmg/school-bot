@@ -1,5 +1,5 @@
 import json
-import logging
+from loguru import logger
 from datetime import datetime
 from pathlib import Path
 from .preprocessors.attachments import extract_attachments
@@ -13,8 +13,6 @@ from .preprocessors.markdown_output import create_markdown_output_step
 from .preprocessors.exceptions import PreprocessingError
 from typing import List, Dict, Any, Optional, Union, Callable
 from dataclasses import dataclass
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

@@ -1,85 +1,61 @@
 from datetime import datetime
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
-from fast_depends import Depends, inject
-from faststream import FastStream
-from faststream.redis import RedisBroker
-import logging
+from taskiq_faststream import StreamScheduler
+from taskiq.schedule_sources import LabelScheduleSource
+from loguru import logger
 
+from src.events.broker import taskiq_broker, broker, app
+from src.events.types import EventTopics, CrawlEvent, Student
 from src.config import settings
-from src.events.broker import get_broker, get_stream_app
 
-logger = logging.getLogger(__name__)
+# Create scheduler instance
+scheduler = StreamScheduler(
+    broker=taskiq_broker,
+    sources=[LabelScheduleSource(taskiq_broker)],
+)
 
-class EventScheduler:
-    @inject
-    def __init__(
-        self,
-        broker: RedisBroker = Depends(get_broker),
-        stream_app: FastStream = Depends(get_stream_app)
-    ):
-        self.broker = broker
-        self.stream_app = stream_app
-        self.scheduler = AsyncIOScheduler()
-        self.crawl_publisher = broker.publisher("crawl.schedule")
+@app.on_startup
+async def setup_schedules():
+    """Setup scheduled tasks for each student."""
+    logger.info("Setting up scheduled tasks...")
+    
+    try:
+        for student_config in settings.students:
+            logger.info(f"Setting up crawl schedule for student: {student_config.nickname}")
+            
+            # Create Student model
+            student = Student(
+                nickname=student_config.nickname,
+                email=student_config.email,
+                password=student_config.password,
+                emoji=student_config.emoji
+            )
+            
+            # Create CrawlEvent
+            event = CrawlEvent(
+                timestamp=datetime.now(),
+                student=student
+            )
+            
+            # Schedule the task using taskiq_broker
+            taskiq_broker.task(
+                message=event.model_dump(),
+                channel=EventTopics.CRAWL_SCHEDULE,
+                schedule=[
+                    # Weekend schedule - Run once at 10 AM on Saturday and Sunday
+                    {
+                        "cron": "0 10 * * 6,0",  # At 10:00 on Saturday and Sunday
+                        "labels": ["weekend_schedule"]
+                    },
+                    # Weekday schedule - Every 45 minutes from 8 AM to 3 PM
+                    {
+                        "cron": "*/45 8-15 * * 1-5",  # Every 45 minutes between 8 AM and 3 PM on weekdays
+                        "labels": ["weekday_schedule"]
+                    }
+                ],
+            )
+            logger.debug(f"Scheduled crawl tasks for {student.nickname}: weekday (*/45 8-15 * * 1-5) and weekend (0 10 * * 6,0)")
 
-    async def emit_crawl_event(self):
-        """Emit crawl events for each student to Redis."""
-        timestamp = datetime.now().isoformat()
-        
-        for student in settings.students:
-            logger.info(f"Emitting crawl event for student: {student.nickname}")
-            await self.crawl_publisher.publish({
-                "timestamp": timestamp,
-                "student": {
-                    "nickname": student.nickname,
-                    "email": student.email,
-                    "password": student.password,
-                    "emoji": student.emoji
-                }
-            })
-
-    def setup_schedules(self):
-        """Set up the complex scheduling requirements."""
-        # Weekend schedule - Run once at 10 AM on Saturday and Sunday
-        self.scheduler.add_job(
-            self.emit_crawl_event,
-            CronTrigger(
-                day_of_week='sat,sun',
-                hour=10,
-                minute=0
-            ),
-            id='weekend_schedule',
-            name='Weekend Schedule Check',
-            misfire_grace_time=3600  # Allow up to 1 hour delay
-        )
-
-        # Weekday schedule - Every 45 minutes from 8 AM to 3 PM
-        self.scheduler.add_job(
-            self.emit_crawl_event,
-            IntervalTrigger(minutes=45),
-            id='weekday_schedule',
-            name='Weekday Schedule Check',
-            day_of_week='mon-fri',
-            start_date=datetime.now().replace(
-                hour=8, minute=0, second=0, microsecond=0
-            ),
-            end_date=datetime.now().replace(
-                hour=15, minute=0, second=0, microsecond=0
-            ),
-            misfire_grace_time=900  # Allow up to 15 minutes delay
-        )
-
-    async def start(self):
-        """Start the scheduler."""
-        logger.info("Starting event scheduler")
-        self.setup_schedules()
-        self.scheduler.start()
-        logger.info("Event scheduler started successfully")
-
-    async def stop(self):
-        """Stop the scheduler."""
-        logger.info("Stopping event scheduler")
-        self.scheduler.shutdown()
-        logger.info("Event scheduler stopped successfully")
+        logger.info("All scheduled tasks set up successfully")
+    except Exception as e:
+        logger.error(f"Error in setup_schedules: {str(e)}")
+        raise

@@ -1,11 +1,9 @@
 from pathlib import Path
 import yaml
-import logging
+from loguru import logger
 from typing import Dict, List, Any
 from .exceptions import PreprocessingError
 from . import lessons  # Import the lessons module
-
-logger = logging.getLogger(__name__)
 
 
 class Translator:

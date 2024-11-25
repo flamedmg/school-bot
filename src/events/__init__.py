@@ -9,27 +9,21 @@ from src.events.types import (
     TelegramCommandEvent,
     EventTopics
 )
-from src.events.base_handler import BaseEventHandler
-from src.events.crawl_handler import CrawlEventHandler
-from src.events.schedule_handler import ScheduleEventHandler
-from src.events.telegram_handler import TelegramEventHandler
-from src.events.broker import get_broker, get_stream_app
-from src.events.manager import EventManager, event_manager
+from src.events.broker import broker, app, taskiq_broker
+from src.events.scheduler import scheduler
 
+# Import all handlers to ensure they're registered
+from src.events import crawl_handler
+from src.events import schedule_handler
+from src.events import telegram_handler
+
+# Export public API
 __all__ = [
-    'Student',
-    'CrawlEvent',
-    'MarkEvent',
-    'AnnouncementEvent',
-    'TelegramMessageEvent',
-    'TelegramCommandEvent',
-    'EventTopics',
-    'BaseEventHandler',
-    'CrawlEventHandler',
-    'ScheduleEventHandler',
-    'TelegramEventHandler',
-    'EventManager',
-    'event_manager',
-    'get_broker',
-    'get_stream_app',
+    'broker',
+    'app',
+    'taskiq_broker',
+    'scheduler',
+    'crawl_handler',
+    'schedule_handler',
+    'telegram_handler',
 ]

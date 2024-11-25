@@ -1,5 +1,5 @@
 import json
-import logging
+from loguru import logger
 from datetime import datetime
 
 """
@@ -37,8 +37,6 @@ Final result: round((9 + 7 + 10) / 3) = 9
 from typing import List, Union, Optional
 import re
 from .exceptions import MarkPreprocessingError
-
-logger = logging.getLogger(__name__)
 
 
 def convert_single_mark(mark: str, context: dict = None) -> Optional[int]:

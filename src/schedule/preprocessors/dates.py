@@ -1,9 +1,7 @@
 import json
-import logging
+from loguru import logger
 from datetime import datetime
 from typing import List, Dict
-
-logger = logging.getLogger(__name__)
 
 
 def preprocess_dates_and_merge(data: list) -> list:

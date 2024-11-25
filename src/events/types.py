@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Tuple
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr, NonNegativeInt
 
@@ -35,6 +35,34 @@ class CrawlEvent(BaseModel):
     student: Student = Field(
         ..., 
         description="Student information for crawling"
+    )
+
+class CrawlErrorEvent(BaseModel):
+    """Event emitted when a crawling or parsing error occurs"""
+    timestamp: datetime = Field(
+        ...,
+        description="Time when the error occurred",
+        examples=[datetime.now()]
+    )
+    student_nickname: str = Field(
+        ...,
+        description="Student's unique identifier",
+        examples=["student1"]
+    )
+    error_type: str = Field(
+        ...,
+        description="Type of error that occurred",
+        examples=["login_failed", "parsing_error", "network_error"]
+    )
+    error_message: str = Field(
+        ...,
+        description="Detailed error message",
+        examples=["Failed to parse schedule: Invalid HTML structure"]
+    )
+    screenshot_path: Optional[str] = Field(
+        None,
+        description="Path to error screenshot if available",
+        examples=["data/page_failure_20240315_123456.png"]
     )
 
 class MarkEvent(BaseModel):
@@ -152,7 +180,35 @@ class TelegramCommandEvent(BaseModel):
 # Event topic constants
 class EventTopics:
     CRAWL_SCHEDULE = "crawl.schedule"
+    CRAWL_ERROR = "crawl.error"  # New topic for crawl errors
     NEW_MARK = "schedule.new_mark"
     NEW_ANNOUNCEMENT = "schedule.new_announcement"
     TELEGRAM_MESSAGE = "telegram.message"
     TELEGRAM_COMMAND = "telegram.command"
+
+
+GRADE_EMOJIS = {
+        1: "💩",  # Total disaster, comrade
+        2: "🪰",  # Like annoying fly in soup
+        3: "🗑️",  # To gulag with this grade
+        4: "🥔",  # Potato - basic survival, comrade!
+        5: "⚒️",  # Hammer and sickle - working on it!
+        6: "🚜",  # Tractor - making progress like a Kolkhoz!
+        7: "🎭",  # Theater mask - Bolshoi level!
+        8: "🚀",  # Sputnik - cosmic achievement!
+        9: "🐻",  # Russian bear - powerful performance!
+        10: "⭐️"  # Red star - supreme Soviet excellence!
+    }
+
+GRADE_MESSAGES = {
+        1: "Катастрофа, товарищ!",
+        2: "Как муха в супе...",
+        3: "Прямой путь в ГУЛАГ",
+        4: "От картошки к звездам!",
+        5: "Труд крепкий!",
+        6: "Вперед к победе!",
+        7: "Культурная революция!",
+        8: "Космический успех!",
+        9: "Могучий результат!",
+        10: "Высшее достижение товарища!"
+    }

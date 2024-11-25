@@ -1,6 +1,6 @@
-import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from loguru import logger
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -8,8 +8,6 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel
 
 from .config import settings
-
-logger = logging.getLogger(__name__)
 
 # Create async engine
 engine = create_async_engine(

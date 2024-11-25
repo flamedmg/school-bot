@@ -1,64 +1,40 @@
-import logging
-
+from loguru import logger
 from telethon import TelegramClient, events
-from telethon.tl.types import Message, Chat, Channel
+from telethon.errors import PeerIdInvalidError
 
-logger = logging.getLogger(__name__)
+from src.config import settings
 
-
-async def start_handler(event: Message):
-    """Handle /start command."""
-    chat = await event.get_chat()
-    logger.info(f"Received /start command from chat ID: {chat.id}")
-    
-    await event.respond(
-        "👋 Welcome to School Parent Assistant Bot!\n\n"
-        "I'll help you stay updated with:\n"
-        "📚 School schedules\n"
-        "📧 Important notifications\n"
-        "📊 Academic performance\n\n"
-        "Use /help to see available commands."
-    )
-
-
-async def help_handler(event: Message):
-    """Handle /help command."""
-    chat = await event.get_chat()
-    logger.info(f"Received /help command from chat ID: {chat.id}")
-    
-    await event.respond(
-        "Available commands:\n\n"
-        "/schedule - View today's schedule\n"
-        "/homework - Check homework assignments\n"
-        "/grades - View recent grades\n"
-        "/notifications - Manage notification settings\n"
-        "/help - Show this help message"
-    )
-
-
-async def message_handler(event: Message):
-    """Handle all messages to log chat IDs."""
-    chat = await event.get_chat()
-    if isinstance(chat, (Chat, Channel)):
-        logger.info(f"Message received in chat/channel - Title: {chat.title}, ID: {chat.id}")
-    else:
-        logger.info(f"Message received from chat ID: {chat.id}")
-
+async def send_welcome_message(bot: TelegramClient, chat_id: int):
+    """Send welcome message to the specified chat."""
+    try:
+        logger.info(f"Sending welcome message to chat {chat_id}...")
+        await bot.send_message(
+            chat_id,
+            "🚀 Bot has started and is ready to assist you!\n\n"
+            "Available commands:\n"
+            "/schedule - View today's schedule\n"
+            "/homework - Check homework assignments\n"
+            "/grades - View recent grades\n"
+            "/notifications - Manage notification settings\n"
+            "/help - Show help message",
+        )
+        logger.info("Welcome message sent successfully")
+    except PeerIdInvalidError:
+        logger.error(
+            "Failed to send welcome message: Invalid chat ID format. "
+            f"Current chat_id: {chat_id}. "
+            "Please make sure:\n"
+            "1. The bot is added to the group/channel\n"
+            "2. The bot has admin privileges in the group/channel\n"
+            "3. Send a message in the group/channel to get the correct ID\n"
+            "4. Update TELEGRAM_CHAT_ID in .env with the ID shown in logs"
+        )
+    except Exception as e:
+        logger.error(f"Failed to send welcome message: {str(e)}")
 
 def setup_handlers(bot: TelegramClient):
-    """Register all message handlers."""
-    # Command handlers
-    bot.add_event_handler(
-        start_handler,
-        events.NewMessage(pattern='/start')
-    )
-    bot.add_event_handler(
-        help_handler,
-        events.NewMessage(pattern='/help')
-    )
-    # General message handler to log chat IDs
-    bot.add_event_handler(
-        message_handler,
-        events.NewMessage()
-    )
-    logger.info("Bot handlers registered")
+    """Setup Telegram bot handlers."""
+    logger.info("Setting up Telegram bot handlers...")
+    # Here you would set up any direct Telegram event handlers
+    # that aren't handled through FastStream
+    logger.info("Telegram bot handlers registered successfully")

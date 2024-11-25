@@ -1,12 +1,11 @@
-import logging
 from datetime import datetime, timedelta
 from typing import List, Dict
 from faststream.redis import RedisBroker
+from loguru import logger
 
 from src.schedule.crawler import ScheduleCrawler
 from src.database.repository import ScheduleRepository
 
-logger = logging.getLogger(__name__)
 
 class StudentManager:
     def __init__(self, email: str, password: str, nickname: str, broker: RedisBroker, repository: ScheduleRepository):

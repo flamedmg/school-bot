@@ -49,7 +49,7 @@ def credentials():
 async def test_real_login(credentials):
     """Test real login to e-klasse"""
     logger.info("Starting login test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"])
+    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
 
     try:
         cookies = await crawler.login()
@@ -62,6 +62,7 @@ async def test_real_login(credentials):
         logger.info("Successfully logged in and retrieved cookies:")
         for cookie in cookies:
             logger.debug(f"Cookie: {cookie.get('name')}: domain={cookie.get('domain')}")
+        
 
     except Exception as e:
         logger.error(f"Login failed: {str(e)}")
@@ -72,7 +73,7 @@ async def test_real_login(credentials):
 async def test_cookie_reuse(credentials):
     """Test that cookies are properly reused across requests"""
     logger.info("Starting cookie reuse test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"])
+    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
 
     try:
         # First request - should perform login

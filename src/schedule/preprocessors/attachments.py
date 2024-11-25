@@ -9,13 +9,11 @@ Modifications:
 - All attachments with a URL are included in the output.
 """
 
-import logging
+from loguru import logger
 from typing import Dict, List, Any
 from urllib.parse import unquote, urlparse, parse_qs
 from pathlib import Path
 from .exceptions import PreprocessingError
-
-logger = logging.getLogger(__name__)
 
 
 def extract_filename_from_url(url: str) -> str:

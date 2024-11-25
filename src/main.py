@@ -1,82 +1,49 @@
 import asyncio
-import logging
 import uvicorn
+from loguru import logger
+
+from src.utils import setup_logging, is_port_in_use, find_free_port
+
+# Configure logging first, before any other imports
+logger = setup_logging()
 
 from telethon import TelegramClient
-from telethon.errors import PeerIdInvalidError
-from telethon.tl.types import PeerChannel
-from fast_depends import Depends, inject
-
 from src.config import settings
 from src.database import init_db
 from src.api.app import app as fastapi_app
-from src.telegram.bot import setup_handlers
-from src.events.manager import event_manager
+from src.telegram.bot import setup_handlers, send_welcome_message
 from src.events.broker import app as stream_app
 from src.dependencies import Dependencies
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+# Import handlers to ensure they're registered
+from src.events import crawl_handler, schedule_handler, telegram_handler
 
 # Initialize Telegram client
 bot = TelegramClient("school_bot", settings.telegram_api_id, settings.telegram_api_hash)
 
-@inject
-async def send_welcome_message(
-    chat_id: int, bot: TelegramClient = Depends(Dependencies.get_bot)
-):
-    """Send welcome message to the specified chat."""
-    try:
-        await bot.send_message(
-            chat_id,
-            "🚀 Bot has started and is ready to assist you!\n\n"
-            "Available commands:\n"
-            "/schedule - View today's schedule\n"
-            "/homework - Check homework assignments\n"
-            "/grades - View recent grades\n"
-            "/notifications - Manage notification settings\n"
-            "/help - Show help message",
-        )
-        logger.info(f"Welcome message sent to chat ID: {chat_id}")
-    except PeerIdInvalidError:
-        logger.error(
-            f"Failed to send welcome message: Invalid chat ID format. "
-            f"Current chat_id: {chat_id}. "
-            f"Please make sure:\n"
-            f"1. The bot is added to the group/channel\n"
-            f"2. The bot has admin privileges in the group/channel\n"
-            f"3. Send a message in the group/channel to get the correct ID\n"
-            f"4. Update TELEGRAM_CHAT_ID in .env with the ID shown in logs"
-        )
-    except Exception as e:
-        logger.error(f"Failed to send welcome message: {str(e)}")
-
 async def startup():
     """Startup events for the application."""
     try:
+        logger.info("Starting application...")
+        
         # Initialize database
         db_initialized = await init_db()
         if not db_initialized:
             raise RuntimeError("Database initialization failed")
+        logger.info("Database initialized")
 
         # Start Telegram client
         await bot.start(bot_token=settings.telegram_bot_token)
+        logger.info("Telegram client started")
 
         # Register bot in dependency system
         Dependencies.set_bot(bot)
 
-        # Setup bot handlers
+        # Setup Telegram bot handlers
         setup_handlers(bot)
+        logger.info("Telegram handlers set up")
 
-        # Send welcome message or instructions for chat ID
-        await send_welcome_message(settings.telegram_chat_id)
-
-        # Initialize and start event manager
-        event_manager.initialize()
-        await event_manager.start()
+        # Send welcome message
+        await send_welcome_message(bot, settings.telegram_chat_id)
 
         logger.info("Application startup complete")
     except Exception as e:
@@ -86,8 +53,7 @@ async def startup():
 async def shutdown():
     """Shutdown events for the application."""
     try:
-        # Cleanup
-        await event_manager.stop()
+        logger.info("Starting shutdown sequence...")
         await bot.disconnect()
         logger.info("Application shutdown complete")
     except Exception as e:
@@ -96,16 +62,33 @@ async def shutdown():
 
 async def run_fastapi():
     """Run the FastAPI server"""
+    port = settings.api_port
+    
+    # Check if port is in use and find a free one if needed
+    if is_port_in_use(port):
+        try:
+            port = find_free_port(port + 1)
+            logger.warning(f"Original port {settings.api_port} was in use, using port {port} instead")
+        except RuntimeError as e:
+            logger.error(str(e))
+            return
+    
     config = uvicorn.Config(
         fastapi_app,
         host=settings.api_host,
-        port=settings.api_port,
+        port=port,
         workers=settings.api_workers,
         reload=True,
         loop="asyncio",
+        log_level="info",
+        log_config=None,  # Disable uvicorn's default logging config
+        access_log=False  # Disable access logging as it will be handled by our interceptor
     )
     server = uvicorn.Server(config)
-    await server.serve()
+    try:
+        await server.serve()
+    except Exception as e:
+        logger.error(f"FastAPI server error: {str(e)}")
 
 async def run_all():
     """Run all services concurrently"""
@@ -113,10 +96,11 @@ async def run_all():
         # Start application
         await startup()
         
-        # Run FastAPI server and FastStream app
+        # Run FastAPI server and FastStream worker
         await asyncio.gather(
             run_fastapi(),
-            stream_app.run()
+            stream_app.run(),
+            return_exceptions=True
         )
     except Exception as e:
         logger.error(f"Application error: {str(e)}")

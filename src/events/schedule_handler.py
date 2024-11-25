@@ -1,16 +1,14 @@
-import logging
 from telethon import TelegramClient
-from faststream import Depends
+from faststream import Depends, Logger
 
 from src.config import settings
 from src.events.types import MarkEvent, AnnouncementEvent, EventTopics
 from src.events.broker import broker, get_telegram
 
-logger = logging.getLogger(__name__)
-
 @broker.subscriber(EventTopics.NEW_MARK)
 async def handle_new_mark(
     event: MarkEvent,
+    logger: Logger,
     telegram: TelegramClient = Depends(get_telegram)
 ):
     """Handle new mark events and send Telegram notifications."""
@@ -43,6 +41,7 @@ async def handle_new_mark(
 @broker.subscriber(EventTopics.NEW_ANNOUNCEMENT)
 async def handle_new_announcement(
     event: AnnouncementEvent,
+    logger: Logger,
     telegram: TelegramClient = Depends(get_telegram)
 ):
     """Handle new announcement events and send Telegram notifications."""

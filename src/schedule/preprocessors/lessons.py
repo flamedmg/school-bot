@@ -1,9 +1,7 @@
 import json
-import logging
+from loguru import logger
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-
-logger = logging.getLogger(__name__)
 
 
 class DateTimeEncoder(json.JSONEncoder):
