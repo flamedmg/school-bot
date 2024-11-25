@@ -9,6 +9,7 @@ class StudentConfig(BaseModel):
     nickname: str = Field(description="Nickname to identify the student")
     email: str = Field(description="Student's school email")
     password: str = Field(description="Student's school email password")
+    emoji: str = Field(default="👤", description="Emoji to represent the student in notifications")
 
 
 class Settings(BaseSettings):
@@ -78,7 +79,7 @@ class Settings(BaseSettings):
     def students(self) -> List[StudentConfig]:
         """Parse student configurations from environment variables"""
         students = []
-        student_pattern = re.compile(r'^STUDENT_(EMAIL|PASSWORD)_(.+)$', re.IGNORECASE)
+        student_pattern = re.compile(r'^STUDENT_(EMAIL|PASSWORD|EMOJI)_(.+)$', re.IGNORECASE)
         
         # Collect all student-related environment variables
         student_vars: Dict[str, dict] = {}
@@ -100,6 +101,9 @@ class Settings(BaseSettings):
         # Create StudentConfig objects for complete configurations
         for nickname, config in student_vars.items():
             if 'email' in config and 'password' in config:
+                # Set default emoji if not provided
+                if 'emoji' not in config:
+                    config['emoji'] = '👤'
                 students.append(StudentConfig(**config))
         
         if not students:

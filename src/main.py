@@ -2,8 +2,6 @@ import asyncio
 import logging
 import uvicorn
 
-from faststream import FastStream
-from faststream.redis import RedisBroker
 from telethon import TelegramClient
 from telethon.errors import PeerIdInvalidError
 from telethon.tl.types import PeerChannel
@@ -13,8 +11,8 @@ from src.config import settings
 from src.database import init_db
 from src.api.app import app as fastapi_app
 from src.telegram.bot import setup_handlers
-from src.schedule.scheduler import CrawlScheduler
-from src.schedule.handlers import CrawlHandlers
+from src.events.manager import event_manager
+from src.events.broker import app as stream_app
 from src.dependencies import Dependencies
 
 # Configure logging
@@ -23,17 +21,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Initialize Redis broker and FastStream app
-broker = RedisBroker(str(settings.redis_url))
-stream_app = FastStream(broker)
-
 # Initialize Telegram client
 bot = TelegramClient("school_bot", settings.telegram_api_id, settings.telegram_api_hash)
-
-# Initialize scheduler and handlers
-scheduler = CrawlScheduler(broker, stream_app)
-crawl_handlers = CrawlHandlers(broker, stream_app)
-
 
 @inject
 async def send_welcome_message(
@@ -65,8 +54,6 @@ async def send_welcome_message(
     except Exception as e:
         logger.error(f"Failed to send welcome message: {str(e)}")
 
-
-@stream_app.on_startup
 async def startup():
     """Startup events for the application."""
     try:
@@ -74,10 +61,6 @@ async def startup():
         db_initialized = await init_db()
         if not db_initialized:
             raise RuntimeError("Database initialization failed")
-
-        # Connect to Redis broker
-        await broker.connect()
-        logger.info("Connected to Redis broker")
 
         # Start Telegram client
         await bot.start(bot_token=settings.telegram_bot_token)
@@ -91,27 +74,25 @@ async def startup():
         # Send welcome message or instructions for chat ID
         await send_welcome_message(settings.telegram_chat_id)
 
-        # Start scheduler
-        await scheduler.start()
+        # Initialize and start event manager
+        event_manager.initialize()
+        await event_manager.start()
+
         logger.info("Application startup complete")
     except Exception as e:
         logger.error(f"Startup failed: {str(e)}")
         raise
 
-
-@stream_app.on_shutdown
 async def shutdown():
     """Shutdown events for the application."""
     try:
         # Cleanup
-        await scheduler.stop()
+        await event_manager.stop()
         await bot.disconnect()
-        await broker.close()
         logger.info("Application shutdown complete")
     except Exception as e:
         logger.error(f"Shutdown error: {str(e)}")
         raise
-
 
 async def run_fastapi():
     """Run the FastAPI server"""
@@ -126,24 +107,22 @@ async def run_fastapi():
     server = uvicorn.Server(config)
     await server.serve()
 
-
-async def run_faststream():
-    """Run the FastStream application"""
-    try:
-        await stream_app.run()
-    except Exception as e:
-        logger.error(f"FastStream error: {str(e)}")
-        raise
-
-
 async def run_all():
     """Run all services concurrently"""
     try:
-        await asyncio.gather(run_fastapi(), run_faststream())
+        # Start application
+        await startup()
+        
+        # Run FastAPI server and FastStream app
+        await asyncio.gather(
+            run_fastapi(),
+            stream_app.run()
+        )
     except Exception as e:
         logger.error(f"Application error: {str(e)}")
         raise
-
+    finally:
+        await shutdown()
 
 if __name__ == "__main__":
     try:
