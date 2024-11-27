@@ -7,8 +7,8 @@ from src.events.types import (
     AnnouncementEvent,
     TelegramMessageEvent,
     TelegramCommandEvent,
-    EventTopics
 )
+from src.events.event_types import CrawlErrorEvent, EventTopics
 from src.events.broker import broker, app, taskiq_broker
 from src.events.scheduler import scheduler
 
@@ -19,11 +19,19 @@ from src.events import telegram_handler
 
 # Export public API
 __all__ = [
-    'broker',
-    'app',
-    'taskiq_broker',
-    'scheduler',
-    'crawl_handler',
-    'schedule_handler',
-    'telegram_handler',
+    "broker",
+    "app",
+    "taskiq_broker",
+    "scheduler",
+    "crawl_handler",
+    "schedule_handler",
+    "telegram_handler",
+    "Student",
+    "CrawlEvent",
+    "CrawlErrorEvent",
+    "MarkEvent",
+    "AnnouncementEvent",
+    "TelegramMessageEvent",
+    "TelegramCommandEvent",
+    "EventTopics",
 ]

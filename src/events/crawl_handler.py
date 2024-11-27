@@ -4,8 +4,10 @@ from loguru import logger as loguru_logger
 from datetime import datetime
 
 from src.config import settings
-from src.events.types import CrawlEvent, CrawlErrorEvent, EventTopics
+from src.events.types import CrawlEvent
+from src.events.event_types import CrawlErrorEvent, EventTopics
 from src.schedule.manager import StudentManager
+from src.schedule.exceptions import CrawlException
 from src.events.broker import broker, get_telegram, get_repository
 from src.database.repository import ScheduleRepository
 
@@ -38,12 +40,18 @@ async def handle_crawl_event(
         )
         logger.info(f"Successfully processed schedules for student: {student.nickname}")
 
+    except CrawlException as e:
+        # The manager will have already converted this to an event and published it
+        loguru_logger.error(f"Crawl error: {e.error_type} - {e.message}")
+        logger.error(f"Crawl error: {e.error_type} - {e.message}")
+        raise
+
     except Exception as e:
         error_msg = f"Error processing crawl event: {str(e)}"
         loguru_logger.error(error_msg)
         logger.error(error_msg)
 
-        # Emit error event instead of direct telegram message
+        # Create and emit error event for unexpected errors
         error_event = CrawlErrorEvent(
             timestamp=datetime.now(),
             student_nickname=event.student.nickname,
@@ -51,3 +59,4 @@ async def handle_crawl_event(
             error_message=error_msg,
         )
         await broker.publish(error_event, EventTopics.CRAWL_ERROR)
+        raise

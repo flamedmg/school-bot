@@ -8,6 +8,9 @@ from src.schedule.crawler import ScheduleCrawler, crawl_schedules
 """Real browser tests for e-klasse crawler
 
 This test module performs real browser interactions with e-klasse website.
+These tests are marked with @pytest.mark.real_crawler and are skipped by default
+to avoid unnecessary load on the e-klasse website.
+
 To run these tests:
 
 1. Create your test environment file:
@@ -17,8 +20,15 @@ To run these tests:
    EKLASSE_USERNAME=your_username
    EKLASSE_PASSWORD=your_password
 
-3. Run the tests:
-   pytest -v tests/crawl/test_real_crawler.py
+3. Run the tests in one of these ways:
+   - Run only real crawler tests:
+     pytest -v -m real_crawler tests/crawl/test_real_crawler.py
+
+   - Run specific test:
+     pytest -v tests/crawl/test_real_crawler.py::test_real_login
+
+   - Run with all other tests:
+     pytest -v --override-ini="addopts=" tests/
 
 The tests will automatically:
 - Load credentials from .env.test file (configured in conftest.py)
@@ -45,6 +55,7 @@ def credentials():
     return {"username": username, "password": password}
 
 
+@pytest.mark.real_crawler
 @pytest.mark.asyncio
 async def test_real_login(credentials):
     """Test real login to e-klasse"""
@@ -70,6 +81,7 @@ async def test_real_login(credentials):
         pytest.fail(f"Login failed: {str(e)}")
 
 
+@pytest.mark.real_crawler
 @pytest.mark.asyncio
 async def test_cookie_reuse(credentials):
     """Test that cookies are properly reused across requests"""
@@ -120,6 +132,7 @@ async def test_cookie_reuse(credentials):
         pytest.fail(f"Cookie reuse test failed: {str(e)}")
 
 
+@pytest.mark.real_crawler
 @pytest.mark.asyncio
 async def test_real_schedule_fetch(credentials):
     """Test fetching real schedules"""

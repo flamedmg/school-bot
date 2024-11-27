@@ -1,10 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Dict
 from faststream.redis import RedisBroker
 from loguru import logger
 
 from src.schedule.crawler import ScheduleCrawler
+from src.schedule.exceptions import CrawlException
 from src.database.repository import ScheduleRepository
+from src.events.event_types import CrawlErrorEvent, EventTopics
 
 
 class StudentManager:
@@ -26,26 +28,52 @@ class StudentManager:
         """Main process to handle schedule crawling and change detection."""
         logger.info("Starting schedule processing...")
 
-        # Initialize the crawler
-        crawler = ScheduleCrawler(self.username, self.password, self.nickname)
+        try:
+            # Initialize the crawler
+            crawler = ScheduleCrawler(self.username, self.password, self.nickname)
 
-        # Get schedules for the current and surrounding weeks
-        schedules = await crawler.get_schedules()
+            # Get schedules for the current and surrounding weeks
+            schedules = await crawler.get_schedules()
 
-        # Detect changes using the repository
-        changes = self.detect_changes(schedules)
+            # Detect changes using the repository
+            changes = self.detect_changes(schedules)
 
-        # Emit events if changes are detected
-        if changes:
-            await self.broker.publish(
-                {"student_nickname": self.nickname, "changes": changes},
-                "schedule.change_detected",
+            # Emit events if changes are detected
+            if changes:
+                await self.broker.publish(
+                    {"student_nickname": self.nickname, "changes": changes},
+                    "schedule.change_detected",
+                )
+
+            # Save the schedules to the repository
+            self.save_schedules(schedules)
+
+            logger.info("Schedule processing completed.")
+
+        except CrawlException as e:
+            # Convert CrawlException to CrawlErrorEvent
+            error_event = CrawlErrorEvent(
+                timestamp=e.timestamp,
+                student_nickname=e.student_nickname or self.nickname,
+                error_type=e.error_type,
+                error_message=e.message,
+                screenshot_path=e.screenshot_path,
             )
+            await self.broker.publish(error_event, EventTopics.CRAWL_ERROR)
+            logger.error(f"Crawl error: {e.error_type} - {e.message}")
+            raise  # Re-raise the exception after publishing the event
 
-        # Save the schedules to the repository
-        self.save_schedules(schedules)
-
-        logger.info("Schedule processing completed.")
+        except Exception as e:
+            # Handle unexpected errors
+            error_event = CrawlErrorEvent(
+                timestamp=datetime.now(),
+                student_nickname=self.nickname,
+                error_type="unexpected_error",
+                error_message=str(e),
+            )
+            await self.broker.publish(error_event, EventTopics.CRAWL_ERROR)
+            logger.error(f"Unexpected error: {str(e)}")
+            raise
 
     def detect_changes(self, schedules: List[Dict]) -> Dict:
         """Detect changes in the schedules using the repository."""

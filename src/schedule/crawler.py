@@ -9,8 +9,7 @@ from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 import os
 
 from src.schedule.preprocess import create_default_pipeline
-from src.events.types import CrawlErrorEvent, EventTopics
-from src.events.broker import broker
+from src.schedule.exceptions import LoginError, FetchError, ParseError, ProcessError
 
 
 class ScheduleCrawler:
@@ -24,27 +23,13 @@ class ScheduleCrawler:
         self.nickname = nickname
         logger.info("Initialized ScheduleCrawler")
 
-    async def _emit_error(
-        self, error_type: str, error_message: str, screenshot_path: Optional[str] = None
-    ):
-        """Helper method to emit crawl error events"""
-        error_event = CrawlErrorEvent(
-            timestamp=datetime.now(),
-            student_nickname=self.nickname,
-            error_type=error_type,
-            error_message=error_message,
-            screenshot_path=screenshot_path,
-        )
-        await broker.publish(error_event, EventTopics.CRAWL_ERROR)
-        logger.error(f"Emitted crawl error event: {error_type} - {error_message}")
-
     async def _perform_login(self, page: Page) -> None:
         """Handle the login process on the page"""
         try:
             # Make sure the page is fully loaded
             logger.debug("Waiting for main login form...")
             main_div = await page.wait_for_selector(
-                "div.main", state="visible", timeout=10000
+                "div.main", state="visible", timeout=5000  # Reduced timeout
             )
 
             # Find elements within the main div
@@ -72,31 +57,32 @@ class ScheduleCrawler:
             # Wait for navigation
             logger.debug("Waiting for successful login...")
             await page.wait_for_selector(
-                "div.student-selector", state="visible", timeout=30000
+                "div.student-selector",
+                state="visible",
+                timeout=15000,  # Reduced timeout
             )
 
             # Check if login was successful
             error_element = await page.query_selector(".error-message")
             if error_element:
                 error_text = await error_element.text_content()
-                await self._emit_error(
-                    "login_failed", f"Invalid credentials: {error_text}"
-                )
-                raise Exception(
-                    f"Login failed: Invalid credentials. Error message: {error_text}"
+                raise LoginError(
+                    f"Invalid credentials: {error_text}", student_nickname=self.nickname
                 )
 
         except Exception as e:
             screenshot_path = None
-            if isinstance(e, Exception) and not str(e).startswith("Login failed"):
+            if not isinstance(e, LoginError):
                 # This will capture a screenshot if the page navigation fails
                 os.makedirs("data", exist_ok=True)
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"data/page_failure_{timestamp}.png"
                 await page.screenshot(path=screenshot_path)
-
-            await self._emit_error("login_error", str(e), screenshot_path)
-            raise e
+            raise LoginError(
+                str(e),
+                screenshot_path=screenshot_path,
+                student_nickname=self.nickname,
+            )
 
     async def login(self) -> List[Dict]:
         """Perform login and return cookies"""
@@ -121,7 +107,6 @@ class ScheduleCrawler:
                 return cookies
 
             except Exception as e:
-                # Let _perform_login handle the error emission
                 raise e
 
         crawler_strategy = AsyncPlaywrightCrawlerStrategy(verbose=True)
@@ -135,8 +120,9 @@ class ScheduleCrawler:
                     url=self.SCHEDULE_URL,
                 )
             except Exception as e:
-                await self._emit_error("browser_error", str(e))
-                raise e
+                raise LoginError(
+                    f"Browser error: {str(e)}", student_nickname=self.nickname
+                )
 
         logger.info("Login completed successfully")
         return self.cookies
@@ -159,10 +145,10 @@ class ScheduleCrawler:
             return result.html
 
         except Exception as e:
-            await self._emit_error(
-                "fetch_error", f"Error fetching schedule for {date}: {str(e)}"
+            raise FetchError(
+                f"Error fetching schedule for {date}: {str(e)}",
+                student_nickname=self.nickname,
             )
-            return None
 
     async def get_schedule_for_week(self, date: datetime) -> List[Dict]:
         """Fetch schedule HTML for a specific week"""
@@ -188,10 +174,10 @@ class ScheduleCrawler:
                     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
                     raw_data = strategy.extract(html=result.html, url=url)
                 except Exception as e:
-                    await self._emit_error(
-                        "parsing_error", f"Failed to parse schedule HTML: {str(e)}"
+                    raise ParseError(
+                        f"Failed to parse schedule HTML: {str(e)}",
+                        student_nickname=self.nickname,
                     )
-                    raise e
 
                 try:
                     # Execute pipeline without capturing output
@@ -200,19 +186,15 @@ class ScheduleCrawler:
                     logger.info(f"Successfully processed schedule for {formatted_date}")
                     return final_data
                 except Exception as e:
-                    await self._emit_error(
-                        "processing_error", f"Failed to process schedule data: {str(e)}"
+                    raise ProcessError(
+                        f"Failed to process schedule data: {str(e)}",
+                        student_nickname=self.nickname,
                     )
-                    raise e
 
         except Exception as e:
-            if not str(e).startswith(
-                "Failed to"
-            ):  # Don't emit twice for already handled errors
-                await self._emit_error(
-                    "schedule_error", f"Error fetching schedule for {date}: {str(e)}"
-                )
-            return None
+            if not isinstance(e, (ParseError, ProcessError)):
+                raise FetchError(str(e), student_nickname=self.nickname)
+            raise
 
     async def get_schedules(self) -> List[any]:
         """Get schedules for current week and two previous weeks"""
@@ -249,9 +231,11 @@ class ScheduleCrawler:
                     logger.error(f"Failed to get schedule for week of {date}")
 
         except Exception as e:
-            await self._emit_error(
-                "schedules_error", f"Error getting schedules: {str(e)}"
-            )
+            if not isinstance(e, (LoginError, FetchError, ParseError, ProcessError)):
+                raise FetchError(
+                    f"Error getting schedules: {str(e)}", student_nickname=self.nickname
+                )
+            raise
 
         logger.info(
             f"Completed fetching schedules. Retrieved {len(schedules)} weeks of data"
