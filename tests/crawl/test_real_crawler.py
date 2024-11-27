@@ -14,7 +14,7 @@ To run these tests:
    cp .env.test.example .env.test
    
 2. Edit .env.test with your credentials:
-   EKLASSE_EMAIL=your.email@example.com
+   EKLASSE_USERNAME=your_username
    EKLASSE_PASSWORD=your_password
 
 3. Run the tests:
@@ -33,23 +33,25 @@ logger = logging.getLogger(__name__)
 @pytest.fixture
 def credentials():
     """Get credentials from .env.test file"""
-    email = os.getenv("EKLASSE_EMAIL")
+    username = os.getenv("EKLASSE_USERNAME")
     password = os.getenv("EKLASSE_PASSWORD")
 
-    if not email or not password:
+    if not username or not password:
         pytest.skip(
-            "EKLASSE_EMAIL and EKLASSE_PASSWORD not found in .env.test file.\n"
+            "EKLASSE_USERNAME and EKLASSE_PASSWORD not found in .env.test file.\n"
             "Please create .env.test from .env.test.example with your credentials."
         )
 
-    return {"email": email, "password": password}
+    return {"username": username, "password": password}
 
 
 @pytest.mark.asyncio
 async def test_real_login(credentials):
     """Test real login to e-klasse"""
     logger.info("Starting login test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
+    crawler = ScheduleCrawler(
+        credentials["username"], credentials["password"], "test_student"
+    )
 
     try:
         cookies = await crawler.login()
@@ -62,7 +64,6 @@ async def test_real_login(credentials):
         logger.info("Successfully logged in and retrieved cookies:")
         for cookie in cookies:
             logger.debug(f"Cookie: {cookie.get('name')}: domain={cookie.get('domain')}")
-        
 
     except Exception as e:
         logger.error(f"Login failed: {str(e)}")
@@ -73,7 +74,9 @@ async def test_real_login(credentials):
 async def test_cookie_reuse(credentials):
     """Test that cookies are properly reused across requests"""
     logger.info("Starting cookie reuse test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
+    crawler = ScheduleCrawler(
+        credentials["username"], credentials["password"], "test_student"
+    )
 
     try:
         # First request - should perform login
@@ -121,7 +124,9 @@ async def test_cookie_reuse(credentials):
 async def test_real_schedule_fetch(credentials):
     """Test fetching real schedules"""
     logger.info("Starting schedule fetch test")
-    crawler = ScheduleCrawler(credentials["email"], credentials["password"], "test_student")
+    crawler = ScheduleCrawler(
+        credentials["username"], credentials["password"], "test_student"
+    )
 
     try:
         # Get current week schedule

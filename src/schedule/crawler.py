@@ -12,25 +12,28 @@ from src.schedule.preprocess import create_default_pipeline
 from src.events.types import CrawlErrorEvent, EventTopics
 from src.events.broker import broker
 
+
 class ScheduleCrawler:
     BASE_URL = "https://www.e-klase.lv"
     SCHEDULE_URL = "https://my.e-klase.lv/Family/Diary"
 
-    def __init__(self, email: str, password: str, nickname: str):
-        self.email = email
+    def __init__(self, username: str, password: str, nickname: str):
+        self.username = username
         self.password = password
         self.cookies = None
         self.nickname = nickname
         logger.info("Initialized ScheduleCrawler")
 
-    async def _emit_error(self, error_type: str, error_message: str, screenshot_path: Optional[str] = None):
+    async def _emit_error(
+        self, error_type: str, error_message: str, screenshot_path: Optional[str] = None
+    ):
         """Helper method to emit crawl error events"""
         error_event = CrawlErrorEvent(
             timestamp=datetime.now(),
             student_nickname=self.nickname,
             error_type=error_type,
             error_message=error_message,
-            screenshot_path=screenshot_path
+            screenshot_path=screenshot_path,
         )
         await broker.publish(error_event, EventTopics.CRAWL_ERROR)
         logger.error(f"Emitted crawl error event: {error_type} - {error_message}")
@@ -41,8 +44,8 @@ class ScheduleCrawler:
             # Make sure the page is fully loaded
             logger.debug("Waiting for main login form...")
             main_div = await page.wait_for_selector(
-                    "div.main", state="visible", timeout=10000
-                )
+                "div.main", state="visible", timeout=10000
+            )
 
             # Find elements within the main div
             username_input = await main_div.wait_for_selector(
@@ -54,7 +57,7 @@ class ScheduleCrawler:
 
             # Fill credentials
             logger.debug("Filling login credentials...")
-            await username_input.fill(self.email)
+            await username_input.fill(self.username)
             await password_input.fill(self.password)
 
             # Find and click submit button within main div
@@ -68,14 +71,20 @@ class ScheduleCrawler:
 
             # Wait for navigation
             logger.debug("Waiting for successful login...")
-            await page.wait_for_selector("div.student-selector", state="visible", timeout=30000)
+            await page.wait_for_selector(
+                "div.student-selector", state="visible", timeout=30000
+            )
 
             # Check if login was successful
             error_element = await page.query_selector(".error-message")
             if error_element:
                 error_text = await error_element.text_content()
-                await self._emit_error("login_failed", f"Invalid credentials: {error_text}")
-                raise Exception(f"Login failed: Invalid credentials. Error message: {error_text}")
+                await self._emit_error(
+                    "login_failed", f"Invalid credentials: {error_text}"
+                )
+                raise Exception(
+                    f"Login failed: Invalid credentials. Error message: {error_text}"
+                )
 
         except Exception as e:
             screenshot_path = None
@@ -85,7 +94,7 @@ class ScheduleCrawler:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 screenshot_path = f"data/page_failure_{timestamp}.png"
                 await page.screenshot(path=screenshot_path)
-                
+
             await self._emit_error("login_error", str(e), screenshot_path)
             raise e
 
@@ -99,18 +108,18 @@ class ScheduleCrawler:
                 viewport={"width": 1920, "height": 1080}
             )
             page = await context.new_page()
-            
+
             try:
                 logger.debug("Navigating to login page...")
                 await page.goto(self.BASE_URL)
                 await self._perform_login(page)
-                
+
                 # Get cookies after successful login
                 logger.debug("Login successful, retrieving cookies...")
                 cookies = await context.cookies()
                 self.cookies = cookies
                 return cookies
-                
+
             except Exception as e:
                 # Let _perform_login handle the error emission
                 raise e
@@ -150,7 +159,9 @@ class ScheduleCrawler:
             return result.html
 
         except Exception as e:
-            await self._emit_error("fetch_error", f"Error fetching schedule for {date}: {str(e)}")
+            await self._emit_error(
+                "fetch_error", f"Error fetching schedule for {date}: {str(e)}"
+            )
             return None
 
     async def get_schedule_for_week(self, date: datetime) -> List[Dict]:
@@ -177,7 +188,9 @@ class ScheduleCrawler:
                     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
                     raw_data = strategy.extract(html=result.html, url=url)
                 except Exception as e:
-                    await self._emit_error("parsing_error", f"Failed to parse schedule HTML: {str(e)}")
+                    await self._emit_error(
+                        "parsing_error", f"Failed to parse schedule HTML: {str(e)}"
+                    )
                     raise e
 
                 try:
@@ -187,12 +200,18 @@ class ScheduleCrawler:
                     logger.info(f"Successfully processed schedule for {formatted_date}")
                     return final_data
                 except Exception as e:
-                    await self._emit_error("processing_error", f"Failed to process schedule data: {str(e)}")
+                    await self._emit_error(
+                        "processing_error", f"Failed to process schedule data: {str(e)}"
+                    )
                     raise e
 
         except Exception as e:
-            if not str(e).startswith("Failed to"):  # Don't emit twice for already handled errors
-                await self._emit_error("schedule_error", f"Error fetching schedule for {date}: {str(e)}")
+            if not str(e).startswith(
+                "Failed to"
+            ):  # Don't emit twice for already handled errors
+                await self._emit_error(
+                    "schedule_error", f"Error fetching schedule for {date}: {str(e)}"
+                )
             return None
 
     async def get_schedules(self) -> List[any]:
@@ -230,7 +249,9 @@ class ScheduleCrawler:
                     logger.error(f"Failed to get schedule for week of {date}")
 
         except Exception as e:
-            await self._emit_error("schedules_error", f"Error getting schedules: {str(e)}")
+            await self._emit_error(
+                "schedules_error", f"Error getting schedules: {str(e)}"
+            )
 
         logger.info(
             f"Completed fetching schedules. Retrieved {len(schedules)} weeks of data"
@@ -238,10 +259,10 @@ class ScheduleCrawler:
         return schedules
 
 
-async def crawl_schedules(email: str, password: str, nickname: str) -> List[str]:
+async def crawl_schedules(username: str, password: str, nickname: str) -> List[str]:
     """Main function to crawl schedules"""
     logger.info("Starting schedule crawling process...")
-    crawler = ScheduleCrawler(email, password, nickname)
+    crawler = ScheduleCrawler(username, password, nickname)
     result = await crawler.get_schedules()
     logger.info("Schedule crawling process completed")
     return result

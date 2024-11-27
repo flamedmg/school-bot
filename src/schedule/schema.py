@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field, validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 import hashlib
 
 
@@ -75,13 +75,15 @@ class Lesson(BaseModel):
         if self.homework:
             self.homework._day = self._day
 
-    @validator("subject")
+    @field_validator("subject")
+    @classmethod
     def validate_subject(cls, v):
         if not v or not v.strip():
             raise ValueError("Subject cannot be empty")
         return v.strip()
 
-    @validator("mark")
+    @field_validator("mark")
+    @classmethod
     def validate_mark(cls, v):
         if v is not None and not (1 <= v <= 10):
             raise ValueError("Mark must be between 1 and 10")
@@ -186,13 +188,15 @@ class Schedule(BaseModel):
         for attachment in self.attachments:
             attachment._day = self.days[0] if self.days else None
 
-    @validator("days")
+    @field_validator("days")
+    @classmethod
     def validate_days(cls, v):
         if not v:
             raise ValueError("Schedule must have at least one day")
         return v
 
-    @validator("nickname")
+    @field_validator("nickname")
+    @classmethod
     def validate_nickname(cls, v):
         if not v or not v.strip():
             raise ValueError("Nickname cannot be empty")
