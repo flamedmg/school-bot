@@ -13,6 +13,7 @@ from .preprocessors.markdown_output import create_markdown_output_step
 from .preprocessors.exceptions import PreprocessingError
 from typing import List, Dict, Any, Optional, Union, Callable
 from dataclasses import dataclass
+import traceback
 
 
 @dataclass
@@ -38,6 +39,7 @@ class PreprocessingPipeline:
         for i, step in enumerate(self.steps, 1):
             try:
                 logger.info(f"Step {i}/{total_steps}: Executing {step.name}")
+                logger.debug(f"Input data for {step.name}: {result}")
                 result = step.function(result)
 
                 # Log counts based on result type
@@ -58,6 +60,8 @@ class PreprocessingPipeline:
                 logger.error(
                     f"Unexpected error in preprocessing step {step.name}: {str(e)}"
                 )
+                logger.debug(f"Data causing error in {step.name}: {result}")
+                logger.error("Stack trace:", traceback.format_exc())
                 raise
 
         # Add nickname to final result if provided
@@ -71,7 +75,7 @@ class PreprocessingPipeline:
 
 def create_default_pipeline(
     markdown_output_path: Optional[Union[str, Path]] = None,
-    nickname: Optional[str] = None
+    nickname: Optional[str] = None,
 ):
     """Create the default preprocessing pipeline with all steps
 

@@ -22,8 +22,7 @@ async def handle_crawl_event(
     """Handle crawl events for schedule updates."""
     try:
         student = event.student
-        loguru_logger.info(f"Processing crawl event for student: {student.nickname}")
-        logger.info(f"Processing crawl event for student: {student.nickname}")
+        logger.info(f"Processing crawl event for student: **{student.nickname}**")
 
         # Create and use StudentManager to process schedules
         manager = StudentManager(
@@ -36,9 +35,8 @@ async def handle_crawl_event(
 
         await manager.process_schedules()
         loguru_logger.info(
-            f"Successfully processed schedules for student: {student.nickname}"
+            f"Successfully processed schedules for student: **{student.nickname}**"
         )
-        logger.info(f"Successfully processed schedules for student: {student.nickname}")
 
     except CrawlException as e:
         # The manager will have already converted this to an event and published it

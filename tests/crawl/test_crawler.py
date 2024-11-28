@@ -226,23 +226,16 @@ async def test_get_schedules(mock_cookies, mock_schedule_data):
         patch(
             "crawl4ai.extraction_strategy.JsonCssExtractionStrategy.extract"
         ) as mock_extract,
-        patch(
-            "src.schedule.preprocess.create_default_pipeline"
-        ) as mock_create_pipeline,
     ):
         # Configure crawler
         crawler_instance = AsyncMock()
         crawler_instance.arun = AsyncMock()
+        crawler_instance.arun.return_value = AsyncMock(html="<html>test</html>")
         MockCrawler.return_value.__aenter__.return_value = crawler_instance
         MockCrawler.return_value.__aexit__ = AsyncMock(return_value=None)
 
         # Configure extraction
         mock_extract.return_value = mock_schedule_data
-
-        # Configure pipeline
-        mock_pipeline = MagicMock()
-        mock_pipeline.execute = MagicMock(return_value=mock_schedule_data)
-        mock_create_pipeline.return_value = mock_pipeline
 
         # Create crawler with pre-set cookies
         crawler = ScheduleCrawler("test@example.com", "password", "test_student")
@@ -251,8 +244,16 @@ async def test_get_schedules(mock_cookies, mock_schedule_data):
         # Test getting schedules
         schedules = await crawler.get_schedules()
 
+        # Should return 3 tuples of (raw_data, html_content)
         assert len(schedules) == 3
-        assert all(isinstance(schedule, list) for schedule in schedules)
+        assert all(isinstance(schedule, tuple) for schedule in schedules)
+        assert all(
+            len(schedule) == 2 for schedule in schedules
+        )  # Each tuple has 2 items
+        assert all(
+            schedule[0] == mock_schedule_data for schedule in schedules
+        )  # Raw data
+        assert all(schedule[1] == "<html>test</html>" for schedule in schedules)  # HTML
         assert mock_extract.call_count == 3
 
 
@@ -264,7 +265,13 @@ async def test_crawl_schedules_integration():
     with patch("src.schedule.crawler.ScheduleCrawler") as MockScheduleCrawler:
         # Configure crawler
         mock_crawler = AsyncMock()
-        mock_crawler.get_schedules = AsyncMock(return_value=["week1", "week2", "week3"])
+        mock_crawler.get_schedules = AsyncMock(
+            return_value=[
+                ({"data": "week1"}, "<html>1</html>"),
+                ({"data": "week2"}, "<html>2</html>"),
+                ({"data": "week3"}, "<html>3</html>"),
+            ]
+        )
         MockScheduleCrawler.return_value = mock_crawler
 
         # Test crawl_schedules
@@ -273,6 +280,7 @@ async def test_crawl_schedules_integration():
         )
 
         assert len(schedules) == 3
+        assert all(isinstance(schedule, tuple) for schedule in schedules)
         MockScheduleCrawler.assert_called_once_with(
             "test@example.com", "password", "test_student"
         )

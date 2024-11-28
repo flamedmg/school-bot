@@ -36,3 +36,4 @@ class EventTopics:
     NEW_ANNOUNCEMENT = "schedule.new_announcement"
     TELEGRAM_MESSAGE = "telegram.message"
     TELEGRAM_COMMAND = "telegram.command"
+    NEW_ATTACHMENT = "schedule.new_attachment"  # Topic for new attachments

@@ -84,6 +84,35 @@ class AnnouncementEvent(BaseModel):
     )
 
 
+class AttachmentEvent(BaseModel):
+    """Event emitted when a new attachment is detected"""
+    
+    student_nickname: str = Field(
+        ..., description="Student's unique identifier", examples=["student1"]
+    )
+    filename: str = Field(
+        ..., description="Name of the attachment file", examples=["homework.pdf"]
+    )
+    url: str = Field(
+        ..., description="URL of the attachment", examples=["https://my.e-klase.lv/attachment/123"]
+    )
+    cookies: dict = Field(
+        ..., description="Cookies needed for authentication", examples=[{"sessionid": "abc123"}]
+    )
+    schedule_id: str = Field(
+        ..., description="Schedule unique ID (YYYYWW)", examples=["202448"]
+    )
+    subject: str = Field(
+        ..., description="Subject the attachment is for", examples=["Mathematics"]
+    )
+    lesson_number: str = Field(
+        ..., description="Lesson number in the day", examples=["1", "2"]
+    )
+    day_id: str = Field(
+        ..., description="Unique identifier of the day", examples=["20241128"]
+    )
+
+
 class TelegramMessageEvent(BaseModel):
     """Event emitted when a Telegram message is received"""
 

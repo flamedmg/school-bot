@@ -7,6 +7,7 @@ Adds an 'attachments' key to the root level of the data structure.
 Modifications:
 - Attachments without a filename are now processed, and the filename is extracted from the URL if possible.
 - All attachments with a URL are included in the output.
+- Each attachment includes schedule_id, subject, lesson number, and day_id for proper file organization.
 """
 
 from loguru import logger
@@ -62,6 +63,10 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             logger.info("No data to process")
             return [{"attachments": []}]
 
+        # Debug log input data
+        logger.debug("Input data structure:")
+        logger.debug(data)
+
         total_days = 0
         total_lessons = 0
         total_homework = 0
@@ -71,9 +76,19 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
             days = data[0]["days"]
             wrap_output = True
+            # Get schedule_id from the first day's date
+            if days and isinstance(days[0], dict) and "date" in days[0]:
+                first_date = days[0]["date"]
+                schedule_id = first_date.strftime("%Y%W")  # Get year and week number
+                logger.debug(
+                    f"First day date: {first_date}, schedule_id: {schedule_id}"
+                )
+            else:
+                schedule_id = ""
         else:
             days = data
             wrap_output = False
+            schedule_id = ""
 
         total_days = len(days)
         logger.info(f"Processing attachments for {total_days} days")
@@ -84,6 +99,19 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 raise PreprocessingError(
                     "Failed to extract attachments: Invalid day data type", {"day": day}
                 )
+
+            # Debug log day structure
+            logger.debug("Day structure:")
+            logger.debug(day)
+
+            # Get day's date and format as YYYYMMDD for unique_id
+            day_date = day.get("date")
+            if day_date:
+                day_id = day_date.strftime("%Y%m%d")
+                logger.debug(f"Day date: {day_date}, day_id: {day_id}")
+            else:
+                day_id = ""
+                logger.warning("No date found in day object")
 
             lessons = day.get("lessons", [])
             if not isinstance(lessons, list):
@@ -118,6 +146,10 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                         {"attachments": attachments},
                     )
 
+                # Get lesson details
+                subject = lesson.get("subject", "")
+                lesson_number = str(lesson.get("index", ""))
+
                 for attachment in attachments:
                     if not isinstance(attachment, dict):
                         raise PreprocessingError(
@@ -149,12 +181,25 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                                 else:
                                     filename = "link"
 
-                        all_attachments.append({"filename": filename, "url": url})
+                        # Add attachment with context
+                        attachment_data = {
+                            "filename": filename,
+                            "url": url,
+                            "schedule_id": schedule_id,
+                            "subject": subject,
+                            "lesson_number": lesson_number,
+                            "day_id": day_id,
+                        }
+                        logger.debug(f"Adding attachment: {attachment_data}")
+                        all_attachments.append(attachment_data)
 
         logger.info(f"Successfully processed attachments:")
         logger.info(f"  - {total_lessons} lessons checked")
         logger.info(f"  - {total_homework} homework entries found")
         logger.info(f"  - {total_attachments} attachments extracted")
+        logger.debug("All attachments:")
+        for att in all_attachments:
+            logger.debug(att)
 
         # Create output structure
         result = data[0].copy() if wrap_output else {"days": days}

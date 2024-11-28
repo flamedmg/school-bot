@@ -4,7 +4,8 @@ from taskiq.schedule_sources import LabelScheduleSource
 from loguru import logger
 
 from src.events.broker import taskiq_broker, broker, app
-from src.events.types import EventTopics, CrawlEvent, Student
+from src.events.types import CrawlEvent, Student
+from src.events.event_types import EventTopics
 from src.config import settings
 
 # Create scheduler instance

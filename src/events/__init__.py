@@ -5,6 +5,7 @@ from src.events.types import (
     CrawlEvent,
     MarkEvent,
     AnnouncementEvent,
+    AttachmentEvent,
     TelegramMessageEvent,
     TelegramCommandEvent,
 )
@@ -16,6 +17,7 @@ from src.events.scheduler import scheduler
 from src.events import crawl_handler
 from src.events import schedule_handler
 from src.events import telegram_handler
+from src.events import attachment_handler
 
 # Export public API
 __all__ = [
@@ -26,11 +28,13 @@ __all__ = [
     "crawl_handler",
     "schedule_handler",
     "telegram_handler",
+    "attachment_handler",
     "Student",
     "CrawlEvent",
     "CrawlErrorEvent",
     "MarkEvent",
     "AnnouncementEvent",
+    "AttachmentEvent",
     "TelegramMessageEvent",
     "TelegramCommandEvent",
     "EventTopics",

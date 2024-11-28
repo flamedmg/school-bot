@@ -33,6 +33,11 @@ def test_convert_single_mark():
         convert_single_mark("11")  # Outside valid range
     assert "outside valid range" in str(exc.value)
 
+    # Test non-string input
+    assert convert_single_mark(123) is None
+    assert convert_single_mark(None) is None
+    assert convert_single_mark({}) is None
+
 
 def test_calculate_average_mark():
     """Test calculation of average marks"""
@@ -52,6 +57,12 @@ def test_calculate_average_mark():
     with pytest.raises(MarkPreprocessingError) as exc:
         calculate_average_mark(["11", "85%"])
     assert "outside valid range" in str(exc.value)
+
+    # Test non-list input
+    assert calculate_average_mark(None) is None
+    assert calculate_average_mark(123) is None
+    assert calculate_average_mark("not a list") is None
+    assert calculate_average_mark({}) is None
 
 
 def test_preprocess_marks():
@@ -96,6 +107,41 @@ def test_preprocess_marks():
     assert "Failed to process marks for lesson Math" in str(exc.value)
     assert "invalid" in str(exc.value.invalid_data)
 
+    # Test invalid input types
+    assert preprocess_marks(None) is None
+    assert preprocess_marks(123) == 123
+    assert preprocess_marks("not a list") == "not a list"
+
+    # Test invalid days structure
+    assert preprocess_marks([123, 456]) == [123, 456]
+    assert preprocess_marks([{"no_days_key": []}]) == [{"no_days_key": []}]
+    assert preprocess_marks([{"days": "not a list"}]) == [{"days": "not a list"}]
+
+    # Test invalid lessons structure
+    input_with_invalid_lessons = [
+        {
+            "date": "2024-01-01",
+            "lessons": "not a list",
+        }
+    ]
+    processed = preprocess_marks(input_with_invalid_lessons)
+    assert processed == input_with_invalid_lessons
+
+    # Test invalid marks structure
+    input_with_invalid_marks = [
+        {
+            "date": "2024-01-01",
+            "lessons": [
+                {
+                    "subject": "Math",
+                    "mark": "not a list",  # Invalid marks type
+                }
+            ],
+        }
+    ]
+    processed = preprocess_marks(input_with_invalid_marks)
+    assert "mark" not in processed[0]["lessons"][0]
+
 
 def test_error_context():
     """Test that error messages include proper context"""
@@ -113,3 +159,28 @@ def test_error_context():
     assert error_data["mark"] == "invalid"
     assert error_data["context"]["subject"] == "Math"
     assert error_data["context"]["date"] == "2024-01-01"
+
+
+def test_wrapped_data_structure():
+    """Test handling of wrapped data structure with 'days' key"""
+    input_data = [
+        {
+            "days": [
+                {
+                    "date": "2024-01-01",
+                    "lessons": [
+                        {
+                            "subject": "Math",
+                            "mark": [{"score": "85%"}, {"score": "A"}],
+                        }
+                    ],
+                }
+            ]
+        }
+    ]
+
+    processed = preprocess_marks(input_data)
+    assert isinstance(processed, list)
+    assert len(processed) == 1
+    assert "days" in processed[0]
+    assert processed[0]["days"][0]["lessons"][0]["mark"] == 8  # (9 + 7) / 2 = 8

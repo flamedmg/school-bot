@@ -14,17 +14,19 @@ from src.api.app import app as fastapi_app
 from src.telegram.bot import setup_handlers, send_welcome_message
 from src.events.broker import app as stream_app
 from src.dependencies import Dependencies
+
 # Import handlers to ensure they're registered
 from src.events import crawl_handler, schedule_handler, telegram_handler
 
 # Initialize Telegram client
 bot = TelegramClient("school_bot", settings.telegram_api_id, settings.telegram_api_hash)
 
+
 async def startup():
     """Startup events for the application."""
     try:
         logger.info("Starting application...")
-        
+
         # Initialize database
         db_initialized = await init_db()
         if not db_initialized:
@@ -50,6 +52,7 @@ async def startup():
         logger.error(f"Startup failed: {str(e)}")
         raise
 
+
 async def shutdown():
     """Shutdown events for the application."""
     try:
@@ -60,19 +63,22 @@ async def shutdown():
         logger.error(f"Shutdown error: {str(e)}")
         raise
 
+
 async def run_fastapi():
     """Run the FastAPI server"""
     port = settings.api_port
-    
+
     # Check if port is in use and find a free one if needed
     if is_port_in_use(port):
         try:
             port = find_free_port(port + 1)
-            logger.warning(f"Original port {settings.api_port} was in use, using port {port} instead")
+            logger.warning(
+                f"Original port {settings.api_port} was in use, using port {port} instead"
+            )
         except RuntimeError as e:
             logger.error(str(e))
             return
-    
+
     config = uvicorn.Config(
         fastapi_app,
         host=settings.api_host,
@@ -82,7 +88,7 @@ async def run_fastapi():
         loop="asyncio",
         log_level="info",
         log_config=None,  # Disable uvicorn's default logging config
-        access_log=False  # Disable access logging as it will be handled by our interceptor
+        access_log=False,  # Disable access logging as it will be handled by our interceptor
     )
     server = uvicorn.Server(config)
     try:
@@ -90,23 +96,21 @@ async def run_fastapi():
     except Exception as e:
         logger.error(f"FastAPI server error: {str(e)}")
 
+
 async def run_all():
     """Run all services concurrently"""
     try:
         # Start application
         await startup()
-        
+
         # Run FastAPI server and FastStream worker
-        await asyncio.gather(
-            run_fastapi(),
-            stream_app.run(),
-            return_exceptions=True
-        )
+        await asyncio.gather(run_fastapi(), stream_app.run(), return_exceptions=True)
     except Exception as e:
         logger.error(f"Application error: {str(e)}")
         raise
     finally:
         await shutdown()
+
 
 if __name__ == "__main__":
     try:

@@ -8,7 +8,6 @@ from playwright.async_api import Page, Browser
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 import os
 
-from src.schedule.preprocess import create_default_pipeline
 from src.schedule.exceptions import LoginError, FetchError, ParseError, ProcessError
 
 
@@ -150,18 +149,13 @@ class ScheduleCrawler:
                 student_nickname=self.nickname,
             )
 
-    async def get_schedule_for_week(self, date: datetime) -> List[Dict]:
+    async def get_schedule_for_week(self, date: datetime) -> Tuple[List[Dict], str]:
         """Fetch schedule HTML for a specific week"""
         strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
-        pipeline = create_default_pipeline(
-            nickname=self.nickname, markdown_output_path=None
-        )
         try:
             formatted_date = date.strftime("%d.%m.%Y.")
             url = f"{self.SCHEDULE_URL}?Date={formatted_date}"
-            logger.info(
-                f"Fetching and processing schedule for week of {formatted_date}"
-            )
+            logger.info(f"Fetching schedule for week of {formatted_date}")
 
             # Use crawler with stored cookies
             logger.debug("Starting crawler for schedule extraction...")
@@ -173,26 +167,16 @@ class ScheduleCrawler:
                 try:
                     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
                     raw_data = strategy.extract(html=result.html, url=url)
+                    logger.info(f"Successfully extracted schedule for {formatted_date}")
+                    return raw_data, result.html
                 except Exception as e:
                     raise ParseError(
                         f"Failed to parse schedule HTML: {str(e)}",
                         student_nickname=self.nickname,
                     )
 
-                try:
-                    # Execute pipeline without capturing output
-                    logger.debug("Executing processing pipeline...")
-                    final_data = pipeline.execute(raw_data)
-                    logger.info(f"Successfully processed schedule for {formatted_date}")
-                    return final_data
-                except Exception as e:
-                    raise ProcessError(
-                        f"Failed to process schedule data: {str(e)}",
-                        student_nickname=self.nickname,
-                    )
-
         except Exception as e:
-            if not isinstance(e, (ParseError, ProcessError)):
+            if not isinstance(e, ParseError):
                 raise FetchError(str(e), student_nickname=self.nickname)
             raise
 
@@ -218,20 +202,23 @@ class ScheduleCrawler:
                 f"Will fetch schedules for dates: {[d.strftime('%d.%m.%Y') for d in dates]}"
             )
 
-            # Fetch schedules for each week
-            for date in dates:
-                logger.info(f"Processing week of {date.strftime('%d.%m.%Y')}")
-                schedule = await self.get_schedule_for_week(date)
-                if schedule:
-                    schedules.append(schedule)
+            # Fetch schedules for each week in parallel with error logging
+            tasks = [self.get_schedule_for_week(date) for date in dates]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for date, result in zip(dates, results):
+                if isinstance(result, Exception):
+                    logger.error(
+                        f"Failed to get schedule for {date.strftime('%d.%m.%Y')}: {result}"
+                    )
+                else:
+                    schedules.append(result)
                     logger.info(
                         f"Successfully added schedule for week of {date.strftime('%d.%m.%Y')}"
                     )
-                else:
-                    logger.error(f"Failed to get schedule for week of {date}")
 
         except Exception as e:
-            if not isinstance(e, (LoginError, FetchError, ParseError, ProcessError)):
+            if not isinstance(e, (LoginError, FetchError, ParseError)):
                 raise FetchError(
                     f"Error getting schedules: {str(e)}", student_nickname=self.nickname
                 )

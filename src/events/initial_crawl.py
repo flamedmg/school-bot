@@ -2,7 +2,9 @@ from datetime import datetime
 from loguru import logger
 from faststream.redis import RedisBroker
 
-from src.events.types import EventTopics, CrawlEvent, Student
+from src.events.event_types import EventTopics
+from src.events.types import CrawlEvent, Student
+
 from src.config import settings
 
 

@@ -6,6 +6,7 @@ from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 import pytest
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
+from src.schedule.schema import Schedule
 from .utils import load_test_file
 from src.schedule.preprocess import (
     preprocess_dates_and_merge,
@@ -70,3 +71,42 @@ def test_schedule_pipeline_output(capsys):
     assert isinstance(final_data, list)
     assert len(final_data) > 0
     assert "days" in final_data[0]
+
+
+def test_err20241128_schedule_parsing():
+    """Test parsing of the err_schedule_20241128.html file"""
+    strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
+    html = load_test_file("err_schedule_20241128.html", base_dir="test_data")
+    result = strategy.extract(html=html, url="https://test.com")
+
+    assert result is not None
+    assert isinstance(result, list)
+    assert len(result) > 0
+    assert "days" in result[0]
+
+    # Test structure of extracted data
+    days = result[0]["days"]
+    assert len(days) > 0
+
+    # Test a sample day's structure
+    sample_day = days[0]
+    assert "date" in sample_day
+    assert "lessons" in sample_day
+
+    # Test lesson structure if present
+    if sample_day["lessons"]:
+        lesson = sample_day["lessons"][0]
+        assert "number" in lesson
+        assert "subject" in lesson
+        assert "room" in lesson
+        assert isinstance(lesson.get("homework", {}), (dict, type(None)))
+    pipeline = create_default_pipeline(nickname="test")
+    final_data = pipeline.execute(result)
+    assert final_data is not None
+    assert isinstance(final_data, list)
+    assert len(final_data) > 0
+    assert "days" in final_data[0]
+
+    initial_schedule = Schedule(**final_data[0])
+    assert initial_schedule is not None
+    assert len(initial_schedule.days) > 0

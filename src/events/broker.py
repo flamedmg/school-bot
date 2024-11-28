@@ -1,9 +1,11 @@
+import asyncio
 from faststream import FastStream, Depends, Logger, ContextRepo
 from faststream.redis import RedisBroker
 from telethon import TelegramClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from taskiq_faststream import BrokerWrapper
+import sys
 
 from src.config import settings
 from src.dependencies import get_bot, get_db
@@ -19,25 +21,38 @@ app = FastStream(broker, logger=logger)
 # Create taskiq broker wrapper for scheduling
 taskiq_broker = BrokerWrapper(broker)
 
+
 # Dependencies
 async def get_telegram() -> TelegramClient:
     """Dependency for telegram client."""
     return await get_bot()
 
+
 async def get_session() -> AsyncSession:
     """Dependency for database session."""
     return await anext(get_db())
 
-async def get_repository(session: AsyncSession = Depends(get_session)) -> ScheduleRepository:
+
+async def get_repository(
+    session: AsyncSession = Depends(get_session),
+) -> ScheduleRepository:
     """Dependency for repository with session injection."""
     return ScheduleRepository(session)
+
 
 @app.on_startup
 async def setup(context: ContextRepo):
     """Initialize broker and set up global context."""
-    await broker.connect()
+    try:
+        await broker.connect()
+    except Exception as e:
+        logger.error(f"Failed to connect to the broker: {str(e)}")
+        sys.exit(1)  # Terminate the application if the broker connection fails
+
     context.set_global("settings", settings)
     logger.info("Message broker connected and context initialized")
+    # Add a small delay to ensure broker is fully ready
+    await asyncio.sleep(1)
 
 
 @app.after_startup
@@ -48,10 +63,10 @@ async def trigger_crawls():
 
 
 __all__ = [
-    'broker',
-    'app',
-    'taskiq_broker',
-    'get_telegram',
-    'get_session',
-    'get_repository'
+    "broker",
+    "app",
+    "taskiq_broker",
+    "get_telegram",
+    "get_session",
+    "get_repository",
 ]
