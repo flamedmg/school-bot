@@ -57,6 +57,7 @@ docker-compose.override.yml
 # Project specific
 poetry.lock
 .aider*
+data/school_bot.db
 
 # Logs
 *.log
