@@ -26,16 +26,14 @@ async def db_session():
         "sqlite+aiosqlite:///:memory:",
         echo=False,
     )
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     # Create async session
     async_session = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
@@ -54,16 +52,14 @@ async def db_session():
         "sqlite+aiosqlite:///:memory:",
         echo=False,
     )
-    
+
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     # Create async session
     async_session = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        engine, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
@@ -103,7 +99,9 @@ async def test_real_data_pipeline_and_changes(db_session):
 
     # Save to database and get it back to verify the save worked
     db_schedule = await repository.save_schedule(initial_schedule)
-    saved_schedule = await repository.get_schedule_by_unique_id(db_schedule.unique_id, initial_schedule.nickname)
+    saved_schedule = await repository.get_schedule_by_unique_id(
+        db_schedule.unique_id, initial_schedule.nickname
+    )
     assert saved_schedule is not None
     assert len(saved_schedule.days) == len(initial_schedule.days)
 
@@ -133,7 +131,9 @@ async def test_real_data_pipeline_and_changes(db_session):
         # Compare announcements
         assert len(orig_day.announcements) == len(saved_day.announcements)
         for orig_ann, saved_ann in zip(orig_day.announcements, saved_day.announcements):
-            assert orig_ann.type.value == saved_ann.type.value  # Compare enum values directly
+            assert (
+                orig_ann.type.value == saved_ann.type.value
+            )  # Compare enum values directly
             assert orig_ann.text == saved_ann.text
             assert orig_ann.behavior_type == saved_ann.behavior_type
             assert orig_ann.description == saved_ann.description
@@ -142,23 +142,22 @@ async def test_real_data_pipeline_and_changes(db_session):
 
     # Now make some changes to test change detection
     # Create a new schedule from pipeline output to simulate newly parsed data
-    modified_data = schedule_data[0].copy()
-    # Modify the data to include our changes
-    modified_data["days"][0]["lessons"][0]["mark"] = 9
-    modified_data["days"][0]["lessons"][1]["subject"] = "Modified Subject"
-    modified_data["days"][0]["announcements"].append(
-        {
-            "type": "general",
-            "text": "New test announcement",
-            "behavior_type": None,
-            "description": None,
-            "rating": None,
-            "subject": None,
-        }
-    )
+    initial_schedule = Schedule(**schedule_data[0])
+    modified_schedule = initial_schedule.model_copy(deep=True)
 
-    # Convert modified data to Schedule model
-    modified_schedule = Schedule(**modified_data)
+    # Modify the data to include our changes
+    modified_schedule.days[0].lessons[0].mark = 9
+    modified_schedule.days[0].lessons[1].subject = "Modified Subject"
+    modified_schedule.days[0].announcements.append(
+        Announcement(
+            type=AnnouncementType.GENERAL,
+            text="New test announcement",
+            behavior_type=None,
+            description=None,
+            rating=None,
+            subject=None,
+        )
+    )
 
     # Test changes are detected
     changes = await repository.get_changes(modified_schedule)
@@ -178,7 +177,9 @@ async def test_real_data_pipeline_and_changes(db_session):
     # Check for announcement changes
     announcement_changes = []
     for day_changes in changes.days:
-        announcement_changes.extend([c for c in day_changes.announcements if c.type == ChangeType.ADDED])
+        announcement_changes.extend(
+            [c for c in day_changes.announcements if c.type == ChangeType.ADDED]
+        )
     assert len(announcement_changes) > 0
 
     # Save modified schedule
@@ -186,8 +187,7 @@ async def test_real_data_pipeline_and_changes(db_session):
 
     # Load and verify modified schedule
     loaded_modified = await repository.get_schedule_by_unique_id(
-        modified_schedule.unique_id, 
-        modified_schedule.nickname
+        modified_schedule.unique_id, modified_schedule.nickname
     )
     assert loaded_modified is not None
 

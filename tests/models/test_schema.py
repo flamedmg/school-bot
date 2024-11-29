@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytest
 from urllib.parse import urlparse
+from pydantic import BaseModel, ConfigDict
 from src.schedule.schema import (
     AnnouncementType,
     Attachment,
@@ -163,7 +164,7 @@ def test_schedule_unique_id():
         days=[
             SchoolDay(date=datetime(2024, 1, 1)),
             SchoolDay(date=datetime(2024, 1, 2)),
-        ]
+        ],
     )
 
     assert schedule.unique_id == "202401"

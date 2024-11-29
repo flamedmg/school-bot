@@ -14,6 +14,7 @@ from pydantic import (
 
 class MarkChange(BaseModel):
     """Represents a change in a mark"""
+
     lesson_id: constr(min_length=1)
     old_mark: Optional[PositiveInt] = None
     new_mark: Optional[PositiveInt] = None
@@ -21,21 +22,27 @@ class MarkChange(BaseModel):
     subject: constr(min_length=1)
     lesson_index: PositiveInt
 
+
 class SubjectChange(BaseModel):
     """Represents a change in subject name"""
+
     lesson_id: constr(min_length=1)
     old_subject: constr(min_length=1)
     new_subject: constr(min_length=1)
     lesson_index: PositiveInt
 
+
 class AnnouncementChange(BaseModel):
     """Represents a change in announcements"""
+
     announcement_id: constr(min_length=1)
     change_type: ChangeType
     text: Optional[str] = None
 
+
 class ScheduleChanges(BaseModel):
     """All changes that might need user notification"""
+
     lessons_order_changed: bool
     marks: List[MarkChange] = []
     subjects: List[SubjectChange] = []
@@ -44,6 +51,7 @@ class ScheduleChanges(BaseModel):
 
 class Student(BaseModel):
     """Student information model"""
+
     nickname: constr(min_length=1)
     username: constr(min_length=1)
     password: constr(min_length=1)
@@ -52,12 +60,14 @@ class Student(BaseModel):
 
 class CrawlEvent(BaseModel):
     """Event emitted to trigger schedule crawling"""
+
     timestamp: datetime
     student: Student
 
 
 class MarkEvent(BaseModel):
     """Event emitted when a new mark is detected"""
+
     student_nickname: constr(min_length=1)
     subject: constr(min_length=1)
     new: constr(min_length=1)
@@ -66,6 +76,7 @@ class MarkEvent(BaseModel):
 
 class AnnouncementEvent(BaseModel):
     """Event emitted when a new announcement is detected"""
+
     student_nickname: constr(min_length=1)
     text: constr(min_length=1)
     type: constr(min_length=1) = "general"
@@ -77,6 +88,7 @@ class AnnouncementEvent(BaseModel):
 
 class AttachmentEvent(BaseModel):
     """Event emitted when a new attachment is detected"""
+
     student_nickname: constr(min_length=1)
     filename: constr(min_length=1)
     url: HttpUrl
@@ -89,6 +101,7 @@ class AttachmentEvent(BaseModel):
 
 class TelegramMessageEvent(BaseModel):
     """Event emitted when a Telegram message is received"""
+
     message_id: NonNegativeInt
     chat_id: int
     text: constr(min_length=1)
@@ -97,6 +110,7 @@ class TelegramMessageEvent(BaseModel):
 
 class TelegramCommandEvent(BaseModel):
     """Event emitted when a Telegram command is received"""
+
     command: constr(min_length=1)
     args: List[str] = []
     chat_id: int

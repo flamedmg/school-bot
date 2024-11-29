@@ -113,7 +113,7 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
         raise PreprocessingError("Invalid lesson data type", {"lesson": lesson})
 
     try:
-        result = lesson.copy()
+        result = lesson.model_copy()
 
         # Convert number to index
         if "number" in result:

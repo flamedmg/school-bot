@@ -12,13 +12,6 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import re
 
-# Silence specific deprecation warnings from fake_http_header package
-warnings.filterwarnings(
-    "ignore",
-    message="read_text is deprecated. Use files()",
-    module="fake_http_header.constants",
-)
-
 
 class StudentConfig(BaseModel):
     """Configuration for a single student."""
