@@ -1,7 +1,7 @@
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 import hashlib
 
 

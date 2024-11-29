@@ -39,7 +39,6 @@ class PreprocessingPipeline:
         for i, step in enumerate(self.steps, 1):
             try:
                 logger.info(f"Step {i}/{total_steps}: Executing {step.name}")
-                logger.debug(f"Input data for {step.name}: {result}")
                 result = step.function(result)
 
                 # Log counts based on result type

@@ -63,10 +63,6 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             logger.info("No data to process")
             return [{"attachments": []}]
 
-        # Debug log input data
-        logger.debug("Input data structure:")
-        logger.debug(data)
-
         total_days = 0
         total_lessons = 0
         total_homework = 0

@@ -1,5 +1,7 @@
 from typing import List, Optional
 from dataclasses import dataclass
+from src.schedule.schema import AnnouncementType
+from .enums import ChangeType
 
 
 @dataclass
@@ -33,9 +35,9 @@ class AnnouncementChange:
     """Represents changes in an announcement"""
 
     announcement_id: str
-    type: str  # 'added', 'removed', or 'modified'
-    old_type: Optional[str] = None
-    new_type: Optional[str] = None
+    type: ChangeType
+    old_type: Optional[AnnouncementType] = None
+    new_type: Optional[AnnouncementType] = None
     old_text: Optional[str] = None
     new_text: Optional[str] = None
 

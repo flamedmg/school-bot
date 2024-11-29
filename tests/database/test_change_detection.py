@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime
+from src.database.enums import ChangeType
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from src.database.models import Base
 from src.database.repository import ScheduleRepository
@@ -7,6 +8,9 @@ from src.schedule.schema import (
     Schedule,
     SchoolDay,
     Lesson,
+    Homework,
+    Link,
+    Attachment,
     Announcement,
     AnnouncementType,
 )
@@ -60,11 +64,7 @@ def make_lesson():
         unique_id = f"{day_id}_{index}"
 
         lesson = Lesson(
-            unique_id=unique_id,
-            index=index,
-            subject=subject,
-            mark=mark,
-            room=room,
+            index=index, subject=subject, mark=mark, room=room, unique_id=unique_id
         )
         if day:
             lesson._day = day
@@ -79,21 +79,19 @@ def make_school_day():
 
     def _make_school_day(date, lessons=None, announcements=None):
         day = SchoolDay(
-            date=date,
-            lessons=lessons or [],
-            announcements=announcements or [],
+            date=date, lessons=lessons or [], announcements=announcements or []
         )
-        # Set parent references and ensure unique IDs
+        # Set parent references
         for lesson in day.lessons:
             lesson._day = day
-            if not lesson.unique_id:
-                lesson.unique_id = f"{date.strftime('%Y%m%d')}_{lesson.index}"
+            if lesson.homework:
+                lesson.homework._day = day
+                for attachment in lesson.homework.attachments:
+                    attachment._day = day
+                for link in lesson.homework.links:
+                    link._day = day
         for announcement in day.announcements:
             announcement._day = day
-            if not announcement.unique_id:
-                announcement.unique_id = (
-                    f"{date.strftime('%Y%m%d')}_{len(day.announcements)}"
-                )
         return day
 
     return _make_school_day
@@ -176,14 +174,18 @@ async def test_detect_lesson_order_change(
 
     # Create modified schedule with reversed lesson order
     modified_day = make_school_day(date=sample_date)
-    modified_lesson1 = make_lesson(index=1, subject="Math", day=modified_day)
-    modified_lesson2 = make_lesson(index=2, subject="Physics", day=modified_day)
-    modified_day.lessons = [modified_lesson2, modified_lesson1]
+    modified_lesson1 = make_lesson(index=1, subject="Physics", day=modified_day)
+    modified_lesson2 = make_lesson(index=2, subject="Math", day=modified_day)
+    modified_day.lessons = [modified_lesson1, modified_lesson2]
     modified_schedule = make_schedule(days=[modified_day])
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
-    assert changes["lessons_changed"] is True
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+    print(day_changes)
+    order_changes = [c for c in day_changes.lessons if c.order_changed]
+    assert len(order_changes) == 1
 
 
 @pytest.mark.asyncio
@@ -210,9 +212,13 @@ async def test_detect_mark_changes(
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
-    assert len(changes["marks"]) == 1
-    assert changes["marks"][0]["old"] == 8
-    assert changes["marks"][0]["new"] == 9
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+    # We should only see mark changes, not order changes
+    mark_changes = [c for c in day_changes.lessons if c.mark_changed]
+    assert len(mark_changes) == 1
+    assert mark_changes[0].old_mark == 8
+    assert mark_changes[0].new_mark == 9
 
 
 @pytest.mark.asyncio
@@ -239,9 +245,12 @@ async def test_detect_subject_changes(
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
-    assert len(changes["subjects"]) == 1
-    assert changes["subjects"][0]["old"] == "Math"
-    assert changes["subjects"][0]["new"] == "Advanced Math"
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+    subject_changes = [c for c in day_changes.lessons if c.subject_changed]
+    assert len(subject_changes) == 1
+    assert subject_changes[0].old_subject == "Math"
+    assert subject_changes[0].new_subject == "Advanced Math"
 
 
 @pytest.mark.asyncio
@@ -275,8 +284,28 @@ async def test_detect_announcement_changes(
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
-    assert len(changes["announcements"]["added"]) == 1
-    assert len(changes["announcements"]["removed"]) == 1
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+
+    added = [a for a in day_changes.announcements if a.type == ChangeType.ADDED]
+    removed = [a for a in day_changes.announcements if a.type == ChangeType.REMOVED]
+
+    assert len(added) == 1
+    assert len(removed) == 1
+    assert added[0].new_type == AnnouncementType.GENERAL
+    assert added[0].new_text == "School closed tomorrow"
+    assert removed[0].old_type == AnnouncementType.BEHAVIOR
+
+    # Verify the specific announcements
+    assert removed[0].announcement_id == announcement.unique_id
+    assert added[0].announcement_id == new_announcement.unique_id
+
+    # Verify removed announcement details
+    assert removed[0].announcement_id == announcement.unique_id
+    assert removed[0].old_type == AnnouncementType.BEHAVIOR.value
+    assert (
+        removed[0].old_text == "Active participation"
+    )  # Now checking the description field
 
 
 @pytest.mark.asyncio
@@ -317,11 +346,67 @@ async def test_detect_multiple_changes(
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
-    assert len(changes["marks"]) == 1
-    assert changes["marks"][0]["old"] == 8
-    assert changes["marks"][0]["new"] == 9
-    assert len(changes["subjects"]) == 1
-    assert changes["subjects"][0]["old"] == "Math"
-    assert changes["subjects"][0]["new"] == "Advanced Math"
-    assert len(changes["announcements"]["removed"]) == 1
-    assert not changes["lessons_changed"]
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+
+    # Check lesson changes (combining mark and subject changes)
+    lesson_changes = [
+        c for c in day_changes.lessons if c.mark_changed or c.subject_changed
+    ]
+    print(lesson_changes)
+    assert len(lesson_changes) == 1
+    lesson_change = lesson_changes[0]
+    assert lesson_change.mark_changed
+    assert lesson_change.old_mark == 8
+    assert lesson_change.new_mark == 9
+    assert lesson_change.subject_changed
+    assert lesson_change.old_subject == "Math"
+    assert lesson_change.new_subject == "Advanced Math"
+
+    # Check announcement changes
+    removed = [a for a in day_changes.announcements if a.type == "removed"]
+    assert len(removed) == 1
+    assert removed[0].old_type == AnnouncementType.BEHAVIOR
+
+    # Structure should not have changed
+    assert not changes.structure_changed
+
+
+@pytest.mark.asyncio
+async def test_detect_announcement_removal(
+    repository, make_announcement, make_school_day, make_schedule, sample_date
+):
+    """Test detection of announcement removal"""
+    # Create initial schedule with two announcements
+    day = make_school_day(date=sample_date)
+    announcement1 = make_announcement(
+        type=AnnouncementType.BEHAVIOR,
+        behavior_type="Good",
+        description="Active participation",
+        rating="positive",
+        subject="Math",
+        day=day,
+    )
+    announcement2 = make_announcement(
+        type=AnnouncementType.GENERAL,
+        text="School meeting tomorrow",
+        day=day,
+    )
+    day.announcements = [announcement1, announcement2]
+    initial_schedule = make_schedule(days=[day])
+
+    # Save initial schedule
+    await repository.save_schedule(initial_schedule)
+
+    # Create modified schedule with one announcement removed
+    modified_day = make_school_day(date=sample_date)
+    modified_day.announcements = [announcement1]  # Only keep the first announcement
+    modified_schedule = make_schedule(days=[modified_day])
+
+    # Check changes
+    changes = await repository.get_changes(modified_schedule)
+    assert len(changes.days) == 1
+    day_changes = changes.days[0]
+    removed = [a for a in day_changes.announcements if a.type == "removed"]
+    assert len(removed) == 1
+    assert removed[0].announcement_id == announcement2.unique_id

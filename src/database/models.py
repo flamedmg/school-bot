@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from typing import List, Optional, TYPE_CHECKING
 from sqlalchemy import ForeignKey, String, DateTime, Enum as SQLAEnum, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase, validates
-import enum
+from src.schedule.schema import AnnouncementType
 
 if TYPE_CHECKING:
     from .models import Schedule, SchoolDay, Lesson, Homework, Link, Attachment, Announcement
@@ -11,10 +11,6 @@ if TYPE_CHECKING:
 class Base(DeclarativeBase):
     """Base class for all database models"""
     pass
-
-class AnnouncementTypeEnum(str, enum.Enum):
-    BEHAVIOR = "BEHAVIOR"
-    GENERAL = "GENERAL"
 
 class Schedule(Base):
     """
@@ -144,7 +140,7 @@ class Announcement(Base):
     
     id: Mapped[int] = mapped_column(primary_key=True)
     unique_id: Mapped[str] = mapped_column(String(20))
-    type: Mapped[str] = mapped_column(String(50))  # Store as string instead of enum
+    type: Mapped[AnnouncementType] = mapped_column(SQLAEnum(AnnouncementType))
     text: Mapped[Optional[str]] = mapped_column(String)
     behavior_type: Mapped[Optional[str]] = mapped_column(String(255))
     description: Mapped[Optional[str]] = mapped_column(String)
@@ -155,8 +151,11 @@ class Announcement(Base):
     day: Mapped["SchoolDay"] = relationship(back_populates="announcements")
 
     @validates('type')
-    def validate_type(self, key: str, value: str) -> str:
+    def validate_type(self, key: str, value: str | AnnouncementType) -> AnnouncementType:
         """Validate announcement type"""
-        if value not in ('BEHAVIOR', 'GENERAL'):
-            raise ValueError("type must be either 'BEHAVIOR' or 'GENERAL'")
-        return value
+        if isinstance(value, AnnouncementType):
+            return value
+        try:
+            return AnnouncementType(value.lower())
+        except ValueError:
+            raise ValueError("type must be either 'behavior' or 'general'")

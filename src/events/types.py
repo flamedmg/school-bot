@@ -1,155 +1,107 @@
-from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, NonNegativeInt
+from src.database.enums import ChangeType
+from typing import List, Optional
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    PositiveInt,
+    HttpUrl,
+    constr,
+    NonNegativeInt,
+)
+
+
+class MarkChange(BaseModel):
+    """Represents a change in a mark"""
+    lesson_id: constr(min_length=1)
+    old_mark: Optional[PositiveInt] = None
+    new_mark: Optional[PositiveInt] = None
+    change_type: ChangeType
+    subject: constr(min_length=1)
+    lesson_index: PositiveInt
+
+class SubjectChange(BaseModel):
+    """Represents a change in subject name"""
+    lesson_id: constr(min_length=1)
+    old_subject: constr(min_length=1)
+    new_subject: constr(min_length=1)
+    lesson_index: PositiveInt
+
+class AnnouncementChange(BaseModel):
+    """Represents a change in announcements"""
+    announcement_id: constr(min_length=1)
+    change_type: ChangeType
+    text: Optional[str] = None
+
+class ScheduleChanges(BaseModel):
+    """All changes that might need user notification"""
+    lessons_order_changed: bool
+    marks: List[MarkChange] = []
+    subjects: List[SubjectChange] = []
+    announcements: List[AnnouncementChange] = []
 
 
 class Student(BaseModel):
     """Student information model"""
-
-    nickname: str = Field(
-        ..., description="Unique identifier for the student", examples=["student1"]
-    )
-    username: str = Field(
-        ..., description="Student's school username", examples=["student123"]
-    )
-    password: str = Field(
-        ..., description="Student's school password", examples=["password123"]
-    )
-    emoji: str = Field(
-        default="👤",
-        description="Emoji representing the student",
-        examples=["🐱", "🐭"],
-    )
+    nickname: constr(min_length=1)
+    username: constr(min_length=1)
+    password: constr(min_length=1)
+    emoji: constr(min_length=1, max_length=2) = "👤"
 
 
 class CrawlEvent(BaseModel):
     """Event emitted to trigger schedule crawling"""
-
-    timestamp: datetime = Field(
-        ...,
-        description="Time when the crawl event was emitted",
-        examples=[datetime.now()],
-    )
-    student: Student = Field(..., description="Student information for crawling")
+    timestamp: datetime
+    student: Student
 
 
 class MarkEvent(BaseModel):
     """Event emitted when a new mark is detected"""
-
-    student_nickname: str = Field(
-        ..., description="Student's unique identifier", examples=["student1"]
-    )
-    subject: str = Field(
-        ..., description="Subject the mark is for", examples=["Mathematics", "Physics"]
-    )
-    new: str = Field(..., description="The new mark value", examples=["A", "9", "10"])
-    lesson_id: str = Field(
-        ..., description="Unique identifier of the lesson", examples=["math_20240315_1"]
-    )
+    student_nickname: constr(min_length=1)
+    subject: constr(min_length=1)
+    new: constr(min_length=1)
+    lesson_id: constr(min_length=1)
 
 
 class AnnouncementEvent(BaseModel):
     """Event emitted when a new announcement is detected"""
-
-    student_nickname: str = Field(
-        ..., description="Student's unique identifier", examples=["student1"]
-    )
-    text: str = Field(
-        ...,
-        description="Announcement text content",
-        examples=["Class canceled tomorrow"],
-    )
-    type: str = Field(
-        default="general",
-        description="Type of announcement",
-        examples=["general", "homework", "behavior"],
-    )
-    behavior_type: Optional[str] = Field(
-        None,
-        description="Type of behavior (if behavior announcement)",
-        examples=["positive", "negative"],
-    )
-    description: Optional[str] = Field(
-        None,
-        description="Additional description",
-        examples=["Student helped classmates"],
-    )
-    rating: Optional[str] = Field(
-        None,
-        description="Behavior rating",
-        examples=["excellent", "good", "needs improvement"],
-    )
-    subject: Optional[str] = Field(
-        None, description="Related subject", examples=["Mathematics", "Physics"]
-    )
+    student_nickname: constr(min_length=1)
+    text: constr(min_length=1)
+    type: constr(min_length=1) = "general"
+    behavior_type: Optional[constr(min_length=1)] = None
+    description: Optional[constr(min_length=1)] = None
+    rating: Optional[constr(min_length=1)] = None
+    subject: Optional[constr(min_length=1)] = None
 
 
 class AttachmentEvent(BaseModel):
     """Event emitted when a new attachment is detected"""
-    
-    student_nickname: str = Field(
-        ..., description="Student's unique identifier", examples=["student1"]
-    )
-    filename: str = Field(
-        ..., description="Name of the attachment file", examples=["homework.pdf"]
-    )
-    url: str = Field(
-        ..., description="URL of the attachment", examples=["https://my.e-klase.lv/attachment/123"]
-    )
-    cookies: dict = Field(
-        ..., description="Cookies needed for authentication", examples=[{"sessionid": "abc123"}]
-    )
-    schedule_id: str = Field(
-        ..., description="Schedule unique ID (YYYYWW)", examples=["202448"]
-    )
-    subject: str = Field(
-        ..., description="Subject the attachment is for", examples=["Mathematics"]
-    )
-    lesson_number: str = Field(
-        ..., description="Lesson number in the day", examples=["1", "2"]
-    )
-    day_id: str = Field(
-        ..., description="Unique identifier of the day", examples=["20241128"]
-    )
+    student_nickname: constr(min_length=1)
+    filename: constr(min_length=1)
+    url: HttpUrl
+    cookies: dict[str, str]
+    schedule_id: constr(min_length=1)
+    subject: constr(min_length=1)
+    lesson_number: constr(min_length=1)
+    day_id: constr(min_length=1)
 
 
 class TelegramMessageEvent(BaseModel):
     """Event emitted when a Telegram message is received"""
-
-    message_id: NonNegativeInt = Field(
-        ..., description="Telegram message identifier", examples=[12345]
-    )
-    chat_id: int = Field(
-        ..., description="Telegram chat identifier", examples=[-100123456789]
-    )
-    text: str = Field(..., description="Message text content", examples=["Hello, bot!"])
-    date: datetime = Field(
-        ..., description="Message timestamp", examples=[datetime.now()]
-    )
+    message_id: NonNegativeInt
+    chat_id: int
+    text: constr(min_length=1)
+    date: datetime
 
 
 class TelegramCommandEvent(BaseModel):
     """Event emitted when a Telegram command is received"""
-
-    command: str = Field(
-        ...,
-        description="Command name without slash",
-        examples=["start", "help", "schedule"],
-    )
-    args: List[str] = Field(
-        default_factory=list,
-        description="Command arguments",
-        examples=[["today"], ["week", "next"]],
-    )
-    chat_id: int = Field(
-        ..., description="Telegram chat identifier", examples=[-100123456789]
-    )
-    message_id: NonNegativeInt = Field(
-        ..., description="Telegram message identifier", examples=[12345]
-    )
-    date: datetime = Field(
-        ..., description="Command timestamp", examples=[datetime.now()]
-    )
+    command: constr(min_length=1)
+    args: List[str] = []
+    chat_id: int
+    message_id: NonNegativeInt
+    date: datetime
 
 
 # Grade-related constants

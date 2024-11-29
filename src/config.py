@@ -1,47 +1,65 @@
+import warnings
 from typing import List, Dict
-from pydantic import Field, RedisDsn, BaseModel, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    RedisDsn,
+    HttpUrl,
+    PositiveInt,
+    constr,
+    field_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import re
+
+# Silence specific deprecation warnings from fake_http_header package
+warnings.filterwarnings(
+    "ignore",
+    message="read_text is deprecated. Use files()",
+    module="fake_http_header.constants",
+)
 
 
 class StudentConfig(BaseModel):
     """Configuration for a single student."""
 
-    nickname: str = Field(description="Nickname to identify the student")
-    username: str = Field(description="Student's school username")
-    password: str = Field(description="Student's school password")
-    emoji: str = Field(
-        default="👤", description="Emoji to represent the student in notifications"
-    )
+    nickname: constr(min_length=1)
+    username: constr(min_length=1)
+    password: constr(min_length=1)
+    emoji: constr(min_length=1, max_length=2) = "👤"
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        validate_default=True,
+        extra="allow",
+    )
+
     # Telegram settings
-    telegram_api_id: int = Field(description="Telegram API ID from my.telegram.org")
-    telegram_api_hash: str = Field(description="Telegram API hash from my.telegram.org")
-    telegram_bot_token: str = Field(description="Telegram Bot token from @BotFather")
-    telegram_chat_id: int = Field(description="Telegram Chat ID to send notifications")
+    telegram_api_id: PositiveInt
+    telegram_api_hash: constr(min_length=1)
+    telegram_bot_token: constr(min_length=1)
+    telegram_chat_id: int
 
     # School settings
-    school_website_url: str = Field(description="School website URL")
-    school_email_server: str = Field(description="Email server hostname")
+    school_website_url: HttpUrl
+    school_email_server: constr(min_length=1)
 
     # Database settings
-    database_url: str = Field(
-        default="sqlite:///data/school_bot.db", description="Database connection string"
-    )
+    database_url: constr(min_length=1) = "sqlite:///data/school_bot.db"
 
     # Redis settings
-    redis_url: RedisDsn = Field(
-        default="redis://redis:6379/0", description="Redis connection URL"
-    )
+    redis_url: RedisDsn = "redis://redis:6379/0"
 
     # FastAPI settings
-    api_host: str = Field(default="0.0.0.0", description="FastAPI server host")
-    api_port: int = Field(default=8000, description="FastAPI server port")
-    api_workers: int = Field(default=1, description="Number of API workers")
+    api_host: constr(min_length=1) = "0.0.0.0"
+    api_port: PositiveInt = 8000
+    api_workers: PositiveInt = 1
 
     # Field validators
     @field_validator(
@@ -66,14 +84,6 @@ class Settings(BaseSettings):
             # Remove any comments and whitespace
             return v.split("#")[0].strip()
         return v
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,  # Changed to False to handle uppercase env vars
-        validate_default=True,
-        extra="allow",  # Allow extra fields for student configs
-    )
 
     @property
     def students(self) -> List[StudentConfig]:

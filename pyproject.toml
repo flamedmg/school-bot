@@ -53,6 +53,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-ra -q"
 pythonpath = ["."]
+filterwarnings = [
+    "ignore:read_text is deprecated:DeprecationWarning:fake_http_header.constants",
+    "ignore:open_text is deprecated:DeprecationWarning:importlib.resources._legacy"
+]
 
 [build-system]
 requires = ["poetry-core"]
