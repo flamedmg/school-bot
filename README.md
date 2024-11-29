@@ -1,131 +1,189 @@
 # School Parent Assistant Bot
 
-A Telegram bot that transforms school's schedule and email communication into a clean, organized Telegram experience for parents.
+A sophisticated Telegram bot that transforms e-klase (school management system) data into a streamlined, organized experience for parents. The bot automatically tracks schedules, grades, homework, and announcements, delivering real-time updates through Telegram.
 
-## Features
+## Core Features
 
-- 🗓️ Real-time schedule tracking
-- 📧 School email notifications
-- 📊 Academic performance monitoring
-- 🔔 Smart notifications
-- 💾 Historical data access
+- 📅 **Automated Schedule Tracking**
+  - Real-time schedule monitoring
+  - Multi-week schedule view (previous, current, next)
+  - Automatic schedule change notifications
+
+- 📊 **Academic Performance Monitoring**
+  - Real-time grade notifications with fun emoji feedback
+  - Grade change tracking and notifications
+  - Historical grade data access
+
+- 📚 **Homework Management**
+  - Homework assignment tracking
+  - Automatic attachment downloads
+  - Assignment change notifications
+
+- 📢 **Smart Announcements**
+  - School announcements delivery
+  - Behavioral notifications
+  - Important updates tracking
+
+- 👥 **Multi-Student Support**
+  - Support for multiple student accounts
+  - Customizable student nicknames and emojis
+  - Individual tracking for each student
+
+## Architecture
+
+### Component Overview
+
+- **Schedule Crawler**: Automated web crawler using Playwright for reliable data extraction
+- **Event System**: Asynchronous event processing using FastStream
+- **Data Pipeline**: Robust data processing with multiple preprocessors
+- **Storage Layer**: SQLite database with SQLModel ORM
+- **API Layer**: FastAPI-based REST API for system monitoring
+- **Telegram Interface**: Asynchronous Telegram bot using Telethon
+
+### Data Flow
+
+1. Schedule Crawler fetches data from e-klase
+2. Raw data is processed through specialized preprocessors
+3. Changes are detected and stored in the database
+4. Events are generated for significant changes
+5. Notifications are sent to users via Telegram
 
 ## Technical Stack
 
 ### Core Technologies
-
 - Python 3.11+
 - SQLite (data storage)
-- Docker
-- Telethon (Telegram client library)
+- Redis (message broker)
+- Playwright (web automation)
+- Docker & Docker Compose
 
 ### Key Libraries
-
-- telethon (Telegram client)
-- crawl4ai (web scraping)
-- httpx (async HTTP client)
+- FastStream (async event processing)
+- FastAPI (REST API framework)
 - SQLModel (SQLAlchemy-based ORM)
-- FastStream (async message broker framework)
-- Redis (message broker for FastStream)
-- beautifulsoup4 (HTML parsing)
-- pydantic (data validation)
-- python-dotenv (environment management)
+- Telethon (Telegram client)
+- Pydantic (data validation)
+- crawl4ai (web scraping framework)
+- loguru (logging)
 
 ### Development Tools
-
-- Poetry (package management)
+- Poetry (dependency management)
 - pytest (testing)
 - black (code formatting)
 - ruff (linting)
 
-## Docker Setup
+## Configuration
 
-### Dockerfile
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-RUN pip install uv
-
-COPY requirements.txt .
-RUN uv pip install -r requirements.txt
-
-COPY . .
-
-CMD ["python", "src/main.py"]
-```
-
-### docker-compose.yml
-
-```yaml
-version: "3.8"
-
-services:
-  bot:
-    build: .
-    env_file: .env
-    volumes:
-      - ./data:/app/data
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-
-volumes:
-  redis_data:
-```
-
-## Environment Variables
+### Environment Variables
 
 ```env
-# Telegram
+# Telegram Configuration
 TELEGRAM_API_ID=your_api_id
 TELEGRAM_API_HASH=your_api_hash
 TELEGRAM_BOT_TOKEN=your_bot_token
+TELEGRAM_CHAT_ID=your_chat_id
 
-# School
-SCHOOL_WEBSITE_URL=school_url
+# School Configuration
+SCHOOL_WEBSITE_URL=https://www.e-klase.lv
 SCHOOL_EMAIL_SERVER=email_server
-SCHOOL_EMAIL_USER=email_user
-SCHOOL_EMAIL_PASSWORD=email_password
 
-# Database
+# Student Configuration (Multiple students supported)
+STUDENT_USERNAME_NICKNAME1=username1
+STUDENT_PASSWORD_NICKNAME1=password1
+STUDENT_EMOJI_NICKNAME1=👦  # Optional, defaults to 👤
+
+STUDENT_USERNAME_NICKNAME2=username2
+STUDENT_PASSWORD_NICKNAME2=password2
+STUDENT_EMOJI_NICKNAME2=👧  # Optional
+
+# Database Configuration
 DATABASE_URL=sqlite:///data/school_bot.db
 
-# Redis
+# Redis Configuration
 REDIS_URL=redis://redis:6379/0
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+API_WORKERS=1
 ```
 
-## Setup and Development
+## Setup
+
+### Docker Setup (Recommended)
 
 1. Clone the repository
-2. Copy `.env.example` to `.env` and fill in your credentials
-3. Run with Docker:
+```bash
+git clone <repository-url>
+cd school-bot
+```
 
+2. Configure environment
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+3. Launch with Docker Compose
 ```bash
 docker-compose up -d
 ```
 
-## Local Development Setup
+### Local Development Setup
 
-1. Install Poetry: `curl -sSL https://install.python-poetry.org | python3 -`
-2. Install dependencies: `poetry install`
-3. Activate virtual environment: `poetry shell`
-4. Run the bot: `poetry run python src/main.py`
+1. Install Poetry
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
 
-## Testing
+2. Install dependencies
+```bash
+poetry install
+```
 
+3. Configure environment
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+4. Run the bot
+```bash
+poetry shell
+python src/main.py
+```
+
+## Development
+
+### Project Structure
+```
+src/
+├── api/            # FastAPI endpoints
+├── database/       # Database models and repository
+├── events/         # Event handlers and types
+├── schedule/       # Schedule crawling and processing
+│   └── preprocessors/  # Data preprocessors
+├── telegram/       # Telegram bot interface
+└── utils/          # Utility functions
+```
+
+### Testing
+
+Run tests with pytest:
 ```bash
 pytest tests/
+```
+
+### Code Style
+
+- Format code with black:
+```bash
+black src/ tests/
+```
+
+- Lint with ruff:
+```bash
+ruff check src/ tests/
 ```
 
 ## License

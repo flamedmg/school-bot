@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A Telegram bot for school communication"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
-packages = [{include = "src"}]
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
@@ -22,13 +22,18 @@ pytest-asyncio = "^0.24.0"
 soupsieve = "^2.6"
 tabulate = "^0.9.0"
 pyyaml = "^6.0.2"
-sqlalchemy = "^2.0.36"
-fastapi = {extras = ["all"], version = "^0.115.5"}
+sqlalchemy = "^2.0.35"
+fastapi = { extras = ["all"], version = "^0.115.5" }
 anyio = "^4.6.2"
 fast-depends = "^2.4.12"
 aiosqlite = "^0.20.0"
 taskiq-faststream = "^0.2.0"
 loguru = "^0.7.2"
+langchain = "^0.3.9"
+chromadb = "^0.5.0"
+langchain-openai = "^0.2.10"
+tiktoken = "^0.8.0"
+langchain-community = "^0.3.8"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "8.3.3"
@@ -55,7 +60,7 @@ addopts = "-ra -q"
 pythonpath = ["."]
 filterwarnings = [
     "ignore:read_text is deprecated:DeprecationWarning:fake_http_header.constants",
-    "ignore:open_text is deprecated:DeprecationWarning:importlib.resources._legacy"
+    "ignore:open_text is deprecated:DeprecationWarning:importlib.resources._legacy",
 ]
 
 [build-system]

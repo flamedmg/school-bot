@@ -1,4 +1,5 @@
 import asyncio
+import os
 import uvicorn
 from loguru import logger
 
@@ -18,8 +19,9 @@ from src.dependencies import Dependencies
 # Import handlers to ensure they're registered
 from src.events import crawl_handler, schedule_handler, telegram_handler
 
-# Initialize Telegram client
-bot = TelegramClient("school_bot", settings.telegram_api_id, settings.telegram_api_hash)
+# Initialize Telegram client with session file in data/telegram directory
+session_path = os.path.join("data", "telegram", "school_bot")
+bot = TelegramClient(session_path, settings.telegram_api_id, settings.telegram_api_hash)
 
 
 async def startup():
