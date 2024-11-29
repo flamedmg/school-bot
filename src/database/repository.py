@@ -1,3 +1,5 @@
+"""Repository for schedule data"""
+
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Set, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -96,41 +98,36 @@ class ScheduleRepository:
             )
         )
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.unique().scalar_one_or_none()
 
     def _check_lesson_order(
         self, new_lessons: List[Lesson], db_lessons: List[models.Lesson]
     ) -> bool:
         """Check if lesson order has changed"""
-
-        # Create lists of (index, subject, room) tuples for comparison
-        # This better represents the actual lesson structure
-        def get_lesson_info(lesson):
-            return (lesson.index, lesson.subject, lesson.room)
-
-        new_lesson_info = [get_lesson_info(l) for l in new_lessons]
-        db_lesson_info = [get_lesson_info(l) for l in db_lessons]
+        # Get ordered list of subjects
+        new_subjects = [l.subject for l in new_lessons]
+        db_subjects = [l.subject for l in db_lessons]
 
         # Filter out group-specific lessons to avoid false positives
-        def is_group_specific(lesson_info):
-            return "(F)" in lesson_info[1] or "Balagurchiki" in lesson_info[1]
+        def is_group_specific(subject):
+            return "(F)" in subject or "Balagurchiki" in subject
 
-        new_lesson_info = [l for l in new_lesson_info if not is_group_specific(l)]
-        db_lesson_info = [l for l in db_lesson_info if not is_group_specific(l)]
+        new_subjects = [s for s in new_subjects if not is_group_specific(s)]
+        db_subjects = [s for s in db_subjects if not is_group_specific(s)]
 
-        # Compare the filtered lesson sequences
-        return new_lesson_info != db_lesson_info
+        # Compare the filtered subject sequences
+        return new_subjects != db_subjects
 
     def _check_lesson_marks(
         self, new_lessons: List[Lesson], db_lessons: List[models.Lesson]
     ) -> List[Dict[str, Any]]:
         """Check for changes in lesson marks"""
         changes = []
-        db_lessons_dict = {l.unique_id: l for l in db_lessons}
+        db_lessons_dict = {l.subject: l for l in db_lessons}
 
         for new_lesson in new_lessons:
-            if new_lesson.unique_id in db_lessons_dict:
-                db_lesson = db_lessons_dict[new_lesson.unique_id]
+            if new_lesson.subject in db_lessons_dict:
+                db_lesson = db_lessons_dict[new_lesson.subject]
                 if new_lesson.mark != db_lesson.mark:
                     changes.append(
                         {
@@ -141,36 +138,29 @@ class ScheduleRepository:
                     )
         return changes
 
-    def _get_lesson_key(self, lesson: Any) -> Tuple[int, str]:
-        """Get a unique key for a lesson based on its index and room"""
-        return (lesson.index, lesson.room)
-
     def _check_lesson_subjects(
         self, new_lessons: List[Lesson], db_lessons: List[models.Lesson]
     ) -> List[Dict[str, Any]]:
         """Check for changes in lesson subjects"""
         changes = []
+        db_subjects = {l.subject for l in db_lessons}
+        new_subjects = {l.subject for l in new_lessons}
 
-        # Create dictionaries using lesson index and room as key
-        db_lessons_dict = {self._get_lesson_key(l): l for l in db_lessons}
+        # Find subjects that have been replaced
+        for db_lesson in db_lessons:
+            if db_lesson.subject not in new_subjects:
+                # Find the corresponding new subject
+                for new_lesson in new_lessons:
+                    if new_lesson.subject not in db_subjects:
+                        changes.append(
+                            {
+                                "lesson_id": new_lesson.unique_id,
+                                "old": db_lesson.subject,
+                                "new": new_lesson.subject,
+                            }
+                        )
+                        break
 
-        for new_lesson in new_lessons:
-            key = self._get_lesson_key(new_lesson)
-            if key in db_lessons_dict:
-                db_lesson = db_lessons_dict[key]
-                # Only consider it a change if both subject and room are different
-                # This helps avoid false positives with group-specific lessons
-                if new_lesson.subject != db_lesson.subject and not (
-                    ("(F)" in new_lesson.subject and "(F)" in db_lesson.subject)
-                    or ("Balagurchiki" in (new_lesson.subject, db_lesson.subject))
-                ):
-                    changes.append(
-                        {
-                            "lesson_id": new_lesson.unique_id,
-                            "old": db_lesson.subject,
-                            "new": new_lesson.subject,
-                        }
-                    )
         return changes
 
     def _check_announcements(
@@ -234,8 +224,22 @@ class ScheduleRepository:
         db_schedule = models.Schedule(unique_id=unique_id, nickname=schedule.nickname)
 
         for day in schedule.days:
-            db_day = self._create_day(day)
+            db_day = models.SchoolDay(
+                unique_id=day.date.strftime("%Y%m%d"),
+                date=day.date,
+            )
             db_day.schedule = db_schedule
+
+            for lesson in day.lessons:
+                db_lesson = self._create_lesson(lesson)
+                db_lesson.day = db_day
+                db_day.lessons.append(db_lesson)
+
+            for announcement in day.announcements:
+                db_announcement = self._create_announcement(announcement)
+                db_announcement.day = db_day
+                db_day.announcements.append(db_announcement)
+
             db_schedule.days.append(db_day)
 
         return db_schedule
@@ -255,8 +259,22 @@ class ScheduleRepository:
             if day_id in existing_days:
                 await self._update_day(existing_days[day_id], day)
             else:
-                db_day = self._create_day(day)
+                db_day = models.SchoolDay(
+                    unique_id=day.date.strftime("%Y%m%d"),
+                    date=day.date,
+                )
                 db_day.schedule = db_schedule
+
+                for lesson in day.lessons:
+                    db_lesson = self._create_lesson(lesson)
+                    db_lesson.day = db_day
+                    db_day.lessons.append(db_lesson)
+
+                for announcement in day.announcements:
+                    db_announcement = self._create_announcement(announcement)
+                    db_announcement.day = db_day
+                    db_day.announcements.append(db_announcement)
+
                 db_schedule.days.append(db_day)
 
         # Remove days that no longer exist
@@ -266,15 +284,15 @@ class ScheduleRepository:
 
     async def _update_day(self, db_day: models.SchoolDay, day: SchoolDay):
         """Update existing day with new data"""
-        # Track existing items
-        existing_lessons = {l.unique_id: l for l in db_day.lessons}
+        # Track existing items by subject
+        existing_lessons = {l.subject: l for l in db_day.lessons}
         existing_announcements = {a.unique_id: a for a in db_day.announcements}
 
         # Update lessons
         new_lessons = []
         for lesson in day.lessons:
-            if lesson.unique_id in existing_lessons:
-                db_lesson = existing_lessons[lesson.unique_id]
+            if lesson.subject in existing_lessons:
+                db_lesson = existing_lessons[lesson.subject]
                 self._update_lesson(db_lesson, lesson)
                 new_lessons.append(db_lesson)
             else:

@@ -1,10 +1,12 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CrawlErrorEvent(BaseModel):
     """Event emitted when a crawling or parsing error occurs"""
+
+    model_config = ConfigDict(validate_default=True, extra="allow")
 
     timestamp: datetime = Field(
         ..., description="Time when the error occurred", examples=[datetime.now()]

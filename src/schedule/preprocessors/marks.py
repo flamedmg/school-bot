@@ -1,7 +1,3 @@
-import json
-from loguru import logger
-from datetime import datetime
-
 """
 Marks Preprocessor
 
@@ -34,32 +30,40 @@ Processing:
 Final result: round((9 + 7 + 10) / 3) = 9
 """
 
+from loguru import logger
 from typing import List, Union, Optional
 import re
 from .exceptions import MarkPreprocessingError
 
 
-def convert_single_mark(mark: str, context: dict = None) -> Optional[int]:
+def convert_single_mark(
+    mark: Union[str, int, None], context: dict = None
+) -> Optional[int]:
     """
     Convert a single mark to the standardized 1-10 scale.
-    Raises MarkPreprocessingError if conversion fails.
+    Returns None for non-string input.
+    Raises MarkPreprocessingError if conversion of string input fails.
     """
+    # Handle non-string input by returning None
+    if not isinstance(mark, str):
+        return None
+
     # Store original mark for error reporting
     original_mark = mark
 
-    # Handle non-string input
-    if not isinstance(mark, str):
-        raise MarkPreprocessingError(
-            f"Invalid mark type: {type(mark)}, expected string",
-            {"mark": mark, "context": context},
-        )
-
-    # Remove any whitespace and convert to uppercase
+    # Remove whitespace and convert to uppercase for processing
     mark = mark.strip().upper()
 
     # Handle NC case
     if mark == "NC":
         return None
+
+    # Handle empty string
+    if not mark:
+        raise MarkPreprocessingError(
+            "Unable to convert mark: empty string",
+            {"mark": original_mark, "context": context},
+        )
 
     # Handle percentage case
     if "%" in mark:
@@ -101,37 +105,26 @@ def convert_single_mark(mark: str, context: dict = None) -> Optional[int]:
         )
 
 
-def calculate_average_mark(marks: List[str], context: dict = None) -> Optional[int]:
+def calculate_average_mark(
+    marks: Union[List[str], None, int, str, dict], context: dict = None
+) -> Optional[int]:
     """
     Convert multiple marks and calculate their average.
-    Raises MarkPreprocessingError if any conversion fails.
+    Returns None for non-list input.
+    Raises MarkPreprocessingError if conversion of any mark fails.
     """
+    # Handle non-list input by returning None
+    if not isinstance(marks, list):
+        return None
+
     if not marks:
         return None
 
-    if not isinstance(marks, list):
-        raise MarkPreprocessingError(
-            f"Invalid marks type: {type(marks)}, expected list",
-            {"marks": marks, "context": context},
-        )
-
     converted_marks = []
     for mark in marks:
-        try:
-            converted = convert_single_mark(mark, context)
-            if converted is not None:
-                converted_marks.append(converted)
-        except MarkPreprocessingError as e:
-            # Preserve the original error message
-            raise MarkPreprocessingError(
-                str(e),  # Use the original error message
-                {
-                    "marks": marks,
-                    "failed_mark": mark,
-                    "context": context,
-                    "original_error": e,
-                },
-            ) from e
+        converted = convert_single_mark(mark, context)
+        if converted is not None:
+            converted_marks.append(converted)
 
     if not converted_marks:
         return None
@@ -144,16 +137,17 @@ def calculate_average_mark(marks: List[str], context: dict = None) -> Optional[i
     return rounded
 
 
-def preprocess_marks(data: List[dict]) -> List[dict]:
+def preprocess_marks(
+    data: Union[List[dict], None, int, str]
+) -> Union[List[dict], None, int, str]:
     """
     Process marks in the schedule data, converting all marks to a 1-10 scale
     and calculating averages where multiple marks exist.
+    Returns input unchanged if it's not a list or is invalid.
     """
-    # Input validation
+    # Return input unchanged if it's not a list
     if not isinstance(data, list):
-        raise MarkPreprocessingError(
-            f"Invalid input type: {type(data)}, expected list", {"data": data}
-        )
+        return data
 
     total_days = 0
     total_lessons_with_marks = 0
@@ -163,43 +157,41 @@ def preprocess_marks(data: List[dict]) -> List[dict]:
     # Handle case where input is a list containing a single dictionary with 'days' key
     if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
         if not isinstance(data[0]["days"], list):
-            raise MarkPreprocessingError(
-                "Invalid days type in input data", {"data": data}
-            )
+            return data
         days = data[0]["days"]
         wrap_output = True
     else:
         days = data
         wrap_output = False
 
+    # Return input unchanged if days contains non-dict elements
+    if not all(isinstance(day, dict) for day in days):
+        return data
+
     total_days = len(days)
     logger.info(f"Processing marks for {total_days} days")
 
     for day in days:
-        if not isinstance(day, dict):
-            raise MarkPreprocessingError(
-                f"Invalid day type: {type(day)}, expected dict", {"day": day}
-            )
+        lessons = day.get("lessons", [])
 
-        for lesson in day.get("lessons", []):
+        # Skip if lessons is not a list
+        if not isinstance(lessons, list):
+            continue
+
+        for lesson in lessons:
             if not isinstance(lesson, dict):
-                raise MarkPreprocessingError(
-                    f"Invalid lesson type: {type(lesson)}, expected dict",
-                    {"lesson": lesson, "day": day},
-                )
+                continue
 
-            # Skip if no marks field or if marks is empty/None
+            # Get marks from lesson
             marks = lesson.get("mark")
             if not marks:
-                # Remove empty marks field
                 lesson.pop("mark", None)
                 continue
 
+            # Skip if marks is not a list
             if not isinstance(marks, list):
-                raise MarkPreprocessingError(
-                    f"Invalid marks type: {type(marks)}, expected list",
-                    {"marks": marks, "lesson": lesson, "day": day},
-                )
+                lesson.pop("mark", None)
+                continue
 
             total_lessons_with_marks += 1
             total_marks_processed += len(marks)
@@ -209,21 +201,21 @@ def preprocess_marks(data: List[dict]) -> List[dict]:
                 "date": day.get("date", "Unknown"),
             }
 
-            scores = [mark.get("score", "") for mark in marks if isinstance(mark, dict)]
             try:
+                scores = [
+                    mark.get("score", "") for mark in marks if isinstance(mark, dict)
+                ]
                 average = calculate_average_mark(scores, context)
                 if average is not None:
-                    # Replace entire mark array with single integer
                     lesson["mark"] = average
                     total_marks_converted += len(marks)
                 else:
-                    # Remove mark field if no valid marks
                     lesson.pop("mark", None)
             except MarkPreprocessingError as e:
                 raise MarkPreprocessingError(
                     f"Failed to process marks for lesson {lesson.get('subject', 'Unknown')}",
                     {"lesson": lesson, "context": context, "original_error": e},
-                ) from e
+                )
 
     logger.info(f"Successfully processed marks:")
     logger.info(f"  - {total_lessons_with_marks} lessons with marks")

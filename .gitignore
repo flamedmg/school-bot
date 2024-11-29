@@ -65,3 +65,5 @@ logs/
 
 # Test environment
 .env.test
+data/
+*.session*

@@ -73,11 +73,21 @@ def test_extract_attachments_with_attachments():
     attachments = result[0]["attachments"]
     assert len(attachments) == 2
 
-    # Check first attachment
-    assert attachments[0] == {"filename": "math1.pdf", "url": "/files/math1.pdf"}
+    # Check first attachment with metadata
+    expected_metadata = {
+        "filename": "math1.pdf",
+        "url": "/files/math1.pdf",
+        "schedule_id": "202401",
+        "subject": "Math",
+        "lesson_number": "1",
+        "day_id": "20240101",
+    }
+    assert attachments[0] == expected_metadata
 
-    # Check second attachment
-    assert attachments[1] == {"filename": "math2.pdf", "url": "/files/math2.pdf"}
+    # Check second attachment with metadata
+    expected_metadata["filename"] = "math2.pdf"
+    expected_metadata["url"] = "/files/math2.pdf"
+    assert attachments[1] == expected_metadata
 
 
 def test_extract_attachments_multiple_days():
@@ -119,8 +129,26 @@ def test_extract_attachments_multiple_days():
     attachments = result[0]["attachments"]
 
     assert len(attachments) == 2
-    assert attachments[0] == {"filename": "day1.pdf", "url": "/files/day1.pdf"}
-    assert attachments[1] == {"filename": "day2.pdf", "url": "/files/day2.pdf"}
+
+    # Check first attachment with metadata
+    assert attachments[0] == {
+        "filename": "day1.pdf",
+        "url": "/files/day1.pdf",
+        "schedule_id": "202401",
+        "subject": "Math",
+        "lesson_number": "",
+        "day_id": "20240101",
+    }
+
+    # Check second attachment with metadata
+    assert attachments[1] == {
+        "filename": "day2.pdf",
+        "url": "/files/day2.pdf",
+        "schedule_id": "202401",
+        "subject": "English",
+        "lesson_number": "",
+        "day_id": "20240102",
+    }
 
 
 def test_extract_attachments_invalid_data():
@@ -158,7 +186,15 @@ def test_extract_attachments_direct_days_list():
     attachments = result[0]["attachments"]
 
     assert len(attachments) == 1
-    assert attachments[0] == {"filename": "test.pdf", "url": "/files/test.pdf"}
+    # For direct days list, schedule_id is empty since there's no wrapping structure
+    assert attachments[0] == {
+        "filename": "test.pdf",
+        "url": "/files/test.pdf",
+        "schedule_id": "",
+        "subject": "Math",
+        "lesson_number": "",
+        "day_id": "20240101",
+    }
 
 
 def test_extract_attachments_missing_filename():
@@ -190,8 +226,14 @@ def test_extract_attachments_missing_filename():
     attachments = result[0]["attachments"]
 
     assert len(attachments) == 1
-    assert attachments[0]["filename"] == "test.pdf"
-    assert attachments[0]["url"] == "/files/test.pdf"
+    assert attachments[0] == {
+        "filename": "test.pdf",
+        "url": "/files/test.pdf",
+        "schedule_id": "202401",
+        "subject": "Math",
+        "lesson_number": "",
+        "day_id": "20240101",
+    }
 
 
 def test_extract_attachments_complex_urls():
@@ -203,47 +245,13 @@ def test_extract_attachments_complex_urls():
                     "date": datetime(2024, 1, 1),
                     "lessons": [
                         {
+                            "subject": "Science",
                             "homework": {
                                 "attachments": [
                                     {"url": "/download?filename=test.pdf"},
                                     {"url": "/files/path/no-extension"},
                                     {"url": "https://example.com/file.doc?token=123"},
                                     {"url": "/complex/path"},
-                                ]
-                            }
-                        }
-                    ],
-                }
-            ]
-        }
-    ]
-
-    result = extract_attachments(data)
-    attachments = result[0]["attachments"]
-
-    assert len(attachments) == 4
-    assert attachments[0]["filename"] == "test.pdf"
-    assert attachments[1]["filename"] == "no-extension"
-    assert attachments[2]["filename"] == "file.doc"
-    assert attachments[3]["filename"] == "path"  # Filename extracted from the URL path
-
-
-def test_extract_attachments_missing_fields():
-    """Test handling of attachments with missing filename"""
-    data = [
-        {
-            "days": [
-                {
-                    "date": datetime(2024, 1, 1),
-                    "lessons": [
-                        {
-                            "subject": "Math",
-                            "homework": {
-                                "attachments": [
-                                    {
-                                        # Missing filename
-                                        "url": "/files/test.pdf"
-                                    }
                                 ]
                             },
                         }
@@ -256,9 +264,36 @@ def test_extract_attachments_missing_fields():
     result = extract_attachments(data)
     attachments = result[0]["attachments"]
 
-    assert len(attachments) == 1
-    assert attachments[0]["filename"] == "test.pdf"
-    assert attachments[0]["url"] == "/files/test.pdf"
+    assert len(attachments) == 4
+
+    # Check each attachment has the correct metadata
+    base_metadata = {
+        "schedule_id": "202401",
+        "subject": "Science",
+        "lesson_number": "",
+        "day_id": "20240101",
+    }
+
+    assert attachments[0] == {
+        **base_metadata,
+        "filename": "test.pdf",
+        "url": "/download?filename=test.pdf",
+    }
+    assert attachments[1] == {
+        **base_metadata,
+        "filename": "no-extension",
+        "url": "/files/path/no-extension",
+    }
+    assert attachments[2] == {
+        **base_metadata,
+        "filename": "file.doc",
+        "url": "https://example.com/file.doc?token=123",
+    }
+    assert attachments[3] == {
+        **base_metadata,
+        "filename": "path",
+        "url": "/complex/path",
+    }
 
 
 def test_extract_attachments_preserves_original_data():
@@ -289,3 +324,15 @@ def test_extract_attachments_preserves_original_data():
     # Check that original homework data is preserved
     assert result[0]["days"][0]["lessons"][0]["homework"]["text"] == "Original homework"
     assert len(result[0]["days"][0]["lessons"][0]["homework"]["attachments"]) == 1
+
+    # Check that attachment metadata is properly added
+    attachments = result[0]["attachments"]
+    assert len(attachments) == 1
+    assert attachments[0] == {
+        "filename": "test.pdf",
+        "url": "/files/test.pdf",
+        "schedule_id": "202401",
+        "subject": "Math",
+        "lesson_number": "",
+        "day_id": "20240101",
+    }

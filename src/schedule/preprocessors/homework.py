@@ -113,48 +113,33 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
 
         # Process links
         for link in homework.get("links", []):
-            try:
-                if not isinstance(link, dict):
-                    logger.warning(f"Skipping invalid link format: {link}")
-                    continue
+            if not isinstance(link, dict):
+                raise PreprocessingError(f"Invalid link format: {link}")
 
-                url = link.get("url")
-                if not url:
-                    logger.warning(f"Skipping link missing URL: {link}")
-                    continue
+            url = link.get("url")
+            if not url:
+                raise PreprocessingError(f"Link missing URL: {link}")
 
-                processed_url = extract_destination_url(url)
-                if processed_url[
-                    "original_url"
-                ]:  # Only add if we have a valid original_url
-                    result["links"].append(processed_url)
-            except PreprocessingError as e:
-                logger.warning(f"Failed to process link: {str(e)}")
-                continue
+            processed_url = extract_destination_url(url)
+            result["links"].append(processed_url)
 
         # Process attachments
         for attachment in homework.get("attachments", []):
-            try:
-                if not isinstance(attachment, dict):
-                    logger.warning(f"Skipping invalid attachment format: {attachment}")
-                    continue
+            if not isinstance(attachment, dict):
+                raise PreprocessingError(f"Invalid attachment format: {attachment}")
 
-                url = attachment.get("url")
-                if not url:
-                    logger.warning(f"Skipping attachment missing URL: {attachment}")
-                    continue
+            url = attachment.get("url")
+            if not url:
+                raise PreprocessingError(f"Attachment missing URL: {attachment}")
 
-                result["attachments"].append(
-                    {
-                        "filename": attachment.get(
-                            "filename", ""
-                        ),  # Default to empty string if missing
-                        "url": url,
-                    }
-                )
-            except Exception as e:
-                logger.warning(f"Failed to process attachment: {str(e)}")
-                continue
+            result["attachments"].append(
+                {
+                    "filename": attachment.get(
+                        "filename", ""
+                    ),  # Default to empty string if missing
+                    "url": url,
+                }
+            )
 
         # Deduplicate links based on attachment URLs
         # Create a set of attachment URLs
@@ -168,7 +153,7 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
         filtered_links = []
         for link in result["links"]:
             link_url = link.get("destination_url") or link.get("original_url")
-            if link_url and link_url not in attachment_urls:  # Check if link_url exists
+            if link_url and link_url not in attachment_urls:
                 filtered_links.append(link)
         result["links"] = filtered_links
 
@@ -213,25 +198,19 @@ def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for day in days:
         if not isinstance(day, dict):
-            continue
+            raise PreprocessingError("Invalid day format", {"day": day})
 
         for lesson in day.get("lessons", []):
             if "homework" in lesson:
-                try:
-                    total_homeworks += 1
-                    homework = lesson["homework"]
-                    processed = preprocess_homework(homework)
+                total_homeworks += 1
+                homework = lesson["homework"]
+                processed = preprocess_homework(homework)
 
-                    # Count links and attachments
-                    total_links += len(processed["links"])
-                    total_attachments += len(processed["attachments"])
+                # Count links and attachments
+                total_links += len(processed["links"])
+                total_attachments += len(processed["attachments"])
 
-                    lesson["homework"] = processed
-                except PreprocessingError as e:
-                    logger.warning(f"Failed to process homework: {str(e)}")
-                    # Initialize with empty values if processing fails
-                    lesson["homework"] = {"text": None, "links": [], "attachments": []}
-                    continue
+                lesson["homework"] = processed
 
     logger.info(f"Successfully processed {total_homeworks} homework entries:")
     logger.info(f"  - {total_links} links processed")
