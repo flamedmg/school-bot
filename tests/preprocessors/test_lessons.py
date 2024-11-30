@@ -1,12 +1,12 @@
 import pytest
+
+from src.schedule.preprocessors.exceptions import PreprocessingError
 from src.schedule.preprocessors.lessons import (
     clean_lesson_index,
-    clean_topic,
+    clean_subject,
     preprocess_lesson,
     preprocess_lessons,
-    clean_subject,
 )
-from src.schedule.preprocessors.exceptions import PreprocessingError
 
 
 def test_clean_lesson_index():
@@ -81,7 +81,10 @@ def test_preprocess_lesson():
         "index": 1,
         "subject": "Matemātika210",
         "room": "210",
-        "topic": "Kāda ir darbību secība izteiksmēs?SR: nosauc darbību secību pēc kārtas; atrisina\n                            izteiksmes pēc parauga.",
+        "topic": (
+            "Kāda ir darbību secība izteiksmēs?SR: nosauc darbību secību pēc kārtas; "
+            "atrisina izteiksmes pēc parauga."
+        ),
         "homework": {
             "text": "G. 140. lpp., 42., 44*. uzd.",
             "links": [],
@@ -95,9 +98,9 @@ def test_preprocess_lesson():
     assert "number" not in processed  # Old field removed
     assert processed["subject"] == "Matemātika"  # Updated to expect cleaned subject
     assert processed["room"] == "210"  # Room number is preserved
-    assert (
-        processed["topic"]
-        == "Kāda ir darbību secība izteiksmēs?SR: nosauc darbību secību pēc kārtas; atrisina izteiksmes pēc parauga."
+    assert processed["topic"] == (
+        "Kāda ir darbību secība izteiksmēs?SR: nosauc darbību secību pēc kārtas; "
+        "atrisina izteiksmes pēc parauga."
     )
 
     # Real example - Special lesson (Tautas dejas)
@@ -121,7 +124,12 @@ def test_preprocess_lesson():
         "index": 1,
         "subject": "Sports un veselībasz",
         "room": "sz",
-        "topic": "Kā izmantot radošās domāšanas stratēģijas\n                              rotaļās?(SR: ar skolotāja atbalstu sadarbojoties pārī vai\n                            mazā grupā, rada jaunas idejas spēlēm, to\n                            nosacījumiem un kopīgi izvēlas labāko risinājumu\n                            uzdevuma veikšanai.)",
+        "topic": (
+            "Kā izmantot radošās domāšanas stratēģijas rotaļās?"
+            "(SR: ar skolotāja atbalstu sadarbojoties pārī vai mazā grupā, "
+            "rada jaunas idejas spēlēm, to nosacījumiem un kopīgi izvēlas "
+            "labāko risinājumu uzdevuma veikšanai.)"
+        ),
         "homework": {"links": [], "attachments": []},
     }
     processed = preprocess_lesson(sports_lesson)
@@ -144,18 +152,27 @@ def test_preprocess_lessons():
                     "number": "2.",
                     "subject": "Latviešu valoda un literatūra403",
                     "room": "403",
-                    "topic": "Gatavošanās pārbaudes darbam.SR:atkārto mācīto\n                            materiālu un gatavojas pārbaudes darbam.",
+                    "topic": (
+                        "Gatavošanās pārbaudes darbam.SR:atkārto mācīto "
+                        "materiālu un gatavojas pārbaudes darbam."
+                    ),
                     "homework": {
                         "text": "Turpināt gatavoties pārbaudes darbam (sk.pielikumu).",
                         "links": [
                             {
-                                "url": "/Attachment/Get/e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"
+                                "url": (
+                                    "/Attachment/Get/"
+                                    "e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"
+                                )
                             }
                         ],
                         "attachments": [
                             {
                                 "filename": "atkārtot p_d__uz 12_11_2024_.pptx",
-                                "url": "/Attachment/Get/e686f1ba-5be8-46a3-aec1-9ccfb83dba5c",
+                                "url": (
+                                    "/Attachment/Get/"
+                                    "e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"
+                                ),
                             }
                         ],
                     },

@@ -1,16 +1,17 @@
 from datetime import datetime
-import pytest
 from urllib.parse import urlparse
-from pydantic import BaseModel, ConfigDict
+
+import pytest
+
 from src.schedule.schema import (
+    Announcement,
     AnnouncementType,
     Attachment,
-    Link,
     Homework,
     Lesson,
-    Announcement,
-    SchoolDay,
+    Link,
     Schedule,
+    SchoolDay,
 )
 
 
@@ -171,7 +172,7 @@ def test_schedule_unique_id():
 
     # Test empty schedule
     with pytest.raises(ValueError, match="Schedule must have at least one day"):
-        Schedule(nickname="test_student", days=[]).unique_id
+        _ = Schedule(nickname="test_student", days=[]).unique_id
 
 
 def test_announcement_type_validation():

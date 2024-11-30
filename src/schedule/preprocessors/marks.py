@@ -8,7 +8,7 @@ Input formats:
 - Numbers (1-10) -> Used as-is
 - Letters:
     - S (Satisfactory) -> 3
-    - T (Transitional) -> 5  
+    - T (Transitional) -> 5
     - A (Accomplished) -> 7
     - P (Proficient) -> 10
 - NC (Not Completed) -> Removed from calculations
@@ -31,14 +31,11 @@ Final result: round((9 + 7 + 10) / 3) = 9
 """
 
 from loguru import logger
-from typing import List, Union, Optional
-import re
+
 from .exceptions import MarkPreprocessingError
 
 
-def convert_single_mark(
-    mark: Union[str, int, None], context: dict = None
-) -> Optional[int]:
+def convert_single_mark(mark: str | int | None, context: dict = None) -> int | None:
     """
     Convert a single mark to the standardized 1-10 scale.
     Returns None for non-string input.
@@ -73,11 +70,11 @@ def convert_single_mark(
             converted = int(percentage / 10 + 0.5)
             logger.debug(f"Converted percentage mark '{original_mark}' to {converted}")
             return converted
-        except ValueError:
+        except ValueError as e:
             raise MarkPreprocessingError(
                 f"Unable to convert percentage mark '{original_mark}' to numeric value",
                 {"mark": original_mark, "context": context},
-            )
+            ) from e
 
     # Handle letter grades
     letter_grades = {"S": 3, "T": 5, "A": 7, "P": 10}
@@ -98,16 +95,16 @@ def convert_single_mark(
             f"Numeric mark '{original_mark}' outside valid range 1-10",
             {"mark": original_mark, "context": context},
         )
-    except ValueError:
+    except ValueError as e:
         raise MarkPreprocessingError(
             f"Unable to convert mark '{original_mark}' to valid score",
             {"mark": original_mark, "context": context},
-        )
+        ) from e
 
 
 def calculate_average_mark(
-    marks: Union[List[str], None, int, str, dict], context: dict = None
-) -> Optional[int]:
+    marks: list[str] | None | int | str | dict, context: dict = None
+) -> int | None:
     """
     Convert multiple marks and calculate their average.
     Returns None for non-list input.
@@ -132,14 +129,15 @@ def calculate_average_mark(
     average = sum(converted_marks) / len(converted_marks)
     rounded = round(average)
     logger.debug(
-        f"Calculated average {average:.2f} rounded to {rounded} from {len(converted_marks)} marks"
+        f"Calculated average {average:.2f} rounded to {rounded} "
+        f"from {len(converted_marks)} marks"
     )
     return rounded
 
 
 def preprocess_marks(
-    data: Union[List[dict], None, int, str]
-) -> Union[List[dict], None, int, str]:
+    data: list[dict] | None | int | str,
+) -> list[dict] | None | int | str:
     """
     Process marks in the schedule data, converting all marks to a 1-10 scale
     and calculating averages where multiple marks exist.
@@ -213,11 +211,12 @@ def preprocess_marks(
                     lesson.pop("mark", None)
             except MarkPreprocessingError as e:
                 raise MarkPreprocessingError(
-                    f"Failed to process marks for lesson {lesson.get('subject', 'Unknown')}",
+                    "Failed to process marks for lesson "
+                    f"{lesson.get('subject', 'Unknown')}",
                     {"lesson": lesson, "context": context, "original_error": e},
-                )
+                ) from e
 
-    logger.info(f"Successfully processed marks:")
+    logger.info("Successfully processed marks:")
     logger.info(f"  - {total_lessons_with_marks} lessons with marks")
     logger.info(f"  - {total_marks_processed} total marks processed")
     logger.info(f"  - {total_marks_converted} marks successfully converted")

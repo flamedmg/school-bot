@@ -1,30 +1,31 @@
-from telethon import TelegramClient
 from faststream import Depends, Logger
+from telethon import TelegramClient
 
 from src.config import settings
-from src.events.types import TelegramMessageEvent, TelegramCommandEvent
-from src.events.event_types import EventTopics, CrawlErrorEvent
 from src.events.broker import broker, get_telegram
+from src.events.event_types import CrawlErrorEvent, EventTopics
+from src.events.types import TelegramCommandEvent, TelegramMessageEvent
+
+# Create a module-level singleton for telegram client
+telegram_client = Depends(get_telegram)
 
 
 @broker.subscriber(EventTopics.TELEGRAM_MESSAGE)
 async def handle_message(
     event: TelegramMessageEvent,
     logger: Logger,
-    telegram: TelegramClient = Depends(get_telegram),
+    telegram: TelegramClient = telegram_client,
 ):
     """Handle incoming Telegram messages."""
     try:
         logger.info(f"Handling Telegram message: {event.message_id}")
 
         # Here you would implement message handling logic
-        # For example, processing natural language queries
-        # or handling specific message patterns
-
         # For now, we'll just acknowledge the message
         await telegram.send_message(
             event.chat_id,
-            "Message received! I'm still learning how to process natural language queries.",
+            "Message received! I'm still learning how to process "
+            "natural language queries.",
         )
         logger.info("Message acknowledgment sent")
 
@@ -36,7 +37,7 @@ async def handle_message(
 async def handle_command(
     event: TelegramCommandEvent,
     logger: Logger,
-    telegram: TelegramClient = Depends(get_telegram),
+    telegram: TelegramClient = telegram_client,
 ):
     """Handle Telegram bot commands."""
     try:
@@ -61,9 +62,10 @@ async def handle_command(
 async def handle_crawl_error(
     event: CrawlErrorEvent,
     logger: Logger,
-    telegram: TelegramClient = Depends(get_telegram),
+    telegram: TelegramClient,
 ):
     """Handle crawling and parsing errors."""
+    telegram = get_telegram()
     try:
         logger.error(f"Crawl error occurred: {event.error_message}")
 

@@ -1,18 +1,18 @@
-from datetime import datetime
-from typing import List, Dict
-from faststream.redis import RedisBroker
-from loguru import logger
 import os
 import traceback
+from datetime import datetime
 
-from src.schedule.crawler import ScheduleCrawler
-from src.schedule.exceptions import CrawlException
+from faststream.redis import RedisBroker
+from loguru import logger
+
+from src.database.enums import ChangeType
 from src.database.repository import ScheduleRepository
 from src.events.event_types import CrawlErrorEvent, EventTopics
+from src.events.types import AttachmentEvent
+from src.schedule.crawler import ScheduleCrawler
+from src.schedule.exceptions import CrawlError
 from src.schedule.preprocess import create_default_pipeline
 from src.schedule.schema import Schedule
-from src.events.types import AttachmentEvent
-from src.database.enums import ChangeType
 
 
 class StudentManager:
@@ -40,7 +40,7 @@ class StudentManager:
         self._schedules_processed = 0
         self.crawler = ScheduleCrawler(username, password, nickname)
 
-    def _convert_cookies_to_dict(self, cookies: List[Dict]) -> Dict[str, str]:
+    def _convert_cookies_to_dict(self, cookies: list[dict]) -> dict[str, str]:
         """Convert cookies from list format to dictionary format."""
         return {cookie["name"]: cookie["value"] for cookie in cookies}
 
@@ -53,7 +53,7 @@ class StudentManager:
             await self._process_raw_schedules(raw_schedules)
             self._log_processing_summary()
 
-        except CrawlException as e:
+        except CrawlError as e:
             await self._handle_crawl_error(e)
             raise
 
@@ -61,11 +61,11 @@ class StudentManager:
             await self._handle_unexpected_error(e)
             raise
 
-    async def _fetch_schedules(self) -> List[tuple]:
+    async def _fetch_schedules(self) -> list[tuple]:
         """Fetch schedules from the crawler."""
         return await self.crawler.get_schedules()
 
-    async def _process_raw_schedules(self, raw_schedules: List[tuple]):
+    async def _process_raw_schedules(self, raw_schedules: list[tuple]):
         """Process raw schedules through the pipeline."""
         pipeline = create_default_pipeline(
             nickname=self.nickname, base_url=self.crawler.SCHEDULE_URL
@@ -100,7 +100,9 @@ class StudentManager:
                         )
                         await self.broker.publish(event, EventTopics.NEW_ATTACHMENT)
                         logger.debug(
-                            f"Emitted attachment event for {attachment['filename']} with ID {attachment['unique_id']}"
+                            "Emitted attachment event for {} with ID {}".format(
+                                attachment["filename"], attachment["unique_id"]
+                            )
                         )
 
                 schedule = self._create_schedule_from_data(processed_data)
@@ -111,7 +113,7 @@ class StudentManager:
                 await self._handle_preprocessing_error(e, html_content)
                 raise
 
-    def _create_schedule_from_data(self, processed_data: List[dict]) -> Schedule:
+    def _create_schedule_from_data(self, processed_data: list[dict]) -> Schedule:
         """Create a Schedule object from processed data."""
         try:
             return Schedule(**processed_data[0])
@@ -192,7 +194,7 @@ class StudentManager:
         """Log lesson order changes."""
         logger.info(f"Lesson order changed in schedule {schedule.unique_id}")
 
-    def _log_mark_changes(self, marks: List[Dict], schedule: Schedule):
+    def _log_mark_changes(self, marks: list[dict], schedule: Schedule):
         """Log mark changes."""
         for mark in marks:
             logger.info(
@@ -200,7 +202,7 @@ class StudentManager:
                 f"lesson {mark['lesson_id']}: {mark['old']} → {mark['new']}"
             )
 
-    def _log_subject_changes(self, subjects: List[Dict], schedule: Schedule):
+    def _log_subject_changes(self, subjects: list[dict], schedule: Schedule):
         """Log subject changes."""
         for subject in subjects:
             logger.info(
@@ -209,19 +211,20 @@ class StudentManager:
             )
 
     def _log_announcement_changes(
-        self, change_type: str, announcements: List[str], schedule: Schedule
+        self, change_type: str, announcements: list[str], schedule: Schedule
     ):
         """Log announcement changes."""
         logger.info(
-            f"{change_type.capitalize()} announcements in schedule {schedule.unique_id}: "
-            f"{', '.join(announcements)}"
+            f"{change_type.capitalize()} announcements in schedule "
+            f"{schedule.unique_id}: {', '.join(announcements)}"
         )
 
     def _log_processing_summary(self):
         """Log summary of all changes."""
         # First log the basic summary
         logger.info(
-            f"Schedule processing completed. Processed {self._schedules_processed} schedules with changes:\n"
+            "Schedule processing completed. "
+            f"Processed {self._schedules_processed} schedules with changes:\n"
             f"- Lessons order changes: {self._changes_summary['lessons_changed']}\n"
             f"- Mark changes: {self._changes_summary['marks_changed']}\n"
             f"- Subject changes: {self._changes_summary['subjects_changed']}\n"
@@ -238,7 +241,7 @@ class StudentManager:
                     f"{date}: {change['old_subject']} → {change['new_subject']}"
                 )
 
-    async def _publish_changes(self, schedule: Schedule, changes: Dict):
+    async def _publish_changes(self, schedule: Schedule, changes: dict):
         """Publish detected changes to the broker."""
         await self.broker.publish(
             {
@@ -261,7 +264,7 @@ class StudentManager:
             error_file.write(html_content)
         logger.info(f"Saved error schedule HTML to {error_filepath}")
 
-    async def _handle_crawl_error(self, error: CrawlException):
+    async def _handle_crawl_error(self, error: CrawlError):
         """Handle crawl-specific errors."""
         error_event = CrawlErrorEvent(
             timestamp=error.timestamp,
@@ -284,7 +287,7 @@ class StudentManager:
         await self.broker.publish(error_event, EventTopics.CRAWL_ERROR)
         logger.error(f"Unexpected error: {str(error)}")
 
-    async def process_schedule_changes(self, schedule: Schedule) -> Dict:
+    async def process_schedule_changes(self, schedule: Schedule) -> dict:
         """Process changes for a single schedule using the repository."""
         logger.info(f"Processing changes for schedule {schedule.unique_id}...")
         changes = await self.repository.get_changes(schedule)

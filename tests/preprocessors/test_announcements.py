@@ -1,4 +1,5 @@
 import pytest
+
 from src.schedule.preprocessors.announcements import (
     parse_single_announcement,
     preprocess_announcements,
@@ -9,7 +10,11 @@ from src.schedule.preprocessors.exceptions import PreprocessingError
 def test_parse_single_announcement():
     """Test parsing of individual announcements"""
     # Test behavior announcement
-    text = "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) (13.11., Mazākumtautību valoda un literatūra (krievu), Petroviča Tatjana)"
+    text = (
+        "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) "
+        "(13.11., Mazākumtautību valoda un literatūra (krievu), "
+        "Petroviča Tatjana)"
+    )
     result = parse_single_announcement(text)
     assert result["type"] == "behavior"
     assert result["behavior_type"] == "Centīgs"
@@ -18,7 +23,10 @@ def test_parse_single_announcement():
     assert result["subject"] == "Mazākumtautību valoda un literatūra (krievu)"
 
     # Test another behavior announcement
-    text = "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) (15.11., Sociālās zinības, Demida Ludmila)"
+    text = (
+        "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) "
+        "(15.11., Sociālās zinības, Demida Ludmila)"
+    )
     result = parse_single_announcement(text)
     assert result["type"] == "behavior"
     assert result["behavior_type"] == "Mērķtiecīgs"
@@ -33,7 +41,10 @@ def test_parse_single_announcement():
     assert result["text"] == text
 
     # Test general announcement without date prefix
-    text = "Aicinu uz datorikas konsultāciju, ceturtdienā (21.11.), plkst. 12:35, 212. kab."
+    text = (
+        "Aicinu uz datorikas konsultāciju, ceturtdienā (21.11.), "
+        "plkst. 12:35, 212. kab."
+    )
     result = parse_single_announcement(text)
     assert result["type"] == "general"
     assert result["text"] == text
@@ -46,13 +57,23 @@ def test_preprocess_announcements():
             "date": "13.11.24",
             "announcements": [
                 {
-                    "text": "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) (13.11., Mazākumtautību valoda un literatūra (krievu), Petroviča Tatjana)"
+                    "text": (
+                        "Centīgs: kārtīgi izpildīts mājas darbs (pozitīvs) "
+                        "(13.11., Mazākumtautību valoda un literatūra (krievu), "
+                        "Petroviča Tatjana)"
+                    )
                 },
                 {
-                    "text": "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) (15.11., Sociālās zinības, Demida Ludmila)"
+                    "text": (
+                        "Mērķtiecīgs: aktīvs darbs stundā (pozitīvs) "
+                        "(15.11., Sociālās zinības, Demida Ludmila)"
+                    )
                 },
                 {
-                    "text": "Aicinu uz datorikas konsultāciju, ceturtdienā (21.11.), plkst. 12:35, 212. kab."
+                    "text": (
+                        "Aicinu uz datorikas konsultāciju, ceturtdienā (21.11.), "
+                        "plkst. 12:35, 212. kab."
+                    )
                 },
             ],
         }

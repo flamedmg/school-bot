@@ -5,17 +5,15 @@ This module handles attachment events by downloading files that don't already ex
 in the data/attachments/YYYYWW directory.
 """
 
-import os
-from datetime import datetime
-import aiohttp
-from pathlib import Path
-from loguru import logger
 import traceback
+from pathlib import Path
+
+import aiohttp
 from faststream import Logger
 
-from .types import AttachmentEvent
-from .event_types import EventTopics
 from .broker import broker
+from .event_types import EventTopics
+from .types import AttachmentEvent
 
 
 @broker.subscriber(EventTopics.NEW_ATTACHMENT)
@@ -44,7 +42,8 @@ async def handle_attachment(
         # Check if file already exists
         if file_path.exists():
             logger.info(
-                f"File {event.filename} already exists at {file_path}, skipping download"
+                f"File {event.filename} already exists at {file_path}, "
+                "skipping download"
             )
             return
 

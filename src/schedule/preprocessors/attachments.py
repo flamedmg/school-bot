@@ -1,20 +1,25 @@
 """
 Attachments Preprocessor
 
-This preprocessor extracts all attachments from homework entries into a simple list of filename/url pairs.
-Adds an 'attachments' key to the root level of the data structure.
+This preprocessor extracts all attachments from homework entries into a simple
+list of filename/url pairs. Adds an 'attachments' key to the root level of
+the data structure.
 
 Modifications:
-- Attachments without a filename are now processed, and the filename is extracted from the URL if possible.
+- Attachments without a filename are now processed, and the filename is
+  extracted from the URL if possible.
 - All attachments with a URL are included in the output.
-- Each attachment includes a unique_id generated from schedule_id, subject, lesson number, and day_id.
+- Each attachment includes a unique_id generated from schedule_id, subject,
+  lesson number, and day_id.
 """
 
 import re
-from loguru import logger
-from typing import Dict, List, Any, Optional
-from urllib.parse import unquote, urlparse, parse_qs, urljoin
 from pathlib import Path
+from typing import Any
+from urllib.parse import parse_qs, unquote, urljoin, urlparse
+
+from loguru import logger
+
 from .exceptions import PreprocessingError
 
 
@@ -72,7 +77,8 @@ def generate_unique_id(
     schedule_id: str, subject: str, lesson_number: str, day_id: str
 ) -> str:
     """
-    Generate a unique ID for an attachment by combining schedule, subject, lesson, and day information.
+    Generate a unique ID for an attachment by combining schedule, subject,
+    lesson, and day information.
     """
     # Clean and normalize the components
     clean_subject = subject.strip().lower()
@@ -88,11 +94,12 @@ def generate_unique_id(
 
 
 def extract_attachments(
-    data: List[Dict[str, Any]], base_url: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    data: list[dict[str, Any]], base_url: str | None = None
+) -> list[dict[str, Any]]:
     """
-    Extract all attachments from homework entries into a simple list of filename/url pairs.
-    Adds an 'attachments' key to the root level of the data structure.
+    Extract all attachments from homework entries into a simple list of
+    filename/url pairs. Adds an 'attachments' key to the root level of
+    the data structure.
     """
     try:
         if not data:
@@ -104,7 +111,8 @@ def extract_attachments(
         total_homework = 0
         total_attachments = 0
 
-        # Handle case where input is a list containing a single dictionary with 'days' key
+        # Handle case where input is a list containing a single dictionary
+        # with 'days' key
         if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
             days = data[0]["days"]
             wrap_output = True
@@ -186,7 +194,8 @@ def extract_attachments(
                 for attachment in attachments:
                     if not isinstance(attachment, dict):
                         raise PreprocessingError(
-                            "Failed to extract attachments: Invalid attachment data type",
+                            "Failed to extract attachments: "
+                            "Invalid attachment data type",
                             {"attachment": attachment},
                         )
 
@@ -217,7 +226,7 @@ def extract_attachments(
                         logger.debug(f"Adding attachment: {attachment_data}")
                         all_attachments.append(attachment_data)
 
-        logger.info(f"Successfully processed attachments:")
+        logger.info("Successfully processed attachments:")
         logger.info(f"  - {total_lessons} lessons checked")
         logger.info(f"  - {total_homework} homework entries found")
         logger.info(f"  - {total_attachments} attachments extracted")
@@ -235,4 +244,4 @@ def extract_attachments(
             raise
         raise PreprocessingError(
             f"Failed to extract attachments: {str(e)}", {"data": data}
-        )
+        ) from e

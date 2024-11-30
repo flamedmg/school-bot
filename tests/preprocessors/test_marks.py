@@ -1,10 +1,11 @@
 import pytest
+
+from src.schedule.preprocessors.exceptions import MarkPreprocessingError
 from src.schedule.preprocessors.marks import (
-    convert_single_mark,
     calculate_average_mark,
+    convert_single_mark,
     preprocess_marks,
 )
-from src.schedule.preprocessors.exceptions import MarkPreprocessingError
 
 
 def test_convert_single_mark():

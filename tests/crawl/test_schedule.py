@@ -1,16 +1,12 @@
-import json
-import sys
-from datetime import datetime
 from pathlib import Path
+
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
-import pytest
+
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
 from src.schedule.schema import Schedule
+
 from .utils import load_test_file
-from src.schedule.preprocess import (
-    preprocess_dates_and_merge,
-)
 
 
 def test_schedule_crawl():
@@ -45,7 +41,7 @@ def test_schedule_crawl():
         assert "number" in lesson
         assert "subject" in lesson
         assert "room" in lesson
-        assert isinstance(lesson.get("homework", {}), (dict, type(None)))
+        assert isinstance(lesson.get("homework", {}), dict | None)
 
 
 def test_schedule_pipeline_output(capsys):
@@ -99,7 +95,7 @@ def test_err20241128_schedule_parsing():
         assert "number" in lesson
         assert "subject" in lesson
         assert "room" in lesson
-        assert isinstance(lesson.get("homework", {}), (dict, type(None)))
+        assert isinstance(lesson.get("homework", {}), dict | None)
     pipeline = create_default_pipeline(nickname="test")
     final_data = pipeline.execute(result)
     assert final_data is not None

@@ -1,17 +1,21 @@
 import pytest
-from urllib.parse import unquote
+
+from src.schedule.preprocessors.exceptions import PreprocessingError
 from src.schedule.preprocessors.homework import (
-    extract_destination_url,
     combine_homework_texts,
+    extract_destination_url,
     preprocess_homework,
 )
-from src.schedule.preprocessors.exceptions import PreprocessingError
 
 
 def test_extract_destination_url():
     """Test extraction of destination URLs from OAuth links"""
     # Test uzdevumi.lv OAuth link
-    oauth_link = "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv%2fTestWork%2fInfo%2f4649268"
+    oauth_link = (
+        "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13"
+        "&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv"
+        "%2fTestWork%2fInfo%2f4649268"
+    )
     result = extract_destination_url(oauth_link)
     assert result == {
         "original_url": oauth_link,
@@ -43,9 +47,9 @@ def test_combine_homework_texts():
         "Darba lapa. Kāda ir Latvijas valsts?",
     ]
     result = combine_homework_texts(texts)
-    assert (
-        result
-        == "G. 140. lpp., 42., 44*. uzd. Prezentācija stundai: Darba lapa. Kāda ir Latvijas valsts?"
+    assert result == (
+        "G. 140. lpp., 42., 44*. uzd. Prezentācija stundai: "
+        "Darba lapa. Kāda ir Latvijas valsts?"
     )
 
     # Test empty list
@@ -63,7 +67,11 @@ def test_preprocess_homework():
         "links": [
             {"url": "/Attachment/Get/e686f1ba-5be8-46a3-aec1-9ccfb83dba5c"},
             {
-                "url": "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv%2fTestWork%2fInfo%2f4649268"
+                "url": (
+                    "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13"
+                    "&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv"
+                    "%2fTestWork%2fInfo%2f4649268"
+                )
             },
         ],
         "attachments": [
@@ -182,7 +190,11 @@ def test_real_examples():
     homework_data = {
         "links": [
             {
-                "url": "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv%2fTestWork%2fInfo%2f4649268"
+                "url": (
+                    "/Auth/OAuth/RemoteApp?client_id=a85e2c10-fb73-420a-83e1-85446ff9ac13"
+                    "&profiles=False&destination_uri=https%3a%2f%2fwww.uzdevumi.lv"
+                    "%2fTestWork%2fInfo%2f4649268"
+                )
             }
         ],
         "attachments": [],

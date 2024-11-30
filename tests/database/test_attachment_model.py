@@ -1,7 +1,9 @@
 """Tests for the Attachment model"""
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from src.database.models import Attachment
 
 

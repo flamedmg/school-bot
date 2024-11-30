@@ -1,9 +1,10 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from src.config import settings
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.api.router import router
+from src.config import settings
 
 
 @asynccontextmanager

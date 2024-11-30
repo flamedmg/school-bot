@@ -1,27 +1,31 @@
 from __future__ import annotations
-from datetime import datetime, UTC
-from typing import List, Optional, TYPE_CHECKING
+
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 from loguru import logger
-from sqlalchemy import ForeignKey, String, DateTime, Enum as SQLAEnum, Index
+from sqlalchemy import Enum as SQLAEnum
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import (
+    DeclarativeBase,
     Mapped,
     mapped_column,
     relationship,
-    DeclarativeBase,
     validates,
 )
+
 from src.schedule.schema import AnnouncementType
-from pathlib import Path
 
 if TYPE_CHECKING:
     from .models import (
+        Announcement,
+        Attachment,
+        Homework,
+        Lesson,
+        Link,
         Schedule,
         SchoolDay,
-        Lesson,
-        Homework,
-        Link,
-        Attachment,
-        Announcement,
     )
 
 
@@ -54,7 +58,7 @@ class Schedule(Base):
         default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
     )
 
-    days: Mapped[List["SchoolDay"]] = relationship(
+    days: Mapped[list[SchoolDay]] = relationship(
         back_populates="schedule", cascade="all, delete-orphan"
     )
 
@@ -78,11 +82,11 @@ class SchoolDay(Base):
     date: Mapped[datetime] = mapped_column()
     schedule_id: Mapped[int] = mapped_column(ForeignKey("schedules.id"))
 
-    schedule: Mapped["Schedule"] = relationship(back_populates="days")
-    lessons: Mapped[List["Lesson"]] = relationship(
+    schedule: Mapped[Schedule] = relationship(back_populates="days")
+    lessons: Mapped[list[Lesson]] = relationship(
         back_populates="day", cascade="all, delete-orphan"
     )
-    announcements: Mapped[List["Announcement"]] = relationship(
+    announcements: Mapped[list[Announcement]] = relationship(
         back_populates="day", cascade="all, delete-orphan"
     )
 
@@ -101,16 +105,16 @@ class Lesson(Base):
     unique_id: Mapped[str] = mapped_column(String(20))
     index: Mapped[int] = mapped_column()
     subject: Mapped[str] = mapped_column(String(255))
-    room: Mapped[Optional[str]] = mapped_column(String(50))
-    topic: Mapped[Optional[str]] = mapped_column(String)
-    mark: Mapped[Optional[int]] = mapped_column()
+    room: Mapped[str | None] = mapped_column(String(50))
+    topic: Mapped[str | None] = mapped_column(String)
+    mark: Mapped[int | None] = mapped_column()
     day_id: Mapped[int] = mapped_column(ForeignKey("school_days.id"))
 
-    day: Mapped["SchoolDay"] = relationship(back_populates="lessons")
-    homework: Mapped[Optional["Homework"]] = relationship(
+    day: Mapped[SchoolDay] = relationship(back_populates="lessons")
+    homework: Mapped[Homework | None] = relationship(
         back_populates="lesson", cascade="all, delete-orphan", uselist=False
     )
-    topic_attachments: Mapped[List["Attachment"]] = relationship(
+    topic_attachments: Mapped[list[Attachment]] = relationship(
         back_populates="lesson",
         cascade="all, delete-orphan",
         primaryjoin="and_(Lesson.id==Attachment.lesson_id, "
@@ -123,14 +127,14 @@ class Homework(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     unique_id: Mapped[str] = mapped_column(String(20))
-    text: Mapped[Optional[str]] = mapped_column(String)
+    text: Mapped[str | None] = mapped_column(String)
     lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.id"))
 
-    lesson: Mapped["Lesson"] = relationship(back_populates="homework")
-    links: Mapped[List["Link"]] = relationship(
+    lesson: Mapped[Lesson] = relationship(back_populates="homework")
+    links: Mapped[list[Link]] = relationship(
         back_populates="homework", cascade="all, delete-orphan"
     )
-    attachments: Mapped[List["Attachment"]] = relationship(
+    attachments: Mapped[list[Attachment]] = relationship(
         back_populates="homework", cascade="all, delete-orphan"
     )
 
@@ -141,10 +145,10 @@ class Link(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     unique_id: Mapped[str] = mapped_column(String(20))
     original_url: Mapped[str] = mapped_column(String(2048))
-    destination_url: Mapped[Optional[str]] = mapped_column(String(2048))
+    destination_url: Mapped[str | None] = mapped_column(String(2048))
     homework_id: Mapped[int] = mapped_column(ForeignKey("homework.id"))
 
-    homework: Mapped["Homework"] = relationship(back_populates="links")
+    homework: Mapped[Homework] = relationship(back_populates="links")
 
 
 class Attachment(Base):
@@ -156,13 +160,11 @@ class Attachment(Base):
     )  # Increased length for new format
     filename: Mapped[str] = mapped_column(String(255))
     url: Mapped[str] = mapped_column(String(2048))
-    homework_id: Mapped[Optional[int]] = mapped_column(ForeignKey("homework.id"))
-    lesson_id: Mapped[Optional[int]] = mapped_column(ForeignKey("lessons.id"))
+    homework_id: Mapped[int | None] = mapped_column(ForeignKey("homework.id"))
+    lesson_id: Mapped[int | None] = mapped_column(ForeignKey("lessons.id"))
 
-    homework: Mapped[Optional["Homework"]] = relationship(back_populates="attachments")
-    lesson: Mapped[Optional["Lesson"]] = relationship(
-        back_populates="topic_attachments"
-    )
+    homework: Mapped[Homework | None] = relationship(back_populates="attachments")
+    lesson: Mapped[Lesson | None] = relationship(back_populates="topic_attachments")
 
     def get_file_path(self) -> Path:
         """
@@ -200,14 +202,14 @@ class Announcement(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     unique_id: Mapped[str] = mapped_column(String(20))
     type: Mapped[AnnouncementType] = mapped_column(SQLAEnum(AnnouncementType))
-    text: Mapped[Optional[str]] = mapped_column(String)
-    behavior_type: Mapped[Optional[str]] = mapped_column(String(255))
-    description: Mapped[Optional[str]] = mapped_column(String)
-    rating: Mapped[Optional[str]] = mapped_column(String(50))
-    subject: Mapped[Optional[str]] = mapped_column(String(255))
+    text: Mapped[str | None] = mapped_column(String)
+    behavior_type: Mapped[str | None] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(String)
+    rating: Mapped[str | None] = mapped_column(String(50))
+    subject: Mapped[str | None] = mapped_column(String(255))
     day_id: Mapped[int] = mapped_column(ForeignKey("school_days.id"))
 
-    day: Mapped["SchoolDay"] = relationship(back_populates="announcements")
+    day: Mapped[SchoolDay] = relationship(back_populates="announcements")
 
     @validates("type")
     def validate_type(
@@ -218,5 +220,5 @@ class Announcement(Base):
             return value
         try:
             return AnnouncementType(value.lower())
-        except ValueError:
-            raise ValueError("type must be either 'behavior' or 'general'")
+        except ValueError as err:
+            raise ValueError("type must be either 'behavior' or 'general'") from err

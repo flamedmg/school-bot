@@ -1,9 +1,10 @@
-import os
-import pytest
 import logging
+import os
 from datetime import datetime
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
-from src.schedule.crawler import ScheduleCrawler, crawl_schedules
+
+import pytest
+
+from src.schedule.crawler import ScheduleCrawler
 
 """Real browser tests for e-klasse crawler
 
@@ -15,7 +16,7 @@ To run these tests:
 
 1. Create your test environment file:
    cp .env.test.example .env.test
-   
+
 2. Edit .env.test with your credentials:
    EKLASSE_USERNAME=your_username
    EKLASSE_PASSWORD=your_password
@@ -95,7 +96,6 @@ async def test_cookie_reuse(credentials):
         logger.info("Performing initial login...")
         cookies = await crawler.login()
         assert cookies is not None
-        initial_cookie_count = len(cookies)
 
         # Store initial cookies for comparison
         initial_cookies = {
@@ -124,7 +124,8 @@ async def test_cookie_reuse(credentials):
                 ), f"Cookie {name} value changed"
 
         logger.info(
-            f"Successfully verified cookie reuse - {len(current_cookies)} cookies maintained"
+            "Successfully verified cookie reuse - "
+            f"{len(current_cookies)} cookies maintained"
         )
 
     except Exception as e:

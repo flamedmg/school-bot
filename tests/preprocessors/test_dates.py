@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from src.schedule.preprocessors.dates import preprocess_dates_and_merge
 
 
@@ -51,12 +52,6 @@ def test_preprocess_dates_and_merge_invalid_date():
     assert len(result) == 2
     assert result[0]["date"] == "invalid date"  # Should preserve original if invalid
     assert result[1]["date"] == "garbage"
-
-
-import pytest
-from datetime import datetime
-from src.schedule.preprocessors.dates import preprocess_dates_and_merge
-from src.schedule.preprocessors.exceptions import PreprocessingError
 
 
 def test_basic_date_processing():
@@ -165,7 +160,7 @@ def test_invalid_date_format():
 def test_empty_input():
     """Test handling of empty input"""
     assert preprocess_dates_and_merge([]) == []
-    assert preprocess_dates_and_merge(None) == None
+    assert preprocess_dates_and_merge(None) is None
     assert preprocess_dates_and_merge([{}]) == [{}]
 
 

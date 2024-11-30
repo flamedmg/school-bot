@@ -1,6 +1,7 @@
-from typing import List, Optional
 from dataclasses import dataclass
+
 from src.schedule.schema import AnnouncementType
+
 from .enums import ChangeType
 
 
@@ -11,11 +12,11 @@ class LessonChange:
     lesson_id: str
     order_changed: bool = False
     mark_changed: bool = False
-    old_mark: Optional[int] = None
-    new_mark: Optional[int] = None
+    old_mark: int | None = None
+    new_mark: int | None = None
     subject_changed: bool = False
-    old_subject: Optional[str] = None
-    new_subject: Optional[str] = None
+    old_subject: str | None = None
+    new_subject: str | None = None
 
 
 @dataclass
@@ -24,8 +25,8 @@ class HomeworkChange:
 
     lesson_id: str
     text_changed: bool = False
-    old_text: Optional[str] = None
-    new_text: Optional[str] = None
+    old_text: str | None = None
+    new_text: str | None = None
     links_changed: bool = False
     attachments_changed: bool = False
 
@@ -36,10 +37,10 @@ class AnnouncementChange:
 
     announcement_id: str
     type: ChangeType
-    old_type: Optional[AnnouncementType] = None
-    new_type: Optional[AnnouncementType] = None
-    old_text: Optional[str] = None
-    new_text: Optional[str] = None
+    old_type: AnnouncementType | None = None
+    new_type: AnnouncementType | None = None
+    old_text: str | None = None
+    new_text: str | None = None
 
 
 @dataclass
@@ -47,9 +48,9 @@ class DayChanges:
     """Represents all changes within a school day"""
 
     day_id: str
-    lessons: List[LessonChange]
-    homework: List[HomeworkChange]
-    announcements: List[AnnouncementChange]
+    lessons: list[LessonChange]
+    homework: list[HomeworkChange]
+    announcements: list[AnnouncementChange]
 
 
 @dataclass
@@ -58,7 +59,7 @@ class ScheduleChanges:
 
     schedule_id: str
     structure_changed: bool  # True if days were added/removed or their order changed
-    days: List[DayChanges]
+    days: list[DayChanges]
 
     def has_changes(self) -> bool:
         """Determine if there are any changes in the schedule."""

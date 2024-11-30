@@ -1,11 +1,11 @@
 from datetime import datetime
-from loguru import logger
-from faststream.redis import RedisBroker
 
-from src.events.event_types import EventTopics
-from src.events.types import CrawlEvent, Student
+from faststream.redis import RedisBroker
+from loguru import logger
 
 from src.config import settings
+from src.events.event_types import EventTopics
+from src.events.types import CrawlEvent, Student
 
 
 async def trigger_initial_crawls(broker: RedisBroker):

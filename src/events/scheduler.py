@@ -1,12 +1,13 @@
 from datetime import datetime
-from taskiq_faststream import StreamScheduler
-from taskiq.schedule_sources import LabelScheduleSource
-from loguru import logger
 
-from src.events.broker import taskiq_broker, broker, app
-from src.events.types import CrawlEvent, Student
-from src.events.event_types import EventTopics
+from loguru import logger
+from taskiq.schedule_sources import LabelScheduleSource
+from taskiq_faststream import StreamScheduler
+
 from src.config import settings
+from src.events.broker import app, taskiq_broker
+from src.events.event_types import EventTopics
+from src.events.types import CrawlEvent, Student
 
 # Create scheduler instance
 scheduler = StreamScheduler(
@@ -49,13 +50,15 @@ async def setup_schedules():
                     },
                     # Weekday schedule - Every 45 minutes from 8 AM to 3 PM
                     {
-                        "cron": "*/45 8-15 * * 1-5",  # Every 45 minutes between 8 AM and 3 PM on weekdays
+                        # Every 45 minutes between 8 AM and 3 PM on weekdays
+                        "cron": "*/45 8-15 * * 1-5",
                         "labels": ["weekday_schedule"],
                     },
                 ],
             )
             logger.debug(
-                f"Scheduled crawl tasks for {student.nickname}: weekday (*/45 8-15 * * 1-5) and weekend (0 10 * * 6,0)"
+                f"Scheduled crawl tasks for {student.nickname}: "
+                f"weekday (*/45 8-15 * * 1-5) and weekend (0 10 * * 6,0)"
             )
 
         logger.info("All scheduled tasks set up successfully")

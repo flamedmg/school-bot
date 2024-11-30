@@ -1,11 +1,8 @@
+
+from fast_depends import Depends, inject
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from telethon import TelegramClient
-from fast_depends import Depends, inject
-from typing import Optional
-from pydantic import BaseModel, ConfigDict
-
-from src.dependencies import Dependencies
+from pydantic import BaseModel
 
 router = APIRouter()
 

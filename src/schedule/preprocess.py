@@ -1,19 +1,20 @@
-import json
-from loguru import logger
-from datetime import datetime
+import traceback
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from loguru import logger
+
+from .preprocessors.announcements import preprocess_announcements
 from .preprocessors.attachments import extract_attachments
 from .preprocessors.dates import preprocess_dates_and_merge
-from .preprocessors.marks import preprocess_marks
-from .preprocessors.lessons import preprocess_lessons
-from .preprocessors.announcements import preprocess_announcements
-from .preprocessors.homework import preprocess_homeworks
-from .preprocessors.translation import preprocess_translations
-from .preprocessors.markdown_output import create_markdown_output_step
 from .preprocessors.exceptions import PreprocessingError
-from typing import List, Dict, Any, Optional, Union, Callable
-from dataclasses import dataclass
-import traceback
+from .preprocessors.homework import preprocess_homeworks
+from .preprocessors.lessons import preprocess_lessons
+from .preprocessors.markdown_output import create_markdown_output_step
+from .preprocessors.marks import preprocess_marks
+from .preprocessors.translation import preprocess_translations
 
 
 @dataclass
@@ -23,8 +24,8 @@ class PipelineStep:
 
 
 class PreprocessingPipeline:
-    def __init__(self, nickname: Optional[str] = None, base_url: Optional[str] = None):
-        self.steps: List[PipelineStep] = []
+    def __init__(self, nickname: str | None = None, base_url: str | None = None):
+        self.steps: list[PipelineStep] = []
         self.nickname = nickname
         self.base_url = base_url
 
@@ -49,7 +50,7 @@ class PreprocessingPipeline:
                 # Log counts based on result type
                 if isinstance(result, dict):
                     for key, value in result.items():
-                        if isinstance(value, (list, dict)):
+                        if isinstance(value, list | dict):
                             count = len(value)
                             logger.info(f"  - Processed {count} {key}")
                 elif isinstance(result, list):
@@ -78,9 +79,9 @@ class PreprocessingPipeline:
 
 
 def create_default_pipeline(
-    markdown_output_path: Optional[Union[str, Path]] = None,
-    nickname: Optional[str] = None,
-    base_url: Optional[str] = None,
+    markdown_output_path: str | Path | None = None,
+    nickname: str | None = None,
+    base_url: str | None = None,
 ):
     """Create the default preprocessing pipeline with all steps
 

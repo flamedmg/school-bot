@@ -2,11 +2,13 @@
 Tests for the attachments preprocessor
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.schedule.preprocessors.attachments import (
-    extract_attachments,
     clean_lesson_number,
+    extract_attachments,
     generate_unique_id,
 )
 from src.schedule.preprocessors.exceptions import PreprocessingError

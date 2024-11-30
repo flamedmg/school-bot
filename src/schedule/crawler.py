@@ -1,14 +1,14 @@
 import asyncio
+import os
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Tuple
-from loguru import logger
+
 from crawl4ai import AsyncWebCrawler, CacheMode
 from crawl4ai.async_crawler_strategy import AsyncPlaywrightCrawlerStrategy
-from playwright.async_api import Page, Browser
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
-import os
+from loguru import logger
+from playwright.async_api import Browser, Page
 
-from src.schedule.exceptions import LoginError, FetchError, ParseError, ProcessError
+from src.schedule.exceptions import FetchError, LoginError, ParseError
 
 
 class ScheduleCrawler:
@@ -81,9 +81,9 @@ class ScheduleCrawler:
                 str(e),
                 screenshot_path=screenshot_path,
                 student_nickname=self.nickname,
-            )
+            ) from e
 
-    async def login(self) -> List[Dict]:
+    async def login(self) -> list[dict]:
         """Perform login and return cookies"""
         logger.info("Starting login process...")
 
@@ -118,18 +118,16 @@ class ScheduleCrawler:
             crawler_strategy=crawler_strategy,
         ) as crawler:
             try:
-                result = await crawler.arun(
-                    url=self.SCHEDULE_URL,
-                )
+                await crawler.arun(url=self.SCHEDULE_URL)
             except Exception as e:
                 raise LoginError(
                     f"Browser error: {str(e)}", student_nickname=self.nickname
-                )
+                ) from e
 
         logger.info("Login completed successfully")
         return self.cookies
 
-    async def get_schedule_raw(self, date: datetime) -> List[Dict]:
+    async def get_schedule_raw(self, date: datetime) -> list[dict]:
         """Fetch schedule HTML for a specific week"""
         try:
             formatted_date = date.strftime("%d.%m.%Y.")
@@ -150,9 +148,9 @@ class ScheduleCrawler:
             raise FetchError(
                 f"Error fetching schedule for {date}: {str(e)}",
                 student_nickname=self.nickname,
-            )
+            ) from e
 
-    async def get_schedule_for_week(self, date: datetime) -> Tuple[List[Dict], str]:
+    async def get_schedule_for_week(self, date: datetime) -> tuple[list[dict], str]:
         """Fetch schedule HTML for a specific week"""
         strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
         try:
@@ -192,7 +190,8 @@ class ScheduleCrawler:
                         or not first_item["days"]
                     ):
                         raise ParseError(
-                            f"Invalid schedule data format for {formatted_date}: missing or empty days field",
+                            f"Invalid schedule data format for {formatted_date}: "
+                            "missing or empty days field",
                             student_nickname=self.nickname,
                         )
 
@@ -202,14 +201,14 @@ class ScheduleCrawler:
                     raise ParseError(
                         f"Failed to parse schedule HTML: {str(e)}",
                         student_nickname=self.nickname,
-                    )
+                    ) from e
 
         except Exception as e:
             if not isinstance(e, ParseError):
-                raise FetchError(str(e), student_nickname=self.nickname)
+                raise FetchError(str(e), student_nickname=self.nickname) from e
             raise
 
-    async def get_schedules(self) -> List[any]:
+    async def get_schedules(self) -> list[any]:
         """Get schedules for current week and two previous weeks"""
         schedules = []
         logger.info("Starting schedule collection for multiple weeks...")
@@ -228,31 +227,36 @@ class ScheduleCrawler:
                 current_date + timedelta(days=7),
             ]
             logger.info(
-                f"Will fetch schedules for dates: {[d.strftime('%d.%m.%Y') for d in dates]}"
+                "Will fetch schedules for dates: "
+                f"{[d.strftime('%d.%m.%Y') for d in dates]}"
             )
 
             # Fetch schedules for each week in parallel with error logging
             tasks = [self.get_schedule_for_week(date) for date in dates]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            for date, result in zip(dates, results):
+            for date, result in zip(dates, results, strict=False):
                 if isinstance(result, Exception):
                     logger.error(
-                        f"Failed to get schedule for {date.strftime('%d.%m.%Y')}: {result}"
+                        "Failed to get schedule for {}: {}".format(
+                            date.strftime("%d.%m.%Y"), result
+                        )
                     )
                     # Re-raise the exception to trigger error handling
                     raise result
                 else:
                     schedules.append(result)
                     logger.info(
-                        f"Successfully added schedule for week of {date.strftime('%d.%m.%Y')}"
+                        "Successfully added schedule for week of {}".format(
+                            date.strftime("%d.%m.%Y")
+                        )
                     )
 
         except Exception as e:
-            if not isinstance(e, (LoginError, FetchError, ParseError)):
+            if not isinstance(e, LoginError | FetchError | ParseError):
                 raise FetchError(
                     f"Error getting schedules: {str(e)}", student_nickname=self.nickname
-                )
+                ) from e
             raise
 
         logger.info(
@@ -261,7 +265,7 @@ class ScheduleCrawler:
         return schedules
 
 
-async def crawl_schedules(username: str, password: str, nickname: str) -> List[str]:
+async def crawl_schedules(username: str, password: str, nickname: str) -> list[str]:
     """Main function to crawl schedules"""
     logger.info("Starting schedule crawling process...")
     crawler = ScheduleCrawler(username, password, nickname)

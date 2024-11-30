@@ -1,15 +1,14 @@
+
 import pytest
-from datetime import datetime
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from src.database.models import Base
+from src.database.repository import ScheduleRepository
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
-from src.database.repository import ScheduleRepository
 from src.schedule.schema import Schedule
-from src.database.types import ScheduleChanges
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from tests.crawl.utils import load_test_file
-from src.schedule.preprocessors.lessons import clean_subject
 
 
 @pytest.fixture

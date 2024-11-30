@@ -1,6 +1,6 @@
-from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CrawlErrorEvent(BaseModel):
@@ -24,7 +24,7 @@ class CrawlErrorEvent(BaseModel):
         description="Detailed error message",
         examples=["Failed to parse schedule: Invalid HTML structure"],
     )
-    screenshot_path: Optional[str] = Field(
+    screenshot_path: str | None = Field(
         None,
         description="Path to error screenshot if available",
         examples=["data/page_failure_20240315_123456.png"],

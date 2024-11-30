@@ -1,10 +1,10 @@
 from datetime import datetime
+
 from loguru import logger
-from telethon import TelegramClient, events
+from telethon import TelegramClient
 from telethon.errors import PeerIdInvalidError
 
-from src.config import settings
-from src.database.kvstore import KeyValueStore, should_show_greeting
+from src.database.kvstore import should_show_greeting
 from src.dependencies import get_kvstore
 
 

@@ -1,23 +1,20 @@
 import asyncio
 import os
+
 import uvicorn
 from loguru import logger
-
-from src.utils import setup_logging, is_port_in_use, find_free_port
-
-# Configure logging first, before any other imports
-logger = setup_logging()
-
 from telethon import TelegramClient
+
+from src.api.app import app as fastapi_app
 from src.config import settings
 from src.database import init_db
-from src.api.app import app as fastapi_app
-from src.telegram.bot import setup_handlers, send_welcome_message
-from src.events.broker import app as stream_app
 from src.dependencies import Dependencies
+from src.events.broker import app as stream_app
+from src.telegram.bot import send_welcome_message, setup_handlers
+from src.utils import find_free_port, is_port_in_use, setup_logging
 
-# Import handlers to ensure they're registered
-from src.events import crawl_handler, schedule_handler, telegram_handler
+# Configure logging
+setup_logging()
 
 # Initialize Telegram client with session file in data/telegram directory
 session_path = os.path.join("data", "telegram", "school_bot")
@@ -80,7 +77,7 @@ async def run_fastapi():
         try:
             port = find_free_port(port + 1)
             logger.warning(
-                f"Original port {settings.api_port} was in use, using port {port} instead"
+                f"Port {settings.api_port} in use, using port {port} instead"
             )
         except RuntimeError as e:
             logger.error(str(e))
@@ -95,7 +92,7 @@ async def run_fastapi():
         loop="asyncio",
         log_level="info",
         log_config=None,  # Disable uvicorn's default logging config
-        access_log=False,  # Disable access logging as it will be handled by our interceptor
+        access_log=False,  # Disable access logging - handled by our interceptor
     )
     server = uvicorn.Server(config)
     try:

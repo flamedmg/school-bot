@@ -1,6 +1,6 @@
 # Class Schedule
 
-*Generated on: 2024-11-30 15:53:15*
+*Generated on: 2024-11-30 20:22:40*
 
 ## Monday, November 11, 2024
 
@@ -129,7 +129,6 @@
 **Centīgs**
 - Description: darbs stundā.
 - Rating: pozitīvs
-- Subject: Svešvaloda 1 (angļu) - 4
 
 ---
 
@@ -191,17 +190,14 @@
 **Centīgs**
 - Description: kārtīgi izpildīts mājas darbs
 - Rating: pozitīvs
-- Subject: Mazākumtautību valoda un literatūra (krievu)
 
 **Centīgs**
 - Description: darbs stundā.
 - Rating: pozitīvs
-- Subject: Vizuālā māksla
 
 **Centīgs**
 - Description: darbs stundā.
 - Rating: pozitīvs
-- Subject: Dabaszinības
 
 ---
 
@@ -314,12 +310,10 @@
 **Mērķtiecīgs**
 - Description: aktīvs darbs stundā
 - Rating: pozitīvs
-- Subject: Sociālās zinības
 
 **Mērķtiecīgs**
 - Description: aktīvs darbs stundā
 - Rating: pozitīvs
-- Subject: Klases stunda
 
 ---
 

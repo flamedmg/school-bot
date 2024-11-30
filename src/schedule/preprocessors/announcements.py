@@ -10,12 +10,13 @@ This preprocessor handles parsing and structuring of announcements:
 """
 
 import re
+
 from loguru import logger
-from typing import Dict, List
+
 from .exceptions import PreprocessingError
 
 
-def parse_single_announcement(text: str) -> Dict[str, str]:
+def parse_single_announcement(text: str) -> dict[str, str]:
     """Parse a single announcement text into its components."""
     try:
         # Clean the text first - normalize whitespace and remove newlines
@@ -28,8 +29,7 @@ def parse_single_announcement(text: str) -> Dict[str, str]:
         )
         if behavior_match:
             behavior_type, description, rating = behavior_match.groups()
-            # Extract subject
-            # The pattern matches the subject inside parentheses after the date and before the teacher's name
+            # Extract subject from parentheses after date and before teacher's name
             subject_match = re.search(
                 r"\(\d{2}\.\d{2}\.,\s*(.*?),\s*[^,]*\)$", cleaned_text
             )
@@ -50,10 +50,10 @@ def parse_single_announcement(text: str) -> Dict[str, str]:
             raise
         raise PreprocessingError(
             f"Failed to process announcement: {str(e)}", {"text": text}
-        )
+        ) from e
 
 
-def preprocess_announcements(data: List[dict]) -> List[dict]:
+def preprocess_announcements(data: list[dict]) -> list[dict]:
     """
     Process all announcements in the schedule data.
     Parses and structures announcement text into components.

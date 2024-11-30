@@ -1,7 +1,6 @@
-import json
-from loguru import logger
 from datetime import datetime
-from typing import List, Dict
+
+from loguru import logger
 
 
 def preprocess_dates_and_merge(data: list) -> list:
@@ -103,7 +102,7 @@ def preprocess_dates_and_merge(data: list) -> list:
         processed_days.append(days[i])
         i += 1
 
-    logger.info(f"Successfully processed dates:")
+    logger.info("Successfully processed dates:")
     logger.info(f"  - {total_entries} total entries")
     logger.info(f"  - {processed_dates} dates processed")
 

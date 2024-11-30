@@ -1,15 +1,16 @@
 import asyncio
-from faststream import FastStream, Depends, Logger, ContextRepo
-from faststream.redis import RedisBroker
-from telethon import TelegramClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
-from taskiq_faststream import BrokerWrapper
 import sys
 
+from faststream import ContextRepo, Depends, FastStream
+from faststream.redis import RedisBroker
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from taskiq_faststream import BrokerWrapper
+from telethon import TelegramClient
+
 from src.config import settings
-from src.dependencies import get_bot, get_db
 from src.database.repository import ScheduleRepository
+from src.dependencies import get_bot, get_db
 from src.events.initial_crawl import trigger_initial_crawls
 
 # Global broker instance
@@ -33,8 +34,12 @@ async def get_session() -> AsyncSession:
     return await anext(get_db())
 
 
+# Create module-level singleton for session
+session_singleton = Depends(get_session)
+
+
 async def get_repository(
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = session_singleton,
 ) -> ScheduleRepository:
     """Dependency for repository with session injection."""
     return ScheduleRepository(session)

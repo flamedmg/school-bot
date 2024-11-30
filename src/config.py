@@ -1,16 +1,14 @@
-import warnings
-from typing import List, Dict
+import re
+
 from pydantic import (
     BaseModel,
-    ConfigDict,
-    RedisDsn,
     HttpUrl,
     PositiveInt,
+    RedisDsn,
     constr,
     field_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import re
 
 
 class StudentConfig(BaseModel):
@@ -58,7 +56,7 @@ class Settings(BaseSettings):
     @field_validator(
         "telegram_api_id", "telegram_chat_id", "api_port", "api_workers", mode="before"
     )
-    def convert_to_int(cls, v):
+    def convert_to_int(cls, v):  # noqa: N805
         if isinstance(v, str):
             # Remove any comments and whitespace
             v = v.split("#")[0].strip()
@@ -72,14 +70,14 @@ class Settings(BaseSettings):
         "school_email_server",
         mode="before",
     )
-    def clean_string(cls, v):
+    def clean_string(cls, v):  # noqa: N805
         if isinstance(v, str):
             # Remove any comments and whitespace
             return v.split("#")[0].strip()
         return v
 
     @property
-    def students(self) -> List[StudentConfig]:
+    def students(self) -> list[StudentConfig]:
         """Parse student configurations from environment variables"""
         students = []
         student_pattern = re.compile(
@@ -87,11 +85,11 @@ class Settings(BaseSettings):
         )
 
         # Collect all student-related environment variables
-        student_vars: Dict[str, dict] = {}
+        student_vars: dict[str, dict] = {}
         env_vars = {
             k: v
             for k, v in self.model_dump().items()
-            if isinstance(k, str) and isinstance(v, (str, int))
+            if isinstance(k, str) and isinstance(v, str | int)
         }
 
         for key, value in env_vars.items():
@@ -105,7 +103,7 @@ class Settings(BaseSettings):
                 student_vars[nickname][field.lower()] = clean_value
 
         # Create StudentConfig objects for complete configurations
-        for nickname, config in student_vars.items():
+        for _nickname, config in student_vars.items():
             if "username" in config and "password" in config:
                 # Set default emoji if not provided
                 if "emoji" not in config:
@@ -114,7 +112,9 @@ class Settings(BaseSettings):
 
         if not students:
             raise ValueError(
-                "At least one student must be configured using STUDENT_USERNAME_<nickname> and STUDENT_PASSWORD_<nickname>"
+                "At least one student must be configured using "
+                "STUDENT_USERNAME_<nickname> and "
+                "STUDENT_PASSWORD_<nickname>"
             )
 
         return students

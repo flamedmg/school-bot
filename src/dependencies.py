@@ -1,11 +1,13 @@
-from typing import AsyncGenerator
-from fast_depends import Depends, inject
-from telethon import TelegramClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from collections.abc import AsyncGenerator
+
+from fast_depends import inject
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
+from telethon import TelegramClient
+
+from src.config import settings
 from src.database import get_db as get_db_session
 from src.database.kvstore import KeyValueStore
-from src.config import settings
 
 
 class Dependencies:

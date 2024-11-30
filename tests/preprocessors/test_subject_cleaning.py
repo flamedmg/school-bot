@@ -1,4 +1,3 @@
-import pytest
 from src.schedule.preprocessors.lessons import clean_subject
 
 
@@ -40,7 +39,7 @@ def test_subject_cleaning():
     assert subject == "Sports un veselība"
     assert room == "mz"
 
-    # Test subject with special room code and parentheses - parentheses should be removed
+    # Test subject with special room code and parentheses - should remove parentheses but keep room code
     subject, room = clean_subject("Sports un veselība (F) mz")
     assert subject == "Sports un veselība"
     assert room == "mz"
@@ -50,7 +49,7 @@ def test_subject_cleaning():
     assert subject == "Matemātika"
     assert room is None
 
-    # Test subject with parentheses in quotes - parentheses in quotes should be preserved
+    # Test subject with parentheses in quotes - should preserve quotes
     subject, room = clean_subject("Tautas dejas kol. 'Balaguri' (I)")
     assert subject == "Tautas dejas kol. 'Balaguri'"
     assert room is None

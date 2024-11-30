@@ -1,5 +1,4 @@
 from enum import Enum
-from src.schedule.schema import AnnouncementType
 
 
 class ChangeType(str, Enum):

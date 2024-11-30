@@ -1,23 +1,22 @@
 from datetime import datetime
-from src.database.enums import ChangeType
-from typing import List, Optional
+
 from pydantic import (
     BaseModel,
-    ConfigDict,
-    Field,
-    PositiveInt,
     HttpUrl,
-    constr,
     NonNegativeInt,
+    PositiveInt,
+    constr,
 )
+
+from src.database.enums import ChangeType
 
 
 class MarkChange(BaseModel):
     """Represents a change in a mark"""
 
     lesson_id: constr(min_length=1)
-    old_mark: Optional[PositiveInt] = None
-    new_mark: Optional[PositiveInt] = None
+    old_mark: PositiveInt | None = None
+    new_mark: PositiveInt | None = None
     change_type: ChangeType
     subject: constr(min_length=1)
     lesson_index: PositiveInt
@@ -37,16 +36,16 @@ class AnnouncementChange(BaseModel):
 
     announcement_id: constr(min_length=1)
     change_type: ChangeType
-    text: Optional[str] = None
+    text: str | None = None
 
 
 class ScheduleChanges(BaseModel):
     """All changes that might need user notification"""
 
     lessons_order_changed: bool
-    marks: List[MarkChange] = []
-    subjects: List[SubjectChange] = []
-    announcements: List[AnnouncementChange] = []
+    marks: list[MarkChange] = []
+    subjects: list[SubjectChange] = []
+    announcements: list[AnnouncementChange] = []
 
 
 class Student(BaseModel):
@@ -80,10 +79,10 @@ class AnnouncementEvent(BaseModel):
     student_nickname: constr(min_length=1)
     text: constr(min_length=1)
     type: constr(min_length=1) = "general"
-    behavior_type: Optional[constr(min_length=1)] = None
-    description: Optional[constr(min_length=1)] = None
-    rating: Optional[constr(min_length=1)] = None
-    subject: Optional[constr(min_length=1)] = None
+    behavior_type: constr(min_length=1) | None = None
+    description: constr(min_length=1) | None = None
+    rating: constr(min_length=1) | None = None
+    subject: constr(min_length=1) | None = None
 
 
 class AttachmentEvent(BaseModel):
@@ -111,7 +110,7 @@ class TelegramCommandEvent(BaseModel):
     """Event emitted when a Telegram command is received"""
 
     command: constr(min_length=1)
-    args: List[str] = []
+    args: list[str] = []
     chat_id: int
     message_id: NonNegativeInt
     date: datetime

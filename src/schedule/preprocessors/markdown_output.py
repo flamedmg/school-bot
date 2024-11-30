@@ -4,7 +4,7 @@ Markdown Output Preprocessor
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 
 class MarkdownOutputError(Exception):
@@ -14,8 +14,8 @@ class MarkdownOutputError(Exception):
 
 
 def save_schedule_markdown(
-    data: List[Dict[str, Any]], output_path: Union[str, Path]
-) -> List[Dict[str, Any]]:
+    data: list[dict[str, Any]], output_path: str | Path
+) -> list[dict[str, Any]]:
     """Save schedule data as formatted Markdown"""
     try:
         output_path = Path(output_path)
@@ -71,7 +71,8 @@ def save_schedule_markdown(
                                 if not url.startswith(("http://", "https://")):
                                     url = "https://" + url
 
-                                # Use the last part of the URL as the link text or 'Link' if empty
+                                # Use the last part of the URL as the link text
+                                # or 'Link' if empty
                                 link_text = url.split("/")[-1] or "Link"
                                 f.write(f"  - 🔗 [{link_text}]({url})\n")
 
@@ -85,10 +86,10 @@ def save_schedule_markdown(
                         if announcement.get("type") == "behavior":
                             f.write(f"**{announcement.get('behavior_type', '')}**\n")
                             f.write(
-                                f"- Description: {announcement.get('description', '')}\n"
+                                "- Description: "
+                                f"{announcement.get('description', '')}\n"
                             )
                             f.write(f"- Rating: {announcement.get('rating', '')}\n")
-                            f.write(f"- Subject: {announcement.get('subject', '')}\n")
                         else:
                             f.write(f"- {announcement.get('text', '')}\n")
                         f.write("\n")
@@ -98,13 +99,13 @@ def save_schedule_markdown(
         return data
 
     except Exception as e:
-        raise MarkdownOutputError(f"Failed to save Markdown output: {str(e)}")
+        raise MarkdownOutputError(f"Failed to save Markdown output: {str(e)}") from e
 
 
-def create_markdown_output_step(output_path: Union[str, Path]):
+def create_markdown_output_step(output_path: str | Path):
     """Create a pipeline step function with configured output path"""
 
-    def markdown_output_step(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def markdown_output_step(data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return save_schedule_markdown(data, output_path)
 
     return markdown_output_step

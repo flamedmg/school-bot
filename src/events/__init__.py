@@ -1,23 +1,24 @@
 """FastStream event handling module."""
 
+# Import all handlers to ensure they're registered
+from src.events import (
+    attachment_handler,
+    crawl_handler,
+    schedule_handler,
+    telegram_handler,
+)
+from src.events.broker import app, broker, taskiq_broker
+from src.events.event_types import CrawlErrorEvent, EventTopics
+from src.events.scheduler import scheduler
 from src.events.types import (
-    Student,
-    CrawlEvent,
-    MarkEvent,
     AnnouncementEvent,
     AttachmentEvent,
-    TelegramMessageEvent,
+    CrawlEvent,
+    MarkEvent,
+    Student,
     TelegramCommandEvent,
+    TelegramMessageEvent,
 )
-from src.events.event_types import CrawlErrorEvent, EventTopics
-from src.events.broker import broker, app, taskiq_broker
-from src.events.scheduler import scheduler
-
-# Import all handlers to ensure they're registered
-from src.events import crawl_handler
-from src.events import schedule_handler
-from src.events import telegram_handler
-from src.events import attachment_handler
 
 # Export public API
 __all__ = [

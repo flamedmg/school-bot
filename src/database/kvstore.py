@@ -1,5 +1,5 @@
-from typing import Optional
 from datetime import datetime
+
 from redis.asyncio import Redis
 
 
@@ -14,7 +14,7 @@ class KeyValueStore:
         """Prefix the key to namespace it"""
         return f"{self.prefix}{key}"
 
-    async def get(self, key: str) -> Optional[str]:
+    async def get(self, key: str) -> str | None:
         """Get a value from the store"""
         result = await self.redis.get(self._key(key))
         return result.decode("utf-8") if result else None
@@ -24,7 +24,7 @@ class KeyValueStore:
         await self.redis.set(self._key(key), value)
 
     # Specific methods for greeting timestamp
-    async def get_last_greeting_time(self) -> Optional[float]:
+    async def get_last_greeting_time(self) -> float | None:
         """Get timestamp of last greeting"""
         result = await self.get("last_greeting_time")
         return float(result) if result else None

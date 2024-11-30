@@ -1,6 +1,8 @@
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 from fakeredis.aioredis import FakeRedis
+
 from src.database.kvstore import KeyValueStore, should_show_greeting
 
 

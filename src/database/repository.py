@@ -1,32 +1,34 @@
 """Repository for schedule data"""
 
-from datetime import datetime
-from typing import Optional, List, Dict, Any, Set, Tuple
-from .enums import ChangeType
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from pathlib import Path
+
 from loguru import logger
-from . import models
-from .types import ScheduleChanges, DayChanges, LessonChange, AnnouncementChange
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from ..schedule.schema import (
-    Schedule as ScheduleModel,
-    SchoolDay,
-    Lesson,
-    Homework,
-    Link,
-    Attachment,
     Announcement,
     AnnouncementType,
+    Attachment,
+    Homework,
+    Lesson,
+    Link,
+    SchoolDay,
 )
+from ..schedule.schema import (
+    Schedule as ScheduleModel,
+)
+from . import models
+from .enums import ChangeType
+from .types import AnnouncementChange, DayChanges, LessonChange, ScheduleChanges
 
 
 class ScheduleRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_attachment_by_id(self, unique_id: str) -> Optional[models.Attachment]:
+    async def get_attachment_by_id(self, unique_id: str) -> models.Attachment | None:
         """
         Get an attachment by its unique ID.
 
@@ -40,7 +42,7 @@ class ScheduleRepository:
         result = await self.session.scalars(stmt)
         return result.first()
 
-    async def get_attachment_path(self, unique_id: str) -> Optional[Path]:
+    async def get_attachment_path(self, unique_id: str) -> Path | None:
         """
         Get the file path for an attachment by its unique ID.
 
@@ -48,7 +50,8 @@ class ScheduleRepository:
             unique_id: The unique identifier of the attachment
 
         Returns:
-            Optional[Path]: The path where the attachment should be stored, or None if attachment not found
+            Path | None: The path where the attachment should be stored,
+                        or None if not found
         """
         attachment = await self.get_attachment_by_id(unique_id)
         if attachment:
@@ -79,13 +82,14 @@ class ScheduleRepository:
             else:
                 # No changes detected, skip update
                 logger.info(
-                    f"No changes detected for schedule {schedule.unique_id}, skipping update."
+                    "No changes detected for schedule "
+                    f"{schedule.unique_id}, skipping update."
                 )
         return db_schedule
 
     async def get_schedule_by_unique_id(
         self, unique_id: str, nickname: str
-    ) -> Optional[models.Schedule]:
+    ) -> models.Schedule | None:
         """Get schedule by its unique ID and nickname with all relationships loaded"""
         # Ensure unique_id is padded to 8 digits
         padded_id = unique_id.zfill(8)
@@ -116,12 +120,12 @@ class ScheduleRepository:
         return result.first()
 
     def _check_lesson_order(
-        self, new_lessons: List[Lesson], db_lessons: List[models.Lesson]
+        self, new_lessons: list[Lesson], db_lessons: list[models.Lesson]
     ) -> bool:
         """Check if lesson order has changed"""
         # Create mappings of index to subject for both lists
-        new_order = {l.index: l.subject for l in new_lessons}
-        db_order = {l.index: l.subject for l in db_lessons}
+        new_order = {lesson.index: lesson.subject for lesson in new_lessons}
+        db_order = {lesson.index: lesson.subject for lesson in db_lessons}
 
         # Compare the subjects at each index
         for index in new_order:
@@ -132,9 +136,9 @@ class ScheduleRepository:
 
     def _check_announcements(
         self,
-        new_announcements: List[Announcement],
-        db_announcements: List[models.Announcement],
-    ) -> List[AnnouncementChange]:
+        new_announcements: list[Announcement],
+        db_announcements: list[models.Announcement],
+    ) -> list[AnnouncementChange]:
         """Check for changes in announcements"""
         changes = []
         new_ids = {a.unique_id for a in new_announcements}
@@ -223,7 +227,7 @@ class ScheduleRepository:
                 day_changes.lessons.append(order_change)
 
             # Create lookup dictionary for database lessons
-            db_lookup = {l.index: l for l in db_day.lessons}
+            db_lookup = {lesson.index: lesson for lesson in db_day.lessons}
 
             # Process all changes for each lesson
             for new_lesson in new_day.lessons:
@@ -272,7 +276,8 @@ class ScheduleRepository:
         unique_id = schedule.unique_id.zfill(8)
         db_schedule = models.Schedule(unique_id=unique_id, nickname=schedule.nickname)
 
-        # First, ensure all days in the schedule have their announcements properly linked
+        # First, ensure all days in the schedule have their announcements properly
+        # linked
         for day in schedule.days:
             # Set day reference for all announcements in this day
             for announcement in day.announcements:
@@ -325,7 +330,7 @@ class ScheduleRepository:
                 await self._update_day(db_day, day)
 
         # Remove days that are no longer in the schedule
-        incoming_day_ids = set(d.date.strftime("%Y%m%d") for d in schedule.days)
+        incoming_day_ids = {d.date.strftime("%Y%m%d") for d in schedule.days}
         db_day_ids = set(db_days_map.keys())
         days_to_remove = db_day_ids - incoming_day_ids
         for day_id in days_to_remove:
@@ -349,7 +354,7 @@ class ScheduleRepository:
                 incoming_lessons.append(db_lesson)
 
         # Remove lessons that are no longer in the schedule
-        incoming_lesson_ids = set(lesson.unique_id for lesson in day.lessons)
+        incoming_lesson_ids = {lesson.unique_id for lesson in day.lessons}
         db_lesson_ids = set(db_lessons_map.keys())
         lessons_to_remove = db_lesson_ids - incoming_lesson_ids
         for lesson_id in lessons_to_remove:
@@ -373,7 +378,7 @@ class ScheduleRepository:
                 incoming_announcements.append(db_announcement)
 
         # Remove announcements that are no longer in the schedule
-        incoming_announcement_ids = set(ann.unique_id for ann in day.announcements)
+        incoming_announcement_ids = {ann.unique_id for ann in day.announcements}
         db_announcement_ids = set(db_announcements_map.keys())
         announcements_to_remove = db_announcement_ids - incoming_announcement_ids
         for ann_id in announcements_to_remove:
@@ -446,7 +451,7 @@ class ScheduleRepository:
                 incoming_attachments.append(db_attachment)
 
         # Remove attachments that are no longer present
-        incoming_attachment_ids = set(att.unique_id for att in new_attachments)
+        incoming_attachment_ids = {att.unique_id for att in new_attachments}
         db_attachment_ids = set(db_attachments_map.keys())
         attachments_to_remove = db_attachment_ids - incoming_attachment_ids
         for att_id in attachments_to_remove:
@@ -472,7 +477,7 @@ class ScheduleRepository:
                 incoming_links.append(db_link)
 
         # Remove links that are no longer present
-        incoming_link_ids = set(link.unique_id for link in new_links)
+        incoming_link_ids = {link.unique_id for link in new_links}
         db_link_ids = set(db_links_map.keys())
         links_to_remove = db_link_ids - incoming_link_ids
         for link_id in links_to_remove:

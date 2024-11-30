@@ -1,10 +1,12 @@
-import pytest
 from datetime import datetime
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from src.database.models import Base
 from src.database.repository import ScheduleRepository
-from src.schedule.schema import Schedule, SchoolDay, Lesson
 from src.schedule.preprocessors.lessons import clean_subject
+from src.schedule.schema import Lesson, Schedule, SchoolDay
 
 
 @pytest.fixture

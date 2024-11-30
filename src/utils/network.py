@@ -1,4 +1,5 @@
 import socket
+
 from loguru import logger
 
 
@@ -15,7 +16,7 @@ def is_port_in_use(port: int) -> bool:
         try:
             s.bind(("0.0.0.0", port))
             return False
-        except socket.error:
+        except OSError:
             logger.warning(f"Port {port} is already in use")
             return True
 

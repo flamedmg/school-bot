@@ -1,7 +1,8 @@
-from loguru import logger
-import sys
 import logging
 import logging.config
+import sys
+
+from loguru import logger
 
 
 class InterceptHandler(logging.Handler):

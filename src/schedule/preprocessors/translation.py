@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Any
+
 import yaml
 from loguru import logger
-from typing import Dict, List, Any
-from .exceptions import PreprocessingError
+
 from . import lessons  # Import the lessons module
+from .exceptions import PreprocessingError
 
 
 class Translator:
@@ -13,14 +15,16 @@ class Translator:
     def _load_translations(self) -> dict:
         try:
             translations_file = Path(__file__).parent.parent / "translations.yaml"
-            with open(translations_file, "r", encoding="utf-8") as f:
+            with open(translations_file, encoding="utf-8") as f:
                 translations = yaml.safe_load(f)
                 logger.debug(
-                    f"Loaded {len(translations.get('subjects', {}))} subject translations"
+                    "Loaded {} subject translations".format(
+                        len(translations.get("subjects", {}))
+                    )
                 )
                 return translations
         except Exception as e:
-            raise PreprocessingError(f"Failed to load translations: {str(e)}")
+            raise PreprocessingError(f"Failed to load translations: {str(e)}") from e
 
     def translate_subject(self, text: str) -> str:
         if not text:
@@ -31,7 +35,7 @@ class Translator:
         return translated
 
 
-def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def preprocess_translations(data: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Translate subject names in the schedule data.
     Should be run before lesson preprocessing.
@@ -43,7 +47,8 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         total_subjects = 0
         translated_subjects = 0
 
-        # Handle case where input is a list containing a single dictionary with 'days' key
+        # Handle case where input is a list containing a single dictionary
+        # with 'days' key
         if len(data) == 1 and isinstance(data[0], dict) and "days" in data[0]:
             days = data[0]["days"]
             wrap_output = True
@@ -69,7 +74,8 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     subject = lesson["subject"]
                     if subject:
                         total_subjects += 1
-                        # Extract subject name using clean_subject function from the lessons module
+                        # Extract subject name using clean_subject function
+                        # from the lessons module
                         subject_name, _ = lessons.clean_subject(subject)
                         if subject_name:
                             # Translate the subject name
@@ -79,7 +85,7 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                             # Replace the subject with the translated name
                             lesson["subject"] = translated_name
 
-        logger.info(f"Successfully processed translations:")
+        logger.info("Successfully processed translations:")
         logger.info(f"  - {total_lessons} lessons checked")
         logger.info(f"  - {total_subjects} subjects found")
         logger.info(f"  - {translated_subjects} subjects translated")
@@ -90,4 +96,4 @@ def preprocess_translations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     except Exception as e:
         raise PreprocessingError(
             f"Failed to translate schedule data: {str(e)}", {"data": data}
-        )
+        ) from e

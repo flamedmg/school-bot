@@ -1,6 +1,4 @@
-import pytest
 from src.schedule.preprocessors.translation import Translator, preprocess_translations
-from src.schedule.preprocessors.exceptions import PreprocessingError
 
 
 def test_translator_initialization():
@@ -23,7 +21,7 @@ def test_subject_translation():
 
     # Test empty/None cases
     assert translator.translate_subject("") == ""
-    assert translator.translate_subject(None) == None
+    assert translator.translate_subject(None) is None
 
 
 def test_preprocess_translations():
@@ -64,4 +62,4 @@ def test_preprocess_translations_error_handling():
     # Test with None values
     data_with_none = [{"days": [{"lessons": [{"subject": None}]}]}]
     result = preprocess_translations(data_with_none)
-    assert result[0]["days"][0]["lessons"][0]["subject"] == None
+    assert result[0]["days"][0]["lessons"][0]["subject"] is None

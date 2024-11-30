@@ -1,10 +1,12 @@
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
-from telethon import TelegramClient
+
+import pytest
 from fakeredis.aioredis import FakeRedis
-from src.telegram.bot import send_welcome_message
+from telethon import TelegramClient
+
 from src.database.kvstore import KeyValueStore
+from src.telegram.bot import send_welcome_message
 
 
 @pytest.fixture

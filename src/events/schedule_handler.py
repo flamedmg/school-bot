@@ -1,15 +1,18 @@
-from telethon import TelegramClient
 from faststream import Depends, Logger
+from telethon import TelegramClient
 
 from src.config import settings
-from src.events.types import MarkEvent, AnnouncementEvent
-from src.events.event_types import EventTopics
 from src.events.broker import broker, get_telegram
+from src.events.event_types import EventTopics
+from src.events.types import AnnouncementEvent, MarkEvent
+
+# Create module-level singleton
+telegram_client = Depends(get_telegram)
 
 
 @broker.subscriber(EventTopics.NEW_MARK)
 async def handle_new_mark(
-    event: MarkEvent, logger: Logger, telegram: TelegramClient = Depends(get_telegram)
+    event: MarkEvent, logger: Logger, telegram: TelegramClient = telegram_client
 ):
     """Handle new mark events and send Telegram notifications."""
     try:
@@ -37,7 +40,7 @@ async def handle_new_mark(
 async def handle_new_announcement(
     event: AnnouncementEvent,
     logger: Logger,
-    telegram: TelegramClient = Depends(get_telegram),
+    telegram: TelegramClient = telegram_client,
 ):
     """Handle new announcement events and send Telegram notifications."""
     try:

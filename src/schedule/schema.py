@@ -1,8 +1,9 @@
+import hashlib
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
-import hashlib
+from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class AnnouncementType(str, Enum):
@@ -26,7 +27,7 @@ class Attachment(BaseModel):
 
 class Link(BaseModel):
     original_url: str
-    destination_url: Optional[str] = None
+    destination_url: str | None = None
     _day: Optional["SchoolDay"] = None
 
     @property
@@ -39,9 +40,9 @@ class Link(BaseModel):
 
 
 class Homework(BaseModel):
-    text: Optional[str] = None
-    links: List[Link] = Field(default_factory=list)
-    attachments: List[Attachment] = Field(default_factory=list)
+    text: str | None = None
+    links: list[Link] = Field(default_factory=list)
+    attachments: list[Attachment] = Field(default_factory=list)
     _day: Optional["SchoolDay"] = None
 
     def __init__(self, **data):
@@ -57,18 +58,22 @@ class Homework(BaseModel):
         """Generate unique ID based on content"""
         if not self._day:
             raise ValueError("Homework must be associated with a day")
-        content = f"{self.text or ''}:{[link.unique_id for link in self.links]}:{[att.unique_id for att in self.attachments]}"
+        content = (
+            f"{self.text or ''}:"
+            f"{[link.unique_id for link in self.links]}:"
+            f"{[att.unique_id for att in self.attachments]}"
+        )
         return f"{self._day.unique_id}_{hashlib.md5(content.encode()).hexdigest()[:6]}"
 
 
 class Lesson(BaseModel):
     index: int
     subject: str
-    room: Optional[str] = None
-    topic: Optional[str] = None
-    topic_attachments: List[Attachment] = Field(default_factory=list)
-    homework: Optional[Homework] = None
-    mark: Optional[int] = None
+    room: str | None = None
+    topic: str | None = None
+    topic_attachments: list[Attachment] = Field(default_factory=list)
+    homework: Homework | None = None
+    mark: int | None = None
     _day: Optional["SchoolDay"] = None
 
     def __init__(self, **data):
@@ -102,11 +107,11 @@ class Lesson(BaseModel):
 
 class Announcement(BaseModel):
     type: AnnouncementType
-    text: Optional[str] = None
-    behavior_type: Optional[str] = None  # For behavior announcements
-    description: Optional[str] = None  # For behavior announcements
-    rating: Optional[str] = None  # For behavior announcements
-    subject: Optional[str] = None  # For behavior announcements
+    text: str | None = None
+    behavior_type: str | None = None  # For behavior announcements
+    description: str | None = None  # For behavior announcements
+    rating: str | None = None  # For behavior announcements
+    subject: str | None = None  # For behavior announcements
     _day: Optional["SchoolDay"] = None
 
     @model_validator(mode="after")
@@ -117,7 +122,8 @@ class Announcement(BaseModel):
                 [self.behavior_type, self.description, self.rating, self.subject]
             ):
                 raise ValueError(
-                    "Behavior announcement requires behavior_type, description, rating, and subject"
+                    "Behavior announcement requires behavior_type, "
+                    "description, rating, and subject"
                 )
         elif self.type == AnnouncementType.GENERAL:
             if not self.text:
@@ -129,7 +135,10 @@ class Announcement(BaseModel):
         """Generate unique ID based on day and content"""
         if not self._day:
             raise ValueError("Announcement must be associated with a day")
-        content = f"{self.type}:{self.text or ''}:{self.behavior_type or ''}:{self.description or ''}"
+        content = (
+            f"{self.type}:{self.text or ''}:"
+            f"{self.behavior_type or ''}:{self.description or ''}"
+        )
         content_hash = hashlib.md5(content.encode()).hexdigest()[:6]
         type_prefix = "b" if self.type == AnnouncementType.BEHAVIOR else "g"
         return f"{self._day.unique_id}_{type_prefix}{content_hash}"
@@ -137,8 +146,8 @@ class Announcement(BaseModel):
 
 class SchoolDay(BaseModel):
     date: datetime
-    lessons: List[Lesson] = Field(default_factory=list)
-    announcements: List[Announcement] = Field(default_factory=list)
+    lessons: list[Lesson] = Field(default_factory=list)
+    announcements: list[Announcement] = Field(default_factory=list)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -185,8 +194,8 @@ class Schedule(BaseModel):
     nickname: str = Field(
         description="Identifier for which student this schedule belongs to"
     )
-    days: List[SchoolDay]
-    attachments: List[Attachment] = Field(default_factory=list)
+    days: list[SchoolDay]
+    attachments: list[Attachment] = Field(default_factory=list)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -216,4 +225,5 @@ class Schedule(BaseModel):
         first_day = self.days[0].date
         year = first_day.isocalendar()[0]
         week = first_day.isocalendar()[1]
-        return f"{year}{week:02d}"  # Year (4 digits) + Week (2 digits padded) = 6 characters
+        # Year (4 digits) + Week (2 digits padded) = 6 characters
+        return f"{year}{week:02d}"

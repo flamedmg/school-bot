@@ -8,19 +8,22 @@ This preprocessor handles cleaning and standardization of homework data:
 4. Handles special cases for uzdevumi.lv and other platforms
 
 Modifications:
-- Attachments without a filename are now allowed to pass through to the extract_attachments step.
+- Attachments without a filename are now allowed to pass through to the
+  extract_attachments step.
 - Removed the check that filters out attachments missing the 'filename' key.
 - Added validation for empty link objects
 - Improved error messages with more context
 """
 
-from loguru import logger
-from typing import Dict, List, Optional, Any
+from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
+
+from loguru import logger
+
 from .exceptions import PreprocessingError
 
 
-def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
+def extract_destination_url(url: str) -> dict[str, str | None]:
     """
     Extract destination URL from OAuth links and standardize other URLs.
     """
@@ -59,7 +62,7 @@ def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
     return result
 
 
-def combine_homework_texts(texts: List[str]) -> Optional[str]:
+def combine_homework_texts(texts: list[str]) -> str | None:
     """
     Combine multiple homework text entries into a single string.
     Removes empty strings and normalizes whitespace.
@@ -76,7 +79,7 @@ def combine_homework_texts(texts: List[str]) -> Optional[str]:
     return " ".join(cleaned)
 
 
-def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
+def preprocess_homework(homework: dict[str, Any]) -> dict[str, Any]:
     """Process homework data"""
     try:
         # Handle empty or None input
@@ -116,7 +119,7 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
                     processed_url = extract_destination_url(url)
                     valid_links.append(processed_url)
                 except PreprocessingError as e:
-                    raise PreprocessingError(f"Failed to process URL: {str(e)}")
+                    raise PreprocessingError(f"Failed to process URL: {str(e)}") from e
 
             result["links"] = valid_links
 
@@ -148,11 +151,11 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
             result["attachments"] = valid_attachments
 
         # Deduplicate links based on attachment URLs
-        attachment_urls = set(
+        attachment_urls = {
             attachment["url"]
             for attachment in result["attachments"]
             if "url" in attachment
-        )
+        }
 
         filtered_links = []
         for link in result["links"]:
@@ -168,10 +171,10 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         raise PreprocessingError(
             f"Failed to process homework data: {str(e)}", {"homework": homework}
-        )
+        ) from e
 
 
-def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def preprocess_homeworks(data: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Process all homework entries in the schedule data.
 

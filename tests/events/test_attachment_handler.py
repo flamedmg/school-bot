@@ -1,8 +1,10 @@
+import logging
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
+
 from src.events.attachment_handler import handle_attachment
 from src.events.types import AttachmentEvent
-import logging
 
 
 @pytest.mark.asyncio

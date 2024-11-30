@@ -1,23 +1,27 @@
-from telethon import TelegramClient
-from faststream import Depends, Logger
-from loguru import logger as loguru_logger
 from datetime import datetime
 
-from src.config import settings
-from src.events.types import CrawlEvent
-from src.events.event_types import CrawlErrorEvent, EventTopics
-from src.schedule.manager import StudentManager
-from src.schedule.exceptions import CrawlException
-from src.events.broker import broker, get_telegram, get_repository
+from faststream import Depends, Logger
+from loguru import logger as loguru_logger
+from telethon import TelegramClient
+
 from src.database.repository import ScheduleRepository
+from src.events.broker import broker, get_repository, get_telegram
+from src.events.event_types import CrawlErrorEvent, EventTopics
+from src.events.types import CrawlEvent
+from src.schedule.exceptions import CrawlError
+from src.schedule.manager import StudentManager
+
+# Create module-level singletons
+telegram_client = Depends(get_telegram)
+repository_singleton = Depends(get_repository)
 
 
 @broker.subscriber(EventTopics.CRAWL_SCHEDULE)
 async def handle_crawl_event(
     event: CrawlEvent,
     logger: Logger,
-    telegram: TelegramClient = Depends(get_telegram),
-    repository: ScheduleRepository = Depends(get_repository),
+    telegram: TelegramClient = telegram_client,
+    repository: ScheduleRepository = repository_singleton,
 ):
     """Handle crawl events for schedule updates."""
     try:
@@ -38,7 +42,7 @@ async def handle_crawl_event(
             f"Successfully processed schedules for student: **{student.nickname}**"
         )
 
-    except CrawlException as e:
+    except CrawlError as e:
         # The manager will have already converted this to an event and published it
         loguru_logger.error(f"Crawl error: {e.error_type} - {e.message}")
         logger.error(f"Crawl error: {e.error_type} - {e.message}")

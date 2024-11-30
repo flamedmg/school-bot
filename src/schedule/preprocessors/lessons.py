@@ -9,12 +9,14 @@ This preprocessor handles cleaning and standardization of lesson data:
 """
 
 import re
-from typing import Dict, Any, Optional, List
+from typing import Any
+
 from loguru import logger
+
 from .exceptions import PreprocessingError
 
 
-def clean_subject(subject: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+def clean_subject(subject: str | None) -> tuple[str | None, str | None]:
     """
     Separate subject name from room number and clean up.
     Removes all content in parentheses and cleans up whitespace.
@@ -46,13 +48,14 @@ def clean_subject(subject: Optional[str]) -> tuple[Optional[str], Optional[str]]
     return subject, None
 
 
-def clean_lesson_index(number: Optional[str]) -> Optional[int]:
+def clean_lesson_index(number: str | None) -> int | None:
     """
     Convert lesson number string to integer index.
     Returns None for missing or invalid numbers.
 
     Raises:
-        PreprocessingError: If the input is invalid (empty string, invalid format, or wrong type)
+        PreprocessingError: If the input is invalid (empty string, invalid format,
+            or wrong type)
     """
     if number is None:
         return None
@@ -79,11 +82,11 @@ def clean_lesson_index(number: Optional[str]) -> Optional[int]:
 
     try:
         return int(cleaned)
-    except (ValueError, TypeError):
-        raise PreprocessingError(f"Invalid lesson number format: {number}")
+    except (ValueError, TypeError) as e:
+        raise PreprocessingError(f"Invalid lesson number format: {number}") from e
 
 
-def clean_topic(topic: str) -> Optional[str]:
+def clean_topic(topic: str) -> str | None:
     """
     Clean and format topic text.
     - Remove excess whitespace and newlines
@@ -100,7 +103,7 @@ def clean_topic(topic: str) -> Optional[str]:
     return cleaned
 
 
-def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
+def preprocess_lesson(lesson: dict[str, Any]) -> dict[str, Any]:
     """Process a single lesson entry"""
     if not isinstance(lesson, dict):
         raise PreprocessingError("Invalid lesson data type", {"lesson": lesson})
@@ -115,7 +118,7 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
 
             # Handle topic links
             if "links" in topic_data:
-                if not "homework" in result:
+                if "homework" not in result:
                     result["homework"] = {"text": None, "links": [], "attachments": []}
                 result["homework"]["links"].extend(
                     [
@@ -141,7 +144,7 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
                 raise PreprocessingError(
                     f"Failed to process lesson number: {str(e)}",
                     {"lesson": lesson, "original_error": e},
-                )
+                ) from e
         # Keep existing index if present
         elif "index" in result:
             pass
@@ -175,10 +178,10 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         raise PreprocessingError(
             f"Failed to preprocess lesson data: {str(e)}", {"lesson": lesson}
-        )
+        ) from e
 
 
-def preprocess_lessons(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def preprocess_lessons(data: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Process all lessons in the schedule data.
     Cleans and standardizes lesson information.

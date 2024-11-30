@@ -1,48 +1,21 @@
-import pytest
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+import pytest
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from src.database.enums import ChangeType
 from src.database.models import Base
+from src.database.repository import ScheduleRepository
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
 from src.schedule.schema import (
-    Schedule,
-    SchoolDay,
-    Lesson,
-    Homework,
     Announcement,
     AnnouncementType,
+    Schedule,
 )
-from src.database.repository import ScheduleRepository
 from tests.crawl.utils import load_test_file
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
-
-
-@pytest.fixture
-async def db_session():
-    """Create a new async database session for each test"""
-    # Create async engine
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:",
-        echo=False,
-    )
-
-    # Create all tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    # Create async session
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-
-    async with async_session() as session:
-        yield session
-
-    # Clean up
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest.fixture
@@ -107,12 +80,16 @@ async def test_real_data_pipeline_and_changes(db_session):
     assert len(saved_schedule.days) == len(initial_schedule.days)
 
     # Compare days
-    for orig_day, saved_day in zip(initial_schedule.days, saved_schedule.days):
+    for orig_day, saved_day in zip(
+        initial_schedule.days, saved_schedule.days, strict=False
+    ):
         assert orig_day.date == saved_day.date
         assert len(orig_day.lessons) == len(saved_day.lessons)
 
         # Compare lessons
-        for orig_lesson, saved_lesson in zip(orig_day.lessons, saved_day.lessons):
+        for orig_lesson, saved_lesson in zip(
+            orig_day.lessons, saved_day.lessons, strict=False
+        ):
             assert orig_lesson.subject == saved_lesson.subject
             assert orig_lesson.mark == saved_lesson.mark
             assert orig_lesson.room == saved_lesson.room
@@ -131,7 +108,9 @@ async def test_real_data_pipeline_and_changes(db_session):
 
         # Compare announcements
         assert len(orig_day.announcements) == len(saved_day.announcements)
-        for orig_ann, saved_ann in zip(orig_day.announcements, saved_day.announcements):
+        for orig_ann, saved_ann in zip(
+            orig_day.announcements, saved_day.announcements, strict=False
+        ):
             assert (
                 orig_ann.type.value == saved_ann.type.value
             )  # Compare enum values directly
@@ -290,7 +269,8 @@ async def test_multiple_schedules_data_comparison(db_session):
                     homework_attachments = len(lesson.homework.attachments)
                     if homework_attachments > 0:
                         attachment_details.append(
-                            f"Lesson {lesson.index} homework: {homework_attachments} attachments"
+                            f"Lesson {lesson.index} homework: "
+                            f"{homework_attachments} attachments"
                         )
                     total_attachments += homework_attachments
 

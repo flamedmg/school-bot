@@ -1,20 +1,23 @@
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import pytest
+from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
 from src.schedule.schema import (
-    Schedule,
-    SchoolDay,
-    Lesson,
-    Homework,
-    Attachment,
-    Link,
     Announcement,
     AnnouncementType,
+    Attachment,
+    Homework,
+    Lesson,
+    Link,
+    Schedule,
+    SchoolDay,
 )
+
 from .utils import load_test_file
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 
 
 def test_schedule_pipeline_output(capsys):

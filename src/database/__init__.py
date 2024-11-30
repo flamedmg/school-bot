@@ -1,7 +1,9 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from .models import Base
+
 from src.config import settings
+
+from .models import Base
 
 # Convert SQLite URL to async version
 db_url = settings.database_url.replace("sqlite:", "sqlite+aiosqlite:")

@@ -1,18 +1,19 @@
-import pytest
 from datetime import datetime
-from typing import List, Optional
+
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from src.database.models import Base
 from src.schedule.schema import (
-    Schedule as ScheduleModel,
-    SchoolDay,
-    Lesson,
-    Homework,
-    Link,
-    Attachment,
     Announcement,
     AnnouncementType,
+    Homework,
+    Lesson,
+    SchoolDay,
+)
+from src.schedule.schema import (
+    Schedule as ScheduleModel,
 )
 
 
@@ -28,8 +29,8 @@ def engine():
 @pytest.fixture
 def db_session(engine):
     """Create a new database session for each test"""
-    SessionLocal = sessionmaker(bind=engine)
-    session = SessionLocal()
+    session_local = sessionmaker(bind=engine)
+    session = session_local()
     try:
         yield session
     finally:
@@ -39,11 +40,11 @@ def db_session(engine):
 def create_lesson(
     index: int,
     subject: str,
-    mark: Optional[int] = None,
-    room: Optional[str] = None,
-    topic: Optional[str] = None,
-    homework: Optional[Homework] = None,
-    day: Optional[SchoolDay] = None,
+    mark: int | None = None,
+    room: str | None = None,
+    topic: str | None = None,
+    homework: Homework | None = None,
+    day: SchoolDay | None = None,
 ) -> Lesson:
     """Create a lesson with proper parent references"""
     lesson = Lesson(
@@ -68,12 +69,12 @@ def create_lesson(
 
 def create_announcement(
     type: AnnouncementType,
-    text: Optional[str] = None,
-    behavior_type: Optional[str] = None,
-    description: Optional[str] = None,
-    rating: Optional[str] = None,
-    subject: Optional[str] = None,
-    day: Optional[SchoolDay] = None,
+    text: str | None = None,
+    behavior_type: str | None = None,
+    description: str | None = None,
+    rating: str | None = None,
+    subject: str | None = None,
+    day: SchoolDay | None = None,
 ) -> Announcement:
     """Create an announcement with proper parent references"""
     announcement = Announcement(
@@ -91,8 +92,8 @@ def create_announcement(
 
 def create_school_day(
     date: datetime,
-    lessons: Optional[List[Lesson]] = None,
-    announcements: Optional[List[Announcement]] = None,
+    lessons: list[Lesson] | None = None,
+    announcements: list[Announcement] | None = None,
 ) -> SchoolDay:
     """Create a school day with proper parent references"""
     day = SchoolDay(date=date, lessons=lessons or [], announcements=announcements or [])
@@ -111,7 +112,7 @@ def create_school_day(
 
 
 def create_schedule(
-    days: List[SchoolDay], nickname: str = "test_student"
+    days: list[SchoolDay], nickname: str = "test_student"
 ) -> ScheduleModel:
     """Create a schedule with proper parent references"""
     schedule = ScheduleModel(days=days, nickname=nickname)

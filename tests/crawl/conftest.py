@@ -1,7 +1,7 @@
-import os
-import pytest
 import logging
 from pathlib import Path
+
+import pytest
 from dotenv import load_dotenv
 
 
@@ -20,7 +20,8 @@ def load_env():
         load_dotenv(env_file)
     else:
         print(
-            f"\nWarning: {env_file} not found. Create it from .env.test.example for real tests."
+            f"\nWarning: {env_file} not found. "
+            "Create it from .env.test.example for real tests."
         )
 
 

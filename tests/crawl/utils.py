@@ -19,5 +19,5 @@ def load_test_file(filename: str, *, base_dir: str | None = None) -> str:
     else:
         file_path = tests_dir / filename
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         return f.read()
