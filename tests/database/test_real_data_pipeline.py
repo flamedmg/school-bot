@@ -197,3 +197,80 @@ async def test_real_data_pipeline_and_changes(db_session):
         modified_schedule.days[0].announcements
     )
     assert any(a.text == "New test announcement" for a in modified_day.announcements)
+
+
+@pytest.mark.asyncio
+async def test_multiple_schedules_data_comparison(db_session):
+    """Test and compare data from multiple schedule files"""
+    repository = ScheduleRepository(db_session)
+    strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
+    
+    test_files = [
+        "test_ekdg_20240212.html",
+        "test_ekdg_20241118.html", 
+        "test_ekdg_20241125.html"
+    ]
+    
+    results = []
+    
+    for filename in test_files:
+        # Process each file
+        html = load_test_file(filename, base_dir="test_data")
+        raw_data = strategy.extract(html=html, url="https://test.com")
+        
+        pipeline = create_default_pipeline()
+        schedule_data = pipeline.execute(raw_data)
+        schedule_data[0]["nickname"] = "Test Student"
+        
+        schedule = Schedule(**schedule_data[0])
+        
+        # Collect statistics
+        total_links = 0
+        total_attachments = 0
+        
+        for day in schedule.days:
+            for lesson in day.lessons:
+                if lesson.homework:
+                    total_links += len(lesson.homework.links)
+                    total_attachments += len(lesson.homework.attachments)
+        
+        results.append({
+            "filename": filename,
+            "days": len(schedule.days),
+            "links": total_links,
+            "attachments": total_attachments,
+            "schedule": schedule
+        })
+        
+        # Save to database to verify data integrity
+        await repository.save_schedule(schedule)
+    
+    # Print comparison results
+    print("\nSchedule Data Comparison:")
+    print("-" * 50)
+    for result in results:
+        print(f"\nFile: {result['filename']}")
+        print(f"Days: {result['days']}")
+        print(f"Total Links: {result['links']}")
+        print(f"Total Attachments: {result['attachments']}")
+    
+    # Verify basic expectations for all files
+    for result in results:
+        assert result["days"] > 0, f"No days found in {result['filename']}"
+        assert result["links"] >= 0, f"Invalid link count in {result['filename']}"
+        assert result["attachments"] >= 0, f"Invalid attachment count in {result['filename']}"
+
+    # Specific assertions for test_ekdg_20240212.html
+    feb_result = next(r for r in results if r["filename"] == "test_ekdg_20240212.html")
+    assert feb_result["links"] == 1, "Expected exactly 1 link (typingclub.com) in February schedule"
+    assert feb_result["attachments"] == 5, "Expected exactly 5 attachments (.pptx, .docx, .ppt files) in February schedule"
+
+    # Specific assertions for test_ekdg_20241118.html
+    nov18_result = next(r for r in results if r["filename"] == "test_ekdg_20241118.html")
+    assert nov18_result["links"] == 0, "Expected no links in November 18th schedule"
+    assert nov18_result["attachments"] == 9, "Expected exactly 9 attachments in November 18th schedule"
+
+    # Specific assertions for test_ekdg_20241125.html
+    nov25_result = next(r for r in results if r["filename"] == "test_ekdg_20241125.html")
+    assert nov25_result["links"] == 2, "Expected exactly 2 links in November 25th schedule"
+    assert nov25_result["attachments"] == 13, "Expected exactly 13 attachments in November 25th schedule"
