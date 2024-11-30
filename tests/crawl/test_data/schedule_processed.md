@@ -1,6 +1,6 @@
 # Class Schedule
 
-*Generated on: 2024-11-30 11:16:30*
+*Generated on: 2024-11-30 15:53:15*
 
 ## Monday, November 11, 2024
 
@@ -39,13 +39,13 @@
   - 📎 [3kl_15_siltuma_joslas1_2024_2025.ppt](/Attachment/Get/52c3d3f4-c9c9-4c2b-a0be-7652fabccff6)
 
 **Period 6**
-- Subject: Russian
+- Subject: Mazākumtautību valoda un literatūra
 - Room: 205
 - Topic: Pārbaudes darba uzdevumu analīze. Kontrolraksts.
 - Homework:
 
 **Period 7**
-- Subject: Dejas un ritmika (F)
+- Subject: Dance
 - Room: az
 - Topic: Darbs diagonālē. S.R.: Deju soli, pagriezieni, lēcieni.
 - Homework:
@@ -75,7 +75,7 @@
 - Mark: 9
 
 **Period 2**
-- Subject: English
+- Subject: Svešvaloda 1
 - Room: 201
 - Topic: Es pats. Kā runāt par savu ārējo izskatu un jūtām? SR: izmanto darbības vārdus "have got" /"to be" teikumos un jautājumos FV: Ārējais izskats un jūtas. SR: prot izmantot darbības vārdus "have got" /"to be" apraksta ārējo izskatu
 - Homework:
@@ -107,7 +107,7 @@
 - Homework:
 
 **Period 6**
-- Subject: Matemātika F (F)
+- Subject: Matemātika F
 - Room: 210
 - Topic: Krāsošanas uzdevumi.
 - Homework:
@@ -119,7 +119,7 @@
 - Homework:
 
 **Period 7**
-- Subject: Pasaku pasaulē (krievu valoda)
+- Subject: Story Time
 - Room: 205
 - Topic: Krievu tautas brīnumu pasaka „Morozko”.
 - Homework:
@@ -144,13 +144,13 @@
 - Homework:
 
 **Period 2**
-- Subject: English
+- Subject: Svešvaloda 1
 - Room: 202
 - Topic: Es pats. Kā runāt par savu ārējo izskatu un jūtām? SR: prot izmantot ​to be un have got​ lai runāt par cilvēku ārējo izskatu; zin 16 vārdus, lai aprakstīt sevi un citus.
 - Homework:
 
 **Period 3**
-- Subject: Russian
+- Subject: Mazākumtautību valoda un literatūra
 - Room: 205
 - Topic: Praktiskais darbs«Veidojam no morfēmām jaunus vārdus un jaunas vārdu formas ».
 - Homework:
@@ -223,7 +223,7 @@
   - Darba burtnīca 1. daļa:
 
 **Period 3**
-- Subject: Russian
+- Subject: Mazākumtautību valoda un literatūra
 - Room: 205
 - Topic: Latviešu tautas pasakas.
 - Homework:
@@ -274,7 +274,7 @@
 - Mark: 10
 
 **Period 2**
-- Subject: Angļu valoda F (F)
+- Subject: Angļu valoda F
 - Room: 407
 - Homework:
   - Izmantojot paraugu pēdējā slaidā uzrakstīt par sevi.
@@ -303,7 +303,7 @@
   - 🔗 [4649268](https://www.uzdevumi.lv/TestWork/Info/4649268)
 
 **Period 6**
-- Subject: Dizains un tehnoloģijas (datorika)
+- Subject: D&T
 - Room: 309
 - Topic: Praktiskais darbs “Teksta formatēšana tekstapstrādes lietotnē.” SR: Veic pieteikšanos tīmekļvietnē ar autorizāciju, ievērojot drošības noteikumus. Dublē tekstu. Formatē tekstu . Veido teksta pirmās rindas atkāpi.
 - Homework:

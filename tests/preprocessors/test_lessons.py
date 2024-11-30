@@ -32,7 +32,7 @@ def test_clean_lesson_index():
 
 
 def test_clean_subject():
-    """Test separation of subject and room"""
+    """Test separation of subject and room, with all parenthetical content removed"""
     # Test cases with room numbers
     assert clean_subject("Matemātika210") == ("Matemātika", "210")
     assert clean_subject("Latviešu valoda un literatūra403") == (
@@ -43,7 +43,7 @@ def test_clean_subject():
     # Test cases with known room codes
     assert clean_subject("Sports un veselībasz") == ("Sports un veselība", "sz")
     assert clean_subject("Sports un veselībamz") == ("Sports un veselība", "mz")
-    assert clean_subject("Dejas un ritmika (F)az") == ("Dejas un ritmika (F)", "az")
+    assert clean_subject("Dejas un ritmika (F)az") == ("Dejas un ritmika", "az")
 
     # Test cases without room numbers or codes
     assert clean_subject("English") == ("English", None)
@@ -52,6 +52,12 @@ def test_clean_subject():
         "Tautas dejas kol. 'Balaguri'",
         None,
     )
+
+    # Test cases with parentheses - all should be removed
+    assert clean_subject("Matemātika F (F)") == ("Matemātika F", None)
+    assert clean_subject("Sports (F) (G)") == ("Sports", None)
+    assert clean_subject("Matemātika (grupa (A))") == ("Matemātika", None)
+    assert clean_subject("Matemātika F (F) 210") == ("Matemātika F", "210")
 
     # Edge cases
     assert clean_subject("") == (None, None)

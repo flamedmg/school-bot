@@ -17,12 +17,15 @@ from .exceptions import PreprocessingError
 def clean_subject(subject: Optional[str]) -> tuple[Optional[str], Optional[str]]:
     """
     Separate subject name from room number and clean up.
+    Removes all content in parentheses and cleans up whitespace.
     """
     if not subject:
         return None, None
 
-    # Remove (I) suffix if present
-    subject = subject.replace(" (I)", "").strip()
+    # Remove all content in parentheses (including nested)
+    while "(" in subject:
+        subject = re.sub(r"\s*\([^()]*\)", "", subject)
+    subject = subject.strip()
 
     # Try to extract numeric room number at the end
     match = re.search(r"(\d{2,3})$", subject)
@@ -58,7 +61,7 @@ def clean_lesson_index(number: Optional[str]) -> Optional[int]:
     if not isinstance(number, str):
         raise PreprocessingError(
             f"Invalid lesson number type: expected string or None, got {type(number)}",
-            {"number": number}
+            {"number": number},
         )
 
     # Handle empty string case explicitly
@@ -109,16 +112,18 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
         if "topic" in result and isinstance(result["topic"], dict):
             topic_data = result["topic"]
             result["topic"] = clean_topic(topic_data.get("text", ""))
-            
+
             # Handle topic links
             if "links" in topic_data:
                 if not "homework" in result:
                     result["homework"] = {"text": None, "links": [], "attachments": []}
-                result["homework"]["links"].extend([
-                    {"original_url": link["url"], "destination_url": None}
-                    for link in topic_data["links"]
-                ])
-            
+                result["homework"]["links"].extend(
+                    [
+                        {"original_url": link["url"], "destination_url": None}
+                        for link in topic_data["links"]
+                    ]
+                )
+
             # Handle topic attachments
             if "attachments" in topic_data:
                 result["topic_attachments"] = topic_data["attachments"]
@@ -134,15 +139,15 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
                 result.pop("number")
             except PreprocessingError as e:
                 raise PreprocessingError(
-                    f"Failed to process lesson number: {str(e)}", 
-                    {"lesson": lesson, "original_error": e}
+                    f"Failed to process lesson number: {str(e)}",
+                    {"lesson": lesson, "original_error": e},
                 )
         # Keep existing index if present
         elif "index" in result:
             pass
         else:
             result["index"] = None
-        
+
         # Clean subject and extract room if needed
         if "subject" in result:
             subject_name, room = clean_subject(result["subject"])

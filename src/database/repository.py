@@ -43,7 +43,7 @@ class ScheduleRepository:
     async def get_attachment_path(self, unique_id: str) -> Optional[Path]:
         """
         Get the file path for an attachment by its unique ID.
-        
+
         Args:
             unique_id: The unique identifier of the attachment
 
@@ -78,7 +78,9 @@ class ScheduleRepository:
                 logger.info(f"Schedule {schedule.unique_id} updated with changes.")
             else:
                 # No changes detected, skip update
-                logger.info(f"No changes detected for schedule {schedule.unique_id}, skipping update.")
+                logger.info(
+                    f"No changes detected for schedule {schedule.unique_id}, skipping update."
+                )
         return db_schedule
 
     async def get_schedule_by_unique_id(
@@ -260,11 +262,7 @@ class ScheduleRepository:
             )
             day_changes.announcements.extend(announcement_changes)
 
-            if (
-                day_changes.lessons
-                or day_changes.homework
-                or day_changes.announcements
-            ):
+            if day_changes.lessons or day_changes.homework or day_changes.announcements:
                 changes.days.append(day_changes)
 
         return changes
@@ -396,8 +394,8 @@ class ScheduleRepository:
         self._update_attachments(
             db_lesson.topic_attachments,
             lesson.topic_attachments,
-            parent='lesson',
-            db_lesson=db_lesson
+            parent="lesson",
+            db_lesson=db_lesson,
         )
 
         if lesson.homework:
@@ -422,11 +420,13 @@ class ScheduleRepository:
         self._update_attachments(
             db_homework.attachments,
             homework.attachments,
-            parent='homework',
-            db_homework=db_homework
+            parent="homework",
+            db_homework=db_homework,
         )
 
-    def _update_attachments(self, db_attachments, new_attachments, parent, db_lesson=None, db_homework=None):
+    def _update_attachments(
+        self, db_attachments, new_attachments, parent, db_lesson=None, db_homework=None
+    ):
         """Update attachments list without recreating."""
         db_attachments_map = {att.unique_id: att for att in db_attachments}
         incoming_attachments = []
@@ -439,9 +439,9 @@ class ScheduleRepository:
                 incoming_attachments.append(db_attachment)
             else:
                 db_attachment = self._create_attachment(attachment)
-                if parent == 'lesson' and db_lesson:
+                if parent == "lesson" and db_lesson:
                     db_attachment.lesson = db_lesson
-                elif parent == 'homework' and db_homework:
+                elif parent == "homework" and db_homework:
                     db_attachment.homework = db_homework
                 incoming_attachments.append(db_attachment)
 
@@ -562,7 +562,7 @@ class ScheduleRepository:
         # Ensure announcement has day reference for unique_id generation
         if not announcement._day:
             raise ValueError("Announcement must have day reference")
-            
+
         return models.Announcement(
             unique_id=announcement.unique_id,
             type=announcement.type.value,  # Store the enum value, not the enum itself
