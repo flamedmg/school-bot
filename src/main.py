@@ -35,6 +35,10 @@ async def startup():
             raise RuntimeError("Database initialization failed")
         logger.info("Database initialized")
 
+        # Initialize Redis and KVStore
+        await Dependencies.initialize_redis()
+        logger.info("Redis and KVStore initialized")
+
         # Start Telegram client
         await bot.start(bot_token=settings.telegram_bot_token)
         logger.info("Telegram client started")
@@ -59,6 +63,7 @@ async def shutdown():
     """Shutdown events for the application."""
     try:
         logger.info("Starting shutdown sequence...")
+        await Dependencies.cleanup()
         await bot.disconnect()
         logger.info("Application shutdown complete")
     except Exception as e:

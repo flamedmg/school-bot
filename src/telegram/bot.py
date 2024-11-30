@@ -1,12 +1,24 @@
+from datetime import datetime
 from loguru import logger
 from telethon import TelegramClient, events
 from telethon.errors import PeerIdInvalidError
 
 from src.config import settings
+from src.database.kvstore import KeyValueStore, should_show_greeting
+from src.dependencies import get_kvstore
+
 
 async def send_welcome_message(bot: TelegramClient, chat_id: int):
     """Send welcome message to the specified chat."""
     try:
+        # Get KVStore instance
+        kvstore = await get_kvstore()
+
+        # Check if we should show the greeting
+        if not await should_show_greeting(kvstore):
+            logger.info("Skipping welcome message (already shown today)")
+            return
+
         logger.info(f"Sending welcome message to chat {chat_id}...")
         await bot.send_message(
             chat_id,
@@ -18,6 +30,9 @@ async def send_welcome_message(bot: TelegramClient, chat_id: int):
             "/notifications - Manage notification settings\n"
             "/help - Show help message",
         )
+
+        # Store current timestamp
+        await kvstore.set_last_greeting_time(datetime.now().timestamp())
         logger.info("Welcome message sent successfully")
     except PeerIdInvalidError:
         logger.error(
@@ -31,6 +46,7 @@ async def send_welcome_message(bot: TelegramClient, chat_id: int):
         )
     except Exception as e:
         logger.error(f"Failed to send welcome message: {str(e)}")
+
 
 def setup_handlers(bot: TelegramClient):
     """Setup Telegram bot handlers."""

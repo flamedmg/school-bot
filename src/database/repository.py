@@ -39,6 +39,21 @@ class ScheduleRepository:
         result = await self.session.scalars(stmt)
         return result.first()
 
+    async def get_attachment_path(self, unique_id: str) -> Optional[Path]:
+        """
+        Get the file path for an attachment by its unique ID.
+        
+        Args:
+            unique_id: The unique identifier of the attachment
+
+        Returns:
+            Optional[Path]: The path where the attachment should be stored, or None if attachment not found
+        """
+        attachment = await self.get_attachment_by_id(unique_id)
+        if attachment:
+            return attachment.get_file_path()
+        return None
+
     async def save_schedule(self, schedule: ScheduleModel) -> models.Schedule:
         """Save schedule to database, updating if it already exists"""
         # Pad schedule unique_id to 8 digits

@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime
+from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from src.database.enums import ChangeType
 from src.database.models import Base
@@ -197,6 +198,48 @@ async def test_real_data_pipeline_and_changes(db_session):
         modified_schedule.days[0].announcements
     )
     assert any(a.text == "New test announcement" for a in modified_day.announcements)
+
+
+@pytest.mark.asyncio
+async def test_get_attachment_path(db_session):
+    """Test getting attachment path from repository"""
+    repository = ScheduleRepository(db_session)
+    
+    # Create test schedule with attachment
+    schedule_data = {
+        "nickname": "Test Student",
+        "days": [{
+            "date": datetime.now(),
+            "lessons": [{
+                "index": 1,
+                "subject": "Test Subject",
+                "topic": "Test Topic",
+                "topic_attachments": [{
+                    "filename": "test.pdf",
+                    "url": "http://test.com/test.pdf"
+                }]
+            }]
+        }]
+    }
+    
+    # Create and save schedule
+    schedule = Schedule(**schedule_data)
+    await repository.save_schedule(schedule)
+    
+    # Get the attachment's unique ID
+    attachment_id = schedule.days[0].lessons[0].topic_attachments[0].unique_id
+    
+    # Test getting attachment path
+    path = await repository.get_attachment_path(attachment_id)
+    assert path is not None
+    assert isinstance(path, Path)
+    assert path.name.startswith(attachment_id)
+    assert path.name.endswith("test.pdf")
+    assert "data/attachments" in str(path)
+    
+    # Test with non-existent attachment ID
+    path = await repository.get_attachment_path("nonexistent_id")
+    assert path is None
 
 
 @pytest.mark.asyncio
