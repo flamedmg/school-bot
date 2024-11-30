@@ -12,6 +12,7 @@ from src.events.event_types import CrawlErrorEvent, EventTopics
 from src.schedule.preprocess import create_default_pipeline
 from src.schedule.schema import Schedule
 from src.events.types import AttachmentEvent
+from src.database.enums import ChangeType
 
 
 class StudentManager:
@@ -66,7 +67,9 @@ class StudentManager:
 
     async def _process_raw_schedules(self, raw_schedules: List[tuple]):
         """Process raw schedules through the pipeline."""
-        pipeline = create_default_pipeline(nickname=self.nickname)
+        pipeline = create_default_pipeline(
+            nickname=self.nickname, base_url=self.crawler.SCHEDULE_URL
+        )
 
         # Only process current and past week (first two items)
         for raw_data, html_content in raw_schedules:
@@ -93,14 +96,11 @@ class StudentManager:
                             filename=attachment["filename"],
                             url=attachment["url"],
                             cookies=cookies_dict,
-                            schedule_id=attachment["schedule_id"],
-                            subject=attachment["subject"],
-                            lesson_number=attachment["lesson_number"],
-                            day_id=attachment["day_id"],
+                            unique_id=attachment["unique_id"],
                         )
                         await self.broker.publish(event, EventTopics.NEW_ATTACHMENT)
                         logger.debug(
-                            f"Emitted attachment event for {attachment['filename']} from {attachment['subject']} lesson {attachment['lesson_number']}"
+                            f"Emitted attachment event for {attachment['filename']} with ID {attachment['unique_id']}"
                         )
 
                 schedule = self._create_schedule_from_data(processed_data)
@@ -127,44 +127,66 @@ class StudentManager:
             await self._publish_changes(schedule, changes)
             await self.save_schedule(schedule)
 
-    def _update_changes_summary(self, changes: Dict, schedule: Schedule):
+    def _update_changes_summary(self, changes, schedule: Schedule):
         """Update the summary of changes and log detailed changes."""
-        if changes["lessons_changed"]:
-            self._changes_summary["lessons_changed"] += 1
-            self._log_lesson_changes(schedule)
+        # Check for lesson order changes
+        for day in changes.days:
+            for lesson_change in day.lessons:
+                if lesson_change.order_changed:
+                    self._changes_summary["lessons_changed"] += 1
+                    self._log_lesson_changes(schedule)
 
-        if changes["marks"]:
-            self._changes_summary["marks_changed"] += len(changes["marks"])
-            self._log_mark_changes(changes["marks"], schedule)
+                if lesson_change.mark_changed:
+                    self._changes_summary["marks_changed"] += 1
+                    self._log_mark_changes(
+                        [
+                            {
+                                "lesson_id": lesson_change.lesson_id,
+                                "old": lesson_change.old_mark,
+                                "new": lesson_change.new_mark,
+                            }
+                        ],
+                        schedule,
+                    )
 
-        if changes["subjects"]:
-            self._changes_summary["subjects_changed"] += len(changes["subjects"])
-            for subject_change in changes["subjects"]:
-                # Store detailed subject change information
-                change_detail = {
-                    "date": schedule.unique_id[:8],  # Extract date from schedule ID
-                    "lesson_id": subject_change["lesson_id"],
-                    "old_subject": subject_change["old"],
-                    "new_subject": subject_change["new"],
-                }
-                self._changes_summary["subject_changes_details"].append(change_detail)
-            self._log_subject_changes(changes["subjects"], schedule)
+                if lesson_change.subject_changed:
+                    self._changes_summary["subjects_changed"] += 1
+                    change_detail = {
+                        "date": schedule.unique_id[:8],
+                        "lesson_id": lesson_change.lesson_id,
+                        "old_subject": lesson_change.old_subject,
+                        "new_subject": lesson_change.new_subject,
+                    }
+                    self._changes_summary["subject_changes_details"].append(
+                        change_detail
+                    )
+                    self._log_subject_changes(
+                        [
+                            {
+                                "lesson_id": lesson_change.lesson_id,
+                                "old": lesson_change.old_subject,
+                                "new": lesson_change.new_subject,
+                            }
+                        ],
+                        schedule,
+                    )
 
-        if changes["announcements"]["added"]:
-            self._changes_summary["announcements_added"] += len(
-                changes["announcements"]["added"]
-            )
-            self._log_announcement_changes(
-                "added", changes["announcements"]["added"], schedule
-            )
-
-        if changes["announcements"]["removed"]:
-            self._changes_summary["announcements_removed"] += len(
-                changes["announcements"]["removed"]
-            )
-            self._log_announcement_changes(
-                "removed", changes["announcements"]["removed"], schedule
-            )
+            # Process announcements
+            for announcement in day.announcements:
+                if announcement.type == ChangeType.ADDED:
+                    self._changes_summary["announcements_added"] += 1
+                    self._log_announcement_changes(
+                        "added",
+                        [announcement.new_text] if announcement.new_text else [],
+                        schedule,
+                    )
+                elif announcement.type == ChangeType.REMOVED:
+                    self._changes_summary["announcements_removed"] += 1
+                    self._log_announcement_changes(
+                        "removed",
+                        [announcement.old_text] if announcement.old_text else [],
+                        schedule,
+                    )
 
     def _log_lesson_changes(self, schedule: Schedule):
         """Log lesson order changes."""

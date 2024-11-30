@@ -122,6 +122,34 @@ def test_preprocess_homework_edge_cases():
         preprocess_homework({"links": [{"url": "invalid-url"}]})
 
 
+def test_preprocess_homework_empty_links():
+    """Test handling of empty link objects"""
+    # Test empty link objects
+    homework_data = {
+        "text": "Some homework",
+        "links": [{}, {"url": "https://valid-url.com"}, {}],
+        "attachments": [],
+    }
+    result = preprocess_homework(homework_data)
+    assert len(result["links"]) == 1  # Only the valid link should remain
+    assert result["links"][0]["original_url"] == "https://valid-url.com"
+
+    # Test link list with only empty objects
+    homework_data = {"text": "Some homework", "links": [{}, {}, {}], "attachments": []}
+    result = preprocess_homework(homework_data)
+    assert result["links"] == []  # All empty links should be filtered out
+
+    # Test mixed valid and empty attachments
+    homework_data = {
+        "text": "Some homework",
+        "links": [],
+        "attachments": [{}, {"filename": "test.pdf", "url": "/Attachment/Get/123"}, {}],
+    }
+    result = preprocess_homework(homework_data)
+    assert len(result["attachments"]) == 1  # Only the valid attachment should remain
+    assert result["attachments"][0]["filename"] == "test.pdf"
+
+
 def test_real_examples():
     """Test with real examples from the schedule"""
     # Example 1: Math homework

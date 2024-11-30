@@ -56,7 +56,7 @@ async def handle_attachment(
             return
 
         # Ensure URL is absolute
-        url = event.url
+        url = str(event.url)
         if not url.startswith(("http://", "https://")):
             url = f"https://my.e-klase.lv{url}"
 

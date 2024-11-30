@@ -25,38 +25,19 @@ class ScheduleRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    def get_attachment_path(
-        self,
-        schedule_id: str,
-        subject: str,
-        lesson_number: str,
-        filename: str,
-        day_id: str,
-    ) -> Path:
+    async def get_attachment_by_id(self, unique_id: str) -> Optional[models.Attachment]:
         """
-        Get the proper path for an attachment file.
+        Get an attachment by its unique ID.
 
         Args:
-            schedule_id: Schedule unique ID (YYYYWW)
-            subject: Subject name
-            lesson_number: Lesson number
-            filename: Original filename
-            day_id: Unique identifier of the day
+            unique_id: The unique identifier of the attachment
 
         Returns:
-            Path object with the proper attachment path
+            Optional[models.Attachment]: The attachment if found, None otherwise
         """
-        # Create path: data/attachments/YYYYWW/day_id_subject_lesson_filename
-        base_dir = Path("data/attachments") / schedule_id
-        base_dir.mkdir(parents=True, exist_ok=True)
-
-        # Clean subject name (remove spaces, lowercase)
-        subject_clean = subject.replace(" ", "").lower()
-
-        # Create filename: YYYYMMDD_subject_filename
-        unique_filename = f"{day_id}_{subject_clean}{lesson_number}_{filename}"
-
-        return base_dir / unique_filename
+        stmt = select(models.Attachment).where(models.Attachment.unique_id == unique_id)
+        result = await self.session.scalars(stmt)
+        return result.first()
 
     async def save_schedule(self, schedule: ScheduleModel) -> models.Schedule:
         """Save schedule to database, updating if it already exists"""
@@ -113,14 +94,13 @@ class ScheduleRepository:
         # Create mappings of index to subject for both lists
         new_order = {l.index: l.subject for l in new_lessons}
         db_order = {l.index: l.subject for l in db_lessons}
-        
+
         # Compare the subjects at each index
         for index in new_order:
             if index in db_order and new_order[index] != db_order[index]:
                 return True
-                
-        return False
 
+        return False
 
     def _check_announcements(
         self,
@@ -131,17 +111,17 @@ class ScheduleRepository:
         changes = []
         new_ids = {a.unique_id for a in new_announcements}
         db_ids = {a.unique_id for a in db_announcements}
-        
+
         new_lookup = {a.unique_id: a for a in new_announcements}
         db_lookup = {a.unique_id: a for a in db_announcements}
-        
+
         # Added announcements
-        for announcement_id in (new_ids - db_ids):
+        for announcement_id in new_ids - db_ids:
             announcement = new_lookup[announcement_id]
             # Handle different announcement types
             announcement_text = (
-                announcement.description 
-                if announcement.type == AnnouncementType.BEHAVIOR 
+                announcement.description
+                if announcement.type == AnnouncementType.BEHAVIOR
                 else announcement.text
             )
             changes.append(
@@ -151,17 +131,17 @@ class ScheduleRepository:
                     new_text=announcement_text,
                     new_type=announcement.type,
                     old_text=None,
-                    old_type=None
+                    old_type=None,
                 )
             )
-        
+
         # Removed announcements
-        for announcement_id in (db_ids - new_ids):
+        for announcement_id in db_ids - new_ids:
             announcement = db_lookup[announcement_id]
             # Handle different announcement types
             announcement_text = (
-                announcement.description 
-                if announcement.type == AnnouncementType.BEHAVIOR 
+                announcement.description
+                if announcement.type == AnnouncementType.BEHAVIOR
                 else announcement.text
             )
             changes.append(
@@ -171,40 +151,34 @@ class ScheduleRepository:
                     old_text=announcement_text,
                     old_type=announcement.type,
                     new_text=None,
-                    new_type=None
+                    new_type=None,
                 )
             )
-        
+
         return changes
 
     async def get_changes(self, schedule: ScheduleModel) -> ScheduleChanges:
         """Compare schedule with database version and return changes"""
         padded_id = schedule.unique_id.zfill(8)
         db_schedule = await self.get_schedule_by_unique_id(padded_id, schedule.nickname)
-        
+
         changes = ScheduleChanges(
-            schedule_id=schedule.unique_id,
-            structure_changed=False,
-            days=[]
+            schedule_id=schedule.unique_id, structure_changed=False, days=[]
         )
-        
+
         if not db_schedule:
             return changes
 
         # Compare each day
         for new_day in schedule.days:
             db_day = next(
-                (d for d in db_schedule.days if d.unique_id == new_day.unique_id),
-                None
+                (d for d in db_schedule.days if d.unique_id == new_day.unique_id), None
             )
             if not db_day:
                 continue
 
             day_changes = DayChanges(
-                day_id=new_day.unique_id,
-                lessons=[],
-                homework=[],
-                announcements=[]
+                day_id=new_day.unique_id, lessons=[], homework=[], announcements=[]
             )
 
             # Create a map to track changes by lesson_id
@@ -213,32 +187,35 @@ class ScheduleRepository:
             # Check lesson order first
             if self._check_lesson_order(new_day.lessons, db_day.lessons):
                 order_change = LessonChange(
-                    lesson_id=new_day.unique_id,
-                    order_changed=True
+                    lesson_id=new_day.unique_id, order_changed=True
                 )
                 day_changes.lessons.append(order_change)
 
             # Create lookup dictionary for database lessons
             db_lookup = {l.index: l for l in db_day.lessons}
-            
+
             # Process all changes for each lesson
             for new_lesson in new_day.lessons:
                 if new_lesson.index in db_lookup:
                     db_lesson = db_lookup[new_lesson.index]
                     lesson_id = new_lesson.unique_id
-                    
+
                     # Create or get the change object for this lesson
                     if lesson_id not in lesson_changes_map:
-                        lesson_changes_map[lesson_id] = LessonChange(lesson_id=lesson_id)
-                    
+                        lesson_changes_map[lesson_id] = LessonChange(
+                            lesson_id=lesson_id
+                        )
+
                     change = lesson_changes_map[lesson_id]
-                    
+
                     # Check mark changes
-                    if new_lesson.mark != db_lesson.mark and (new_lesson.mark is not None or db_lesson.mark is not None):
+                    if new_lesson.mark != db_lesson.mark and (
+                        new_lesson.mark is not None or db_lesson.mark is not None
+                    ):
                         change.mark_changed = True
                         change.old_mark = db_lesson.mark
                         change.new_mark = new_lesson.mark
-                    
+
                     # Check subject changes
                     if new_lesson.subject != db_lesson.subject:
                         change.subject_changed = True
@@ -264,7 +241,13 @@ class ScheduleRepository:
         unique_id = schedule.unique_id.zfill(8)
         db_schedule = models.Schedule(unique_id=unique_id, nickname=schedule.nickname)
 
+        # First, ensure all days in the schedule have their announcements properly linked
         for day in schedule.days:
+            # Set day reference for all announcements in this day
+            for announcement in day.announcements:
+                announcement._day = day
+
+            # Create the database objects
             db_day = models.SchoolDay(
                 unique_id=day.date.strftime("%Y%m%d"),
                 date=day.date,
@@ -291,8 +274,13 @@ class ScheduleRepository:
         """Update existing schedule with new data"""
         db_schedule.nickname = schedule.nickname
 
-        # Create new days
+        # First, ensure all days in the schedule have their announcements properly linked
         for day in schedule.days:
+            # Set day reference for all announcements in this day
+            for announcement in day.announcements:
+                announcement._day = day
+
+            # Create new days
             db_day = models.SchoolDay(
                 unique_id=day.date.strftime("%Y%m%d"),
                 date=day.date,
@@ -448,6 +436,10 @@ class ScheduleRepository:
 
     def _create_announcement(self, announcement: Announcement) -> models.Announcement:
         """Create an announcement with all its data"""
+        # Ensure announcement has day reference for unique_id generation
+        if not announcement._day:
+            raise ValueError("Announcement must have day reference")
+            
         return models.Announcement(
             unique_id=announcement.unique_id,
             type=announcement.type.value,  # Store the enum value, not the enum itself

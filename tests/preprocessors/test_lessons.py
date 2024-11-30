@@ -274,5 +274,7 @@ def test_error_handling():
 
     with pytest.raises(PreprocessingError) as exc:
         preprocess_lesson(invalid_lesson)
-    assert "Failed to preprocess lesson data" in str(exc.value)
-    assert "lesson" in exc.value.invalid_data
+    # Update expected error message to match the more detailed one
+    assert "Invalid lesson number type" in str(exc.value)
+    assert "expected string or None" in str(exc.value)
+    assert "<class 'dict'>" in str(exc.value)

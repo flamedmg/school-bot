@@ -23,9 +23,10 @@ class PipelineStep:
 
 
 class PreprocessingPipeline:
-    def __init__(self, nickname: Optional[str] = None):
+    def __init__(self, nickname: Optional[str] = None, base_url: Optional[str] = None):
         self.steps: List[PipelineStep] = []
         self.nickname = nickname
+        self.base_url = base_url
 
     def add_step(self, name: str, function: Callable) -> "PreprocessingPipeline":
         self.steps.append(PipelineStep(name=name, function=function))
@@ -39,7 +40,11 @@ class PreprocessingPipeline:
         for i, step in enumerate(self.steps, 1):
             try:
                 logger.info(f"Step {i}/{total_steps}: Executing {step.name}")
-                result = step.function(result)
+                # Pass base_url to attachment preprocessor
+                if step.name == "attachments" and self.base_url:
+                    result = step.function(result, self.base_url)
+                else:
+                    result = step.function(result)
 
                 # Log counts based on result type
                 if isinstance(result, dict):
@@ -75,14 +80,16 @@ class PreprocessingPipeline:
 def create_default_pipeline(
     markdown_output_path: Optional[Union[str, Path]] = None,
     nickname: Optional[str] = None,
+    base_url: Optional[str] = None,
 ):
     """Create the default preprocessing pipeline with all steps
 
     Args:
         markdown_output_path: Optional path for markdown output
         nickname: Optional nickname to identify which student this schedule belongs to
+        base_url: Optional base URL for converting relative URLs to absolute URLs
     """
-    pipeline = PreprocessingPipeline(nickname=nickname)
+    pipeline = PreprocessingPipeline(nickname=nickname, base_url=base_url)
 
     # Add all preprocessing steps
     pipeline = (

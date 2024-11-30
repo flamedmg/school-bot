@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Tuple
 from loguru import logger
-from crawl4ai import AsyncWebCrawler
+from crawl4ai import AsyncWebCrawler, CacheMode
 from crawl4ai.async_crawler_strategy import AsyncPlaywrightCrawlerStrategy
 from playwright.async_api import Page, Browser
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
@@ -101,6 +101,7 @@ class ScheduleCrawler:
 
                 # Get cookies after successful login
                 logger.debug("Login successful, retrieving cookies...")
+
                 cookies = await context.cookies()
                 self.cookies = cookies
                 return cookies
@@ -108,7 +109,9 @@ class ScheduleCrawler:
             except Exception as e:
                 raise e
 
-        crawler_strategy = AsyncPlaywrightCrawlerStrategy(verbose=True)
+        crawler_strategy = AsyncPlaywrightCrawlerStrategy(
+            verbose=True, use_cached_html=False
+        )
         crawler_strategy.set_hook("on_browser_created", on_browser_created)
         async with AsyncWebCrawler(
             verbose=True,
@@ -162,11 +165,37 @@ class ScheduleCrawler:
             async with AsyncWebCrawler(
                 cookies=self.cookies,
             ) as crawler:
-                result = await crawler.arun(url=url)
+                result = await crawler.arun(
+                    url=url, use_cached_html=False, cache_mode=CacheMode.DISABLED
+                )
 
                 try:
                     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
                     raw_data = strategy.extract(html=result.html, url=url)
+
+                    # Validate extracted data
+                    if (
+                        not raw_data
+                        or not isinstance(raw_data, list)
+                        or len(raw_data) == 0
+                    ):
+                        raise ParseError(
+                            f"No schedule data found for {formatted_date}",
+                            student_nickname=self.nickname,
+                        )
+
+                    # Check if days field exists and has data
+                    first_item = raw_data[0]
+                    if (
+                        not isinstance(first_item, dict)
+                        or "days" not in first_item
+                        or not first_item["days"]
+                    ):
+                        raise ParseError(
+                            f"Invalid schedule data format for {formatted_date}: missing or empty days field",
+                            student_nickname=self.nickname,
+                        )
+
                     logger.info(f"Successfully extracted schedule for {formatted_date}")
                     return raw_data, result.html
                 except Exception as e:
@@ -211,6 +240,8 @@ class ScheduleCrawler:
                     logger.error(
                         f"Failed to get schedule for {date.strftime('%d.%m.%Y')}: {result}"
                     )
+                    # Re-raise the exception to trigger error handling
+                    raise result
                 else:
                     schedules.append(result)
                     logger.info(

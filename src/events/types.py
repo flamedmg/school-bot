@@ -93,10 +93,7 @@ class AttachmentEvent(BaseModel):
     filename: constr(min_length=1)
     url: HttpUrl
     cookies: dict[str, str]
-    schedule_id: constr(min_length=1)
-    subject: constr(min_length=1)
-    lesson_number: constr(min_length=1)
-    day_id: constr(min_length=1)
+    unique_id: constr(min_length=1)  # Combined ID from schedule_id, subject, lesson_number, day_id
 
 
 class TelegramMessageEvent(BaseModel):

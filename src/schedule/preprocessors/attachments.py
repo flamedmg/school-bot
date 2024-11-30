@@ -7,53 +7,89 @@ Adds an 'attachments' key to the root level of the data structure.
 Modifications:
 - Attachments without a filename are now processed, and the filename is extracted from the URL if possible.
 - All attachments with a URL are included in the output.
-- Each attachment includes schedule_id, subject, lesson number, and day_id for proper file organization.
+- Each attachment includes a unique_id generated from schedule_id, subject, lesson number, and day_id.
 """
 
+import re
 from loguru import logger
-from typing import Dict, List, Any
-from urllib.parse import unquote, urlparse, parse_qs
+from typing import Dict, List, Any, Optional
+from urllib.parse import unquote, urlparse, parse_qs, urljoin
 from pathlib import Path
 from .exceptions import PreprocessingError
 
 
+def clean_lesson_number(number: str) -> str:
+    """
+    Clean lesson number by removing dots and spaces, handling various formats.
+    Returns "0" for invalid or empty numbers.
+    """
+    if not number:
+        return "0"
+
+    # Remove dots and spaces
+    cleaned = number.replace(".", "").strip()
+
+    # Extract first sequence of digits
+    import re
+
+    match = re.search(r"\d+", cleaned)
+    if match:
+        return match.group()
+
+    return "0"
+
+
 def extract_filename_from_url(url: str) -> str:
-    """
-    Extract filename from URL, handling various URL formats.
-    Falls back to a generic name if extraction fails.
-    """
+    """Extract filename from URL, handling various URL formats"""
     try:
-        # Parse and decode URL
         parsed = urlparse(unquote(url))
-
-        # Try to get filename from path
-        path = Path(parsed.path)
-        if path.name:
-            return path.name
-
-        # If no filename found in path, check query parameters
+        
+        # First check query parameters for filename
         if parsed.query:
-            # Parse query parameters
-            query_params = parse_qs(parsed.query)
-            # Common query param names for files
-            for param in ["filename", "file", "name", "download"]:
-                if param in query_params:
-                    filenames = query_params[param]
-                    if filenames:
-                        return unquote(filenames[0])
-
+            params = parse_qs(parsed.query)
+            if "filename" in params and params["filename"]:
+                return params["filename"][0]
+        
+        # Then try to get filename from path
+        path = Path(parsed.path)
+        if path.name and path.suffix:
+            return path.name
+        
+        # If no extension in path, check if there's a meaningful name
+        if path.name and not path.name.startswith(('download', 'get', 'file')):
+            return path.name
+            
         # Fall back to "link" + extension if present
         if path.suffix:
-            ext = path.suffix
-            return f"link{ext}"
-
+            return f"link{path.suffix}"
+            
         return "link"
-
     except Exception:
         return "link"
 
 
-def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def generate_unique_id(
+    schedule_id: str, subject: str, lesson_number: str, day_id: str
+) -> str:
+    """
+    Generate a unique ID for an attachment by combining schedule, subject, lesson, and day information.
+    """
+    # Clean and normalize the components
+    clean_subject = subject.strip().lower()
+    # Replace special characters with underscores
+    clean_subject = re.sub(r'[^a-z0-9]+', '_', clean_subject)
+    # Remove trailing underscores and multiple underscores
+    clean_subject = re.sub(r'_+', '_', clean_subject.strip('_'))
+    
+    clean_lesson = clean_lesson_number(lesson_number)
+
+    # Combine components with underscores
+    return f"{schedule_id}_{day_id}_{clean_subject}_{clean_lesson}"
+
+
+def extract_attachments(
+    data: List[Dict[str, Any]], base_url: Optional[str] = None
+) -> List[Dict[str, Any]]:
     """
     Extract all attachments from homework entries into a simple list of filename/url pairs.
     Adds an 'attachments' key to the root level of the data structure.
@@ -144,7 +180,8 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
                 # Get lesson details
                 subject = lesson.get("subject", "")
-                lesson_number = str(lesson.get("index", ""))
+                lesson_number = clean_lesson_number(lesson.get("number", ""))
+                logger.debug(f"Using lesson number: {lesson_number}")
 
                 for attachment in attachments:
                     if not isinstance(attachment, dict):
@@ -160,31 +197,22 @@ def extract_attachments(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
                         # If filename is missing, try to extract it from URL
                         if not filename:
-                            # Parse URL to extract query parameters
-                            from urllib.parse import urlparse, parse_qs
+                            filename = extract_filename_from_url(url)
 
-                            parsed = urlparse(url)
-                            query = parse_qs(parsed.query)
+                        # Convert relative URL to absolute URL if base_url is provided
+                        if base_url:
+                            url = urljoin(base_url, url)
 
-                            # First try to get filename from query parameter
-                            if "filename" in query:
-                                filename = query["filename"][0]
-                            else:
-                                # Otherwise get the last part of the path
-                                path = parsed.path.rstrip("/")
-                                if path:
-                                    filename = path.split("/")[-1]
-                                else:
-                                    filename = "link"
+                        # Generate unique ID
+                        unique_id = generate_unique_id(
+                            schedule_id, subject, lesson_number, day_id
+                        )
 
                         # Add attachment with context
                         attachment_data = {
                             "filename": filename,
                             "url": url,
-                            "schedule_id": schedule_id,
-                            "subject": subject,
-                            "lesson_number": lesson_number,
-                            "day_id": day_id,
+                            "unique_id": unique_id,
                         }
                         logger.debug(f"Adding attachment: {attachment_data}")
                         all_attachments.append(attachment_data)

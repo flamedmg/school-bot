@@ -1,16 +1,3 @@
-import json
-from loguru import logger
-from datetime import datetime
-from typing import Dict, List, Any, Optional
-
-
-class DateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
-
-
 """
 Lessons Preprocessor
 
@@ -22,7 +9,8 @@ This preprocessor handles cleaning and standardization of lesson data:
 """
 
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from loguru import logger
 from .exceptions import PreprocessingError
 
 
@@ -61,14 +49,16 @@ def clean_lesson_index(number: Optional[str]) -> Optional[int]:
     Returns None for missing or invalid numbers.
 
     Raises:
-        PreprocessingError: If the input is invalid (empty string or invalid format)
+        PreprocessingError: If the input is invalid (empty string, invalid format, or wrong type)
     """
     if number is None:
         return None
 
+    # Check for invalid type
     if not isinstance(number, str):
         raise PreprocessingError(
-            f"Invalid lesson number type: expected string or None, got {type(number)}"
+            f"Invalid lesson number type: expected string or None, got {type(number)}",
+            {"number": number}
         )
 
     # Handle empty string case explicitly
@@ -113,19 +103,25 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
         raise PreprocessingError("Invalid lesson data type", {"lesson": lesson})
 
     try:
-        result = lesson.model_copy()
+        result = lesson.copy()
 
-        # Convert number to index
+        # Convert number to index if present
         if "number" in result:
             try:
                 index = clean_lesson_index(result["number"])
-                result["index"] = index  # Add new index field
-                del result["number"]  # Remove old number field
-            except (ValueError, TypeError, AttributeError):
+                result["index"] = index
+                result.pop("number")
+            except PreprocessingError as e:
                 raise PreprocessingError(
-                    f"Invalid lesson number format", {"lesson": lesson}
+                    f"Failed to process lesson number: {str(e)}", 
+                    {"lesson": lesson, "original_error": e}
                 )
-
+        # Keep existing index if present
+        elif "index" in result:
+            pass
+        else:
+            result["index"] = None
+        
         # Clean subject and extract room if needed
         if "subject" in result:
             subject_name, room = clean_subject(result["subject"])
@@ -148,6 +144,8 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
 
         return result
 
+    except PreprocessingError:
+        raise
     except Exception as e:
         raise PreprocessingError(
             f"Failed to preprocess lesson data: {str(e)}", {"lesson": lesson}
@@ -184,32 +182,33 @@ def preprocess_lessons(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
         total_lessons += len(lessons)
         processed_day_lessons = []
-        last_valid_index = 0
+        used_indices = set()
+        highest_index = 0
 
-        # Process all lessons and assign indices
+        # First pass: Process lessons and track indices
         for lesson in lessons:
             try:
                 processed = preprocess_lesson(lesson)
-                if "number" in lesson:
-                    index = clean_lesson_index(lesson["number"])
-                    if index is not None:
-                        processed["index"] = index
-                        last_valid_index = max(last_valid_index, index)
-                    else:
-                        # Assign next sequential index after last valid one
-                        last_valid_index += 1
-                        processed["index"] = last_valid_index
+                if processed["index"] is not None:
+                    used_indices.add(processed["index"])
+                    highest_index = max(highest_index, processed["index"])
                 processed_day_lessons.append(processed)
                 processed_lessons += 1
-            except PreprocessingError:
-                processed_day_lessons.append(lesson)
+            except PreprocessingError as e:
+                logger.error(f"Error processing lesson: {e}")
+                continue
 
-        # Remove old number field if it exists
+        # Second pass: Fill in missing indices sequentially
+        next_index = 1
         for lesson in processed_day_lessons:
-            lesson.pop("number", None)
+            if lesson["index"] is None:
+                # Find next available index
+                while next_index in used_indices:
+                    next_index += 1
+                lesson["index"] = next_index
+                used_indices.add(next_index)
+            next_index = max(next_index + 1, lesson["index"] + 1)
 
-        # Sort lessons by index to ensure correct order
-        processed_day_lessons.sort(key=lambda x: x.get("index", float("inf")))
         day["lessons"] = processed_day_lessons
 
     logger.info(

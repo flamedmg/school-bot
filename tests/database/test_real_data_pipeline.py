@@ -148,14 +148,10 @@ async def test_real_data_pipeline_and_changes(db_session):
     # Modify the data to include our changes
     modified_schedule.days[0].lessons[0].mark = 9
     modified_schedule.days[0].lessons[1].subject = "Modified Subject"
-    modified_schedule.days[0].announcements.append(
+    modified_schedule.days[0].append_announcement(
         Announcement(
             type=AnnouncementType.GENERAL,
             text="New test announcement",
-            behavior_type=None,
-            description=None,
-            rating=None,
-            subject=None,
         )
     )
 

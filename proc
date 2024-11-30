@@ -1,0 +1,19 @@
+/drop
+/add       src/database.py
+/add       src/database/__init__.py
+/add       src/database/enums.py
+/add       src/database/models.py
+/add       src/database/repository.py
+/add       src/database/types.py
+/add       src/schedule/manager.py
+/add       src/schedule/preprocess.py
+/add       src/schedule/preprocessors/__init__.py
+/add       src/schedule/preprocessors/announcements.py
+/add       src/schedule/preprocessors/attachments.py
+/add       src/schedule/preprocessors/dates.py
+/add       src/schedule/preprocessors/exceptions.py
+/add       src/schedule/preprocessors/homework.py
+/add       src/schedule/preprocessors/lessons.py
+/add       src/schedule/preprocessors/markdown_output.py
+/add       src/schedule/preprocessors/marks.py
+/add       src/schedule/preprocessors/translation.py

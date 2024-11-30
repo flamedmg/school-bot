@@ -4,8 +4,34 @@ Tests for the attachments preprocessor
 
 import pytest
 from datetime import datetime
-from src.schedule.preprocessors.attachments import extract_attachments
+from src.schedule.preprocessors.attachments import (
+    extract_attachments,
+    clean_lesson_number,
+    generate_unique_id,
+)
 from src.schedule.preprocessors.exceptions import PreprocessingError
+
+
+def test_clean_lesson_number():
+    """Test lesson number cleaning function"""
+    assert clean_lesson_number("1. ") == "1"
+    assert clean_lesson_number("2.") == "2"
+    assert clean_lesson_number("10") == "10"
+    assert clean_lesson_number("") == "0"
+    assert clean_lesson_number(". ") == "0"
+    assert clean_lesson_number("abc") == "0"
+    assert clean_lesson_number("1.2.3") == "123"
+    assert clean_lesson_number("5th") == "5"
+
+
+def test_generate_unique_id():
+    """Test unique ID generation"""
+    unique_id = generate_unique_id("202401", "Math Class", "1", "20240101")
+    assert unique_id == "202401_20240101_math_class_1"
+
+    # Test with spaces and special characters
+    unique_id = generate_unique_id("202401", "Math & Science!", "2", "20240101")
+    assert unique_id == "202401_20240101_math_science_2"
 
 
 def test_extract_attachments_empty_data():
@@ -25,7 +51,7 @@ def test_extract_attachments_no_homework():
             "days": [
                 {
                     "date": datetime(2024, 1, 1),
-                    "lessons": [{"subject": "Math", "index": 1}],
+                    "lessons": [{"subject": "Math", "number": "1. "}],
                 }
             ]
         }
@@ -33,6 +59,46 @@ def test_extract_attachments_no_homework():
     result = extract_attachments(data)
     assert "attachments" in result[0]
     assert result[0]["attachments"] == []
+
+
+def test_extract_attachments_with_base_url():
+    """Test extraction with base_url parameter"""
+    test_date = datetime(2024, 1, 1)
+    data = [
+        {
+            "days": [
+                {
+                    "date": test_date,
+                    "lessons": [
+                        {
+                            "subject": "Math",
+                            "number": "1. ",
+                            "homework": {
+                                "text": "Do exercises",
+                                "attachments": [
+                                    {
+                                        "filename": "math1.pdf",
+                                        "url": "/files/math1.pdf",
+                                    }
+                                ],
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+    ]
+
+    base_url = "https://example.com"
+    result = extract_attachments(data, base_url)
+
+    assert "attachments" in result[0]
+    attachments = result[0]["attachments"]
+    assert len(attachments) == 1
+
+    # Check that URL is properly joined with base_url
+    assert attachments[0]["url"] == "https://example.com/files/math1.pdf"
+    assert attachments[0]["unique_id"] == "202401_20240101_math_1"
 
 
 def test_extract_attachments_with_attachments():
@@ -46,7 +112,7 @@ def test_extract_attachments_with_attachments():
                     "lessons": [
                         {
                             "subject": "Math",
-                            "index": 1,
+                            "number": "1. ",
                             "homework": {
                                 "text": "Do exercises",
                                 "attachments": [
@@ -73,21 +139,19 @@ def test_extract_attachments_with_attachments():
     attachments = result[0]["attachments"]
     assert len(attachments) == 2
 
-    # Check first attachment with metadata
-    expected_metadata = {
+    # Check first attachment
+    assert attachments[0] == {
         "filename": "math1.pdf",
         "url": "/files/math1.pdf",
-        "schedule_id": "202401",
-        "subject": "Math",
-        "lesson_number": "1",
-        "day_id": "20240101",
+        "unique_id": "202401_20240101_math_1",
     }
-    assert attachments[0] == expected_metadata
 
-    # Check second attachment with metadata
-    expected_metadata["filename"] = "math2.pdf"
-    expected_metadata["url"] = "/files/math2.pdf"
-    assert attachments[1] == expected_metadata
+    # Check second attachment
+    assert attachments[1] == {
+        "filename": "math2.pdf",
+        "url": "/files/math2.pdf",
+        "unique_id": "202401_20240101_math_1",
+    }
 
 
 def test_extract_attachments_multiple_days():
@@ -100,6 +164,7 @@ def test_extract_attachments_multiple_days():
                     "lessons": [
                         {
                             "subject": "Math",
+                            "number": "1. ",
                             "homework": {
                                 "attachments": [
                                     {"filename": "day1.pdf", "url": "/files/day1.pdf"}
@@ -113,6 +178,7 @@ def test_extract_attachments_multiple_days():
                     "lessons": [
                         {
                             "subject": "English",
+                            "number": "2. ",
                             "homework": {
                                 "attachments": [
                                     {"filename": "day2.pdf", "url": "/files/day2.pdf"}
@@ -130,24 +196,18 @@ def test_extract_attachments_multiple_days():
 
     assert len(attachments) == 2
 
-    # Check first attachment with metadata
+    # Check first attachment
     assert attachments[0] == {
         "filename": "day1.pdf",
         "url": "/files/day1.pdf",
-        "schedule_id": "202401",
-        "subject": "Math",
-        "lesson_number": "",
-        "day_id": "20240101",
+        "unique_id": "202401_20240101_math_1",
     }
 
-    # Check second attachment with metadata
+    # Check second attachment
     assert attachments[1] == {
         "filename": "day2.pdf",
         "url": "/files/day2.pdf",
-        "schedule_id": "202401",
-        "subject": "English",
-        "lesson_number": "",
-        "day_id": "20240102",
+        "unique_id": "202401_20240102_english_2",
     }
 
 
@@ -170,6 +230,7 @@ def test_extract_attachments_direct_days_list():
             "lessons": [
                 {
                     "subject": "Math",
+                    "number": "1. ",
                     "homework": {
                         "attachments": [
                             {"filename": "test.pdf", "url": "/files/test.pdf"}
@@ -186,14 +247,11 @@ def test_extract_attachments_direct_days_list():
     attachments = result[0]["attachments"]
 
     assert len(attachments) == 1
-    # For direct days list, schedule_id is empty since there's no wrapping structure
+    # For direct days list, schedule_id is empty
     assert attachments[0] == {
         "filename": "test.pdf",
         "url": "/files/test.pdf",
-        "schedule_id": "",
-        "subject": "Math",
-        "lesson_number": "",
-        "day_id": "20240101",
+        "unique_id": "_20240101_math_1",  # Empty schedule_id
     }
 
 
@@ -207,6 +265,7 @@ def test_extract_attachments_missing_filename():
                     "lessons": [
                         {
                             "subject": "Math",
+                            "number": "1. ",
                             "homework": {
                                 "attachments": [
                                     {
@@ -227,12 +286,9 @@ def test_extract_attachments_missing_filename():
 
     assert len(attachments) == 1
     assert attachments[0] == {
-        "filename": "test.pdf",
+        "filename": "test.pdf",  # Extracted from URL
         "url": "/files/test.pdf",
-        "schedule_id": "202401",
-        "subject": "Math",
-        "lesson_number": "",
-        "day_id": "20240101",
+        "unique_id": "202401_20240101_math_1",
     }
 
 
@@ -246,6 +302,7 @@ def test_extract_attachments_complex_urls():
                     "lessons": [
                         {
                             "subject": "Science",
+                            "number": "1. ",
                             "homework": {
                                 "attachments": [
                                     {"url": "/download?filename=test.pdf"},
@@ -266,33 +323,28 @@ def test_extract_attachments_complex_urls():
 
     assert len(attachments) == 4
 
-    # Check each attachment has the correct metadata
-    base_metadata = {
-        "schedule_id": "202401",
-        "subject": "Science",
-        "lesson_number": "",
-        "day_id": "20240101",
-    }
+    # All attachments should have the same unique_id
+    expected_unique_id = "202401_20240101_science_1"
 
     assert attachments[0] == {
-        **base_metadata,
         "filename": "test.pdf",
         "url": "/download?filename=test.pdf",
+        "unique_id": expected_unique_id,
     }
     assert attachments[1] == {
-        **base_metadata,
         "filename": "no-extension",
         "url": "/files/path/no-extension",
+        "unique_id": expected_unique_id,
     }
     assert attachments[2] == {
-        **base_metadata,
         "filename": "file.doc",
         "url": "https://example.com/file.doc?token=123",
+        "unique_id": expected_unique_id,
     }
     assert attachments[3] == {
-        **base_metadata,
         "filename": "path",
         "url": "/complex/path",
+        "unique_id": expected_unique_id,
     }
 
 
@@ -306,6 +358,7 @@ def test_extract_attachments_preserves_original_data():
                     "lessons": [
                         {
                             "subject": "Math",
+                            "number": "1. ",
                             "homework": {
                                 "text": "Original homework",
                                 "attachments": [
@@ -331,8 +384,69 @@ def test_extract_attachments_preserves_original_data():
     assert attachments[0] == {
         "filename": "test.pdf",
         "url": "/files/test.pdf",
-        "schedule_id": "202401",
-        "subject": "Math",
-        "lesson_number": "",
-        "day_id": "20240101",
+        "unique_id": "202401_20240101_math_1",
     }
+
+
+def test_extract_attachments_missing_number():
+    """Test handling of lessons with missing number field"""
+    data = [
+        {
+            "days": [
+                {
+                    "date": datetime(2024, 1, 1),
+                    "lessons": [
+                        {
+                            "subject": "Math",
+                            # No number field
+                            "homework": {
+                                "attachments": [
+                                    {"filename": "test.pdf", "url": "/files/test.pdf"}
+                                ]
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+    ]
+
+    result = extract_attachments(data)
+    attachments = result[0]["attachments"]
+
+    assert len(attachments) == 1
+    assert (
+        attachments[0]["unique_id"] == "202401_20240101_math_0"
+    )  # Default lesson number
+
+
+def test_extract_attachments_invalid_number_format():
+    """Test handling of lessons with invalid number format"""
+    data = [
+        {
+            "days": [
+                {
+                    "date": datetime(2024, 1, 1),
+                    "lessons": [
+                        {
+                            "subject": "Math",
+                            "number": "invalid",  # Invalid format
+                            "homework": {
+                                "attachments": [
+                                    {"filename": "test.pdf", "url": "/files/test.pdf"}
+                                ]
+                            },
+                        }
+                    ],
+                }
+            ]
+        }
+    ]
+
+    result = extract_attachments(data)
+    attachments = result[0]["attachments"]
+
+    assert len(attachments) == 1
+    assert (
+        attachments[0]["unique_id"] == "202401_20240101_math_0"
+    )  # Default for invalid format
