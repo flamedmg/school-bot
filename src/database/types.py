@@ -59,3 +59,11 @@ class ScheduleChanges:
     schedule_id: str
     structure_changed: bool  # True if days were added/removed or their order changed
     days: List[DayChanges]
+
+    def has_changes(self) -> bool:
+        """Determine if there are any changes in the schedule."""
+        if self.structure_changed:
+            return True
+        if self.days:
+            return True
+        return False

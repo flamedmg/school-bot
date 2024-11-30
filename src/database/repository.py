@@ -5,8 +5,9 @@ from typing import Optional, List, Dict, Any, Set, Tuple
 from .enums import ChangeType
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 from pathlib import Path
+from loguru import logger
 from . import models
 from .types import ScheduleChanges, DayChanges, LessonChange, AnnouncementChange
 from ..schedule.schema import (
@@ -55,22 +56,29 @@ class ScheduleRepository:
         return None
 
     async def save_schedule(self, schedule: ScheduleModel) -> models.Schedule:
-        """Save schedule to database, updating if it already exists"""
+        """Save schedule to database, updating if there are changes"""
         # Pad schedule unique_id to 8 digits
         padded_id = schedule.unique_id.zfill(8)
         db_schedule = await self.get_schedule_by_unique_id(padded_id, schedule.nickname)
 
         if db_schedule is None:
+            # Schedule doesn't exist, create new
             db_schedule = self._create_schedule(schedule)
             self.session.add(db_schedule)
+            await self.session.commit()
+            await self.session.refresh(db_schedule)
         else:
-            # Clear existing days before updating
-            db_schedule.days = []
-            await self._update_schedule(db_schedule, schedule)
-
-        await self.session.commit()
-        # Refresh the session to ensure we have the latest data
-        await self.session.refresh(db_schedule)
+            # Check for changes before updating
+            changes = await self.get_changes(schedule)
+            if changes.has_changes():
+                # Update only if there are changes
+                await self._update_schedule(db_schedule, schedule)
+                await self.session.commit()
+                await self.session.refresh(db_schedule)
+                logger.info(f"Schedule {schedule.unique_id} updated with changes.")
+            else:
+                # No changes detected, skip update
+                logger.info(f"No changes detected for schedule {schedule.unique_id}, skipping update.")
         return db_schedule
 
     async def get_schedule_by_unique_id(
@@ -90,6 +98,9 @@ class ScheduleRepository:
                 .selectinload(models.SchoolDay.lessons)
                 .selectinload(models.Lesson.homework)
                 .selectinload(models.Homework.attachments),
+                selectinload(models.Schedule.days)
+                .selectinload(models.SchoolDay.lessons)
+                .selectinload(models.Lesson.topic_attachments),
                 selectinload(models.Schedule.days).selectinload(
                     models.SchoolDay.announcements
                 ),
@@ -182,6 +193,8 @@ class ScheduleRepository:
         )
 
         if not db_schedule:
+            # If there is no existing schedule, all data is new
+            changes.structure_changed = True
             return changes
 
         # Compare each day
@@ -190,6 +203,7 @@ class ScheduleRepository:
                 (d for d in db_schedule.days if d.unique_id == new_day.unique_id), None
             )
             if not db_day:
+                changes.structure_changed = True
                 continue
 
             day_changes = DayChanges(
@@ -246,7 +260,11 @@ class ScheduleRepository:
             )
             day_changes.announcements.extend(announcement_changes)
 
-            if day_changes.lessons or day_changes.homework or day_changes.announcements:
+            if (
+                day_changes.lessons
+                or day_changes.homework
+                or day_changes.announcements
+            ):
                 changes.days.append(day_changes)
 
         return changes
@@ -286,129 +304,183 @@ class ScheduleRepository:
     async def _update_schedule(
         self, db_schedule: models.Schedule, schedule: ScheduleModel
     ):
-        """Update existing schedule with new data"""
+        """Update existing schedule with new data without deleting and recreating."""
         db_schedule.nickname = schedule.nickname
 
-        # First, ensure all days in the schedule have their announcements properly linked
+        # Create a mapping of existing days by unique_id
+        db_days_map = {day.unique_id: day for day in db_schedule.days}
+
         for day in schedule.days:
-            # Set day reference for all announcements in this day
-            for announcement in day.announcements:
-                announcement._day = day
+            day_unique_id = day.date.strftime("%Y%m%d")
+            if day_unique_id in db_days_map:
+                # Update existing day
+                db_day = db_days_map[day_unique_id]
+                await self._update_day(db_day, day)
+            else:
+                # Add new day
+                db_day = models.SchoolDay(
+                    unique_id=day_unique_id,
+                    date=day.date,
+                    schedule=db_schedule,
+                )
+                db_schedule.days.append(db_day)
+                await self._update_day(db_day, day)
 
-            # Create new days
-            db_day = models.SchoolDay(
-                unique_id=day.date.strftime("%Y%m%d"),
-                date=day.date,
-            )
-            db_day.schedule = db_schedule
-
-            for lesson in day.lessons:
-                db_lesson = self._create_lesson(lesson)
-                db_lesson.day = db_day
-                db_day.lessons.append(db_lesson)
-
-            for announcement in day.announcements:
-                db_announcement = self._create_announcement(announcement)
-                db_announcement.day = db_day
-                db_day.announcements.append(db_announcement)
-
-            db_schedule.days.append(db_day)
+        # Remove days that are no longer in the schedule
+        incoming_day_ids = set(d.date.strftime("%Y%m%d") for d in schedule.days)
+        db_day_ids = set(db_days_map.keys())
+        days_to_remove = db_day_ids - incoming_day_ids
+        for day_id in days_to_remove:
+            db_day = db_days_map[day_id]
+            await self.session.delete(db_day)
 
     async def _update_day(self, db_day: models.SchoolDay, day: SchoolDay):
-        """Update existing day with new data"""
-        # Track existing items by index instead of subject
-        existing_lessons = {l.index: l for l in db_day.lessons}
-        existing_announcements = {a.unique_id: a for a in db_day.announcements}
-
+        """Update existing day with new data without deleting and recreating content."""
         # Update lessons
-        new_lessons = []
+        db_lessons_map = {lesson.unique_id: lesson for lesson in db_day.lessons}
+        incoming_lessons = []
+
         for lesson in day.lessons:
-            if lesson.index in existing_lessons:
-                db_lesson = existing_lessons[lesson.index]
-                self._update_lesson(db_lesson, lesson)
-                new_lessons.append(db_lesson)
+            if lesson.unique_id in db_lessons_map:
+                db_lesson = db_lessons_map[lesson.unique_id]
+                await self._update_lesson(db_lesson, lesson)
+                incoming_lessons.append(db_lesson)
             else:
                 db_lesson = self._create_lesson(lesson)
                 db_lesson.day = db_day
-                new_lessons.append(db_lesson)
+                incoming_lessons.append(db_lesson)
 
-        db_day.lessons = new_lessons
+        # Remove lessons that are no longer in the schedule
+        incoming_lesson_ids = set(lesson.unique_id for lesson in day.lessons)
+        db_lesson_ids = set(db_lessons_map.keys())
+        lessons_to_remove = db_lesson_ids - incoming_lesson_ids
+        for lesson_id in lessons_to_remove:
+            db_lesson = db_lessons_map[lesson_id]
+            await self.session.delete(db_lesson)
 
-        # Update announcements
-        new_announcements = []
+        db_day.lessons = incoming_lessons
+
+        # Update announcements similarly
+        db_announcements_map = {ann.unique_id: ann for ann in db_day.announcements}
+        incoming_announcements = []
+
         for announcement in day.announcements:
-            if announcement.unique_id in existing_announcements:
-                db_announcement = existing_announcements[announcement.unique_id]
+            if announcement.unique_id in db_announcements_map:
+                db_announcement = db_announcements_map[announcement.unique_id]
                 self._update_announcement(db_announcement, announcement)
-                new_announcements.append(db_announcement)
+                incoming_announcements.append(db_announcement)
             else:
                 db_announcement = self._create_announcement(announcement)
                 db_announcement.day = db_day
-                new_announcements.append(db_announcement)
+                incoming_announcements.append(db_announcement)
 
-        db_day.announcements = new_announcements
+        # Remove announcements that are no longer in the schedule
+        incoming_announcement_ids = set(ann.unique_id for ann in day.announcements)
+        db_announcement_ids = set(db_announcements_map.keys())
+        announcements_to_remove = db_announcement_ids - incoming_announcement_ids
+        for ann_id in announcements_to_remove:
+            db_announcement = db_announcements_map[ann_id]
+            await self.session.delete(db_announcement)
 
-    def _update_lesson(self, db_lesson: models.Lesson, lesson: Lesson):
-        """Update existing lesson with new data"""
+        db_day.announcements = incoming_announcements
+
+    async def _update_lesson(self, db_lesson: models.Lesson, lesson: Lesson):
+        """Update existing lesson with new data without recreating."""
         db_lesson.index = lesson.index
         db_lesson.subject = lesson.subject
         db_lesson.room = lesson.room
         db_lesson.topic = lesson.topic
         db_lesson.mark = lesson.mark
 
-        # Update topic attachments - ensure they have _day reference
-        for attachment in lesson.topic_attachments:
-            if not attachment._day and lesson._day:
-                attachment._day = lesson._day
-        db_lesson.topic_attachments = [
-            self._create_attachment(attachment) 
-            for attachment in lesson.topic_attachments
-        ]
+        # Update topic attachments
+        self._update_attachments(
+            db_lesson.topic_attachments,
+            lesson.topic_attachments,
+            parent='lesson',
+            db_lesson=db_lesson
+        )
 
         if lesson.homework:
-            # Ensure homework has _day reference
-            if not lesson.homework._day and lesson._day:
-                lesson.homework._day = lesson._day
-                # Also ensure homework's attachments have _day reference
-                for attachment in lesson.homework.attachments:
-                    if not attachment._day:
-                        attachment._day = lesson._day
             if db_lesson.homework:
                 self._update_homework(db_lesson.homework, lesson.homework)
             else:
                 db_lesson.homework = self._create_homework(lesson.homework)
-        elif db_lesson.homework:
-            db_lesson.homework = None
+                db_lesson.homework.lesson = db_lesson
+        else:
+            if db_lesson.homework:
+                await self.session.delete(db_lesson.homework)
+                db_lesson.homework = None
 
     def _update_homework(self, db_homework: models.Homework, homework: Homework):
-        """Update existing homework with new data"""
+        """Update existing homework with new data without recreating."""
         db_homework.text = homework.text
 
         # Update links
-        existing_links = {l.unique_id: l for l in db_homework.links}
-        new_links = []
-        for link in homework.links:
-            if link.unique_id in existing_links:
-                db_link = existing_links[link.unique_id]
-                db_link.original_url = link.original_url
-                db_link.destination_url = link.destination_url
-                new_links.append(db_link)
-            else:
-                new_links.append(self._create_link(link))
-        db_homework.links = new_links
+        self._update_links(db_homework.links, homework.links)
 
         # Update attachments
-        existing_attachments = {a.unique_id: a for a in db_homework.attachments}
-        new_attachments = []
-        for attachment in homework.attachments:
-            if attachment.unique_id in existing_attachments:
-                db_attachment = existing_attachments[attachment.unique_id]
+        self._update_attachments(
+            db_homework.attachments,
+            homework.attachments,
+            parent='homework',
+            db_homework=db_homework
+        )
+
+    def _update_attachments(self, db_attachments, new_attachments, parent, db_lesson=None, db_homework=None):
+        """Update attachments list without recreating."""
+        db_attachments_map = {att.unique_id: att for att in db_attachments}
+        incoming_attachments = []
+
+        for attachment in new_attachments:
+            if attachment.unique_id in db_attachments_map:
+                db_attachment = db_attachments_map[attachment.unique_id]
                 db_attachment.filename = attachment.filename
                 db_attachment.url = attachment.url
-                new_attachments.append(db_attachment)
+                incoming_attachments.append(db_attachment)
             else:
-                new_attachments.append(self._create_attachment(attachment))
-        db_homework.attachments = new_attachments
+                db_attachment = self._create_attachment(attachment)
+                if parent == 'lesson' and db_lesson:
+                    db_attachment.lesson = db_lesson
+                elif parent == 'homework' and db_homework:
+                    db_attachment.homework = db_homework
+                incoming_attachments.append(db_attachment)
+
+        # Remove attachments that are no longer present
+        incoming_attachment_ids = set(att.unique_id for att in new_attachments)
+        db_attachment_ids = set(db_attachments_map.keys())
+        attachments_to_remove = db_attachment_ids - incoming_attachment_ids
+        for att_id in attachments_to_remove:
+            db_attachment = db_attachments_map[att_id]
+            self.session.delete(db_attachment)
+
+        # Update the list in place
+        db_attachments[:] = incoming_attachments
+
+    def _update_links(self, db_links, new_links):
+        """Update links list without recreating."""
+        db_links_map = {link.unique_id: link for link in db_links}
+        incoming_links = []
+
+        for link in new_links:
+            if link.unique_id in db_links_map:
+                db_link = db_links_map[link.unique_id]
+                db_link.original_url = link.original_url
+                db_link.destination_url = link.destination_url
+                incoming_links.append(db_link)
+            else:
+                db_link = self._create_link(link)
+                incoming_links.append(db_link)
+
+        # Remove links that are no longer present
+        incoming_link_ids = set(link.unique_id for link in new_links)
+        db_link_ids = set(db_links_map.keys())
+        links_to_remove = db_link_ids - incoming_link_ids
+        for link_id in links_to_remove:
+            db_link = db_links_map[link_id]
+            self.session.delete(db_link)
+
+        # Update the list in place
+        db_links[:] = incoming_links
 
     def _create_lesson(self, lesson: Lesson) -> models.Lesson:
         """Create a lesson with all its data"""
@@ -425,7 +497,9 @@ class ScheduleRepository:
         for attachment in lesson.topic_attachments:
             if not attachment._day and lesson._day:
                 attachment._day = lesson._day
-            db_lesson.topic_attachments.append(self._create_attachment(attachment))
+            db_attachment = self._create_attachment(attachment)
+            db_attachment.lesson = db_lesson
+            db_lesson.topic_attachments.append(db_attachment)
 
         if lesson.homework:
             # Ensure homework has _day reference
@@ -436,6 +510,7 @@ class ScheduleRepository:
                     if not attachment._day:
                         attachment._day = lesson._day
             db_lesson.homework = self._create_homework(lesson.homework)
+            db_lesson.homework.lesson = db_lesson
 
         return db_lesson
 
@@ -444,10 +519,14 @@ class ScheduleRepository:
         db_homework = models.Homework(unique_id=homework.unique_id, text=homework.text)
 
         for link in homework.links:
-            db_homework.links.append(self._create_link(link))
+            db_link = self._create_link(link)
+            db_link.homework = db_homework
+            db_homework.links.append(db_link)
 
         for attachment in homework.attachments:
-            db_homework.attachments.append(self._create_attachment(attachment))
+            db_attachment = self._create_attachment(attachment)
+            db_attachment.homework = db_homework
+            db_homework.attachments.append(db_attachment)
 
         return db_homework
 
