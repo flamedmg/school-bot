@@ -28,8 +28,7 @@ def test_schedule_pipeline_output(capsys):
     output_dir = Path(__file__).parent / "test_data"
     test_output_path = output_dir / "schedule_test_output.md"
     pipeline = create_default_pipeline(
-        markdown_output_path=test_output_path,
-        nickname="test_student"
+        markdown_output_path=test_output_path, nickname="test_student"
     )
 
     # Execute pipeline without capturing output

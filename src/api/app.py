@@ -19,7 +19,7 @@ app = FastAPI(
     title="EKlasse Bot API",
     description="API for handling authenticated redirects and other functionalities",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -34,6 +34,7 @@ app.add_middleware(
 # Include routers
 app.include_router(router, prefix="/api/v1")
 
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
@@ -43,12 +44,13 @@ async def health_check():
 def start_api():
     """Function to start the API server using uvicorn"""
     import uvicorn
+
     uvicorn.run(
         "src.api.app:app",
         host=settings.api_host,
         port=settings.api_port,
         workers=settings.api_workers,
-        reload=True  # Enable auto-reload during development
+        reload=True,  # Enable auto-reload during development
     )
 
 

@@ -4,6 +4,7 @@ from src.events.attachment_handler import handle_attachment
 from src.events.types import AttachmentEvent
 import logging
 
+
 @pytest.mark.asyncio
 async def test_handle_attachment_downloads_file(tmp_path, monkeypatch):
     # Arrange
@@ -12,7 +13,7 @@ async def test_handle_attachment_downloads_file(tmp_path, monkeypatch):
         filename="test_file.pdf",
         url="https://example.com/test_file.pdf",
         cookies={"sessionid": "fake-session-id"},
-        unique_id="202415_testlesson_testday"
+        unique_id="202415_testlesson_testday",
     )
 
     # Change the current working directory to tmp_path
@@ -36,7 +37,7 @@ async def test_handle_attachment_downloads_file(tmp_path, monkeypatch):
 
     class MockClientSession:
         def __init__(self, *args, **kwargs):
-            self.cookies = kwargs.get('cookies', {})
+            self.cookies = kwargs.get("cookies", {})
 
         async def __aenter__(self):
             return self
@@ -49,9 +50,9 @@ async def test_handle_attachment_downloads_file(tmp_path, monkeypatch):
             return MockResponse()
 
     # Patch aiohttp.ClientSession
-    with patch('aiohttp.ClientSession', new=MockClientSession):
+    with patch("aiohttp.ClientSession", new=MockClientSession):
         # Use standard logging logger
-        logger = logging.getLogger('test_attachment_handler')
+        logger = logging.getLogger("test_attachment_handler")
 
         # Act
         await handle_attachment(event=event, logger=logger)

@@ -110,7 +110,9 @@ def create_school_day(
     return day
 
 
-def create_schedule(days: List[SchoolDay], nickname: str = "test_student") -> ScheduleModel:
+def create_schedule(
+    days: List[SchoolDay], nickname: str = "test_student"
+) -> ScheduleModel:
     """Create a schedule with proper parent references"""
     schedule = ScheduleModel(days=days, nickname=nickname)
     # Ensure each day's lessons and announcements have proper references

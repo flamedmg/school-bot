@@ -114,7 +114,7 @@ class Lesson(Base):
         back_populates="lesson",
         cascade="all, delete-orphan",
         primaryjoin="and_(Lesson.id==Attachment.lesson_id, "
-                   "Attachment.homework_id.is_(None))"
+        "Attachment.homework_id.is_(None))",
     )
 
 
@@ -160,7 +160,9 @@ class Attachment(Base):
     lesson_id: Mapped[Optional[int]] = mapped_column(ForeignKey("lessons.id"))
 
     homework: Mapped[Optional["Homework"]] = relationship(back_populates="attachments")
-    lesson: Mapped[Optional["Lesson"]] = relationship(back_populates="topic_attachments")
+    lesson: Mapped[Optional["Lesson"]] = relationship(
+        back_populates="topic_attachments"
+    )
 
     def get_file_path(self) -> Path:
         """

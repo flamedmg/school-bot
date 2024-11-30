@@ -204,31 +204,34 @@ async def test_real_data_pipeline_and_changes(db_session):
 async def test_get_attachment_path(db_session):
     """Test getting attachment path from repository"""
     repository = ScheduleRepository(db_session)
-    
+
     # Create test schedule with attachment
     schedule_data = {
         "nickname": "Test Student",
-        "days": [{
-            "date": datetime.now(),
-            "lessons": [{
-                "index": 1,
-                "subject": "Test Subject",
-                "topic": "Test Topic",
-                "topic_attachments": [{
-                    "filename": "test.pdf",
-                    "url": "http://test.com/test.pdf"
-                }]
-            }]
-        }]
+        "days": [
+            {
+                "date": datetime.now(),
+                "lessons": [
+                    {
+                        "index": 1,
+                        "subject": "Test Subject",
+                        "topic": "Test Topic",
+                        "topic_attachments": [
+                            {"filename": "test.pdf", "url": "http://test.com/test.pdf"}
+                        ],
+                    }
+                ],
+            }
+        ],
     }
-    
+
     # Create and save schedule
     schedule = Schedule(**schedule_data)
     await repository.save_schedule(schedule)
-    
+
     # Get the attachment's unique ID
     attachment_id = schedule.days[0].lessons[0].topic_attachments[0].unique_id
-    
+
     # Test getting attachment path
     path = await repository.get_attachment_path(attachment_id)
     assert path is not None
@@ -236,7 +239,7 @@ async def test_get_attachment_path(db_session):
     assert path.name.startswith(attachment_id)
     assert path.name.endswith("test.pdf")
     assert "data/attachments" in str(path)
-    
+
     # Test with non-existent attachment ID
     path = await repository.get_attachment_path("nonexistent_id")
     assert path is None
@@ -247,46 +250,50 @@ async def test_multiple_schedules_data_comparison(db_session):
     """Test and compare data from multiple schedule files"""
     repository = ScheduleRepository(db_session)
     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
-    
+
     test_files = [
         "test_ekdg_20240212.html",
-        "test_ekdg_20241118.html", 
-        "test_ekdg_20241125.html"
+        "test_ekdg_20241118.html",
+        "test_ekdg_20241125.html",
     ]
-    
+
     results = []
-    
+
     for filename in test_files:
         # Process each file
         html = load_test_file(filename, base_dir="test_data")
         raw_data = strategy.extract(html=html, url="https://test.com")
-        
+
         pipeline = create_default_pipeline()
         schedule_data = pipeline.execute(raw_data)
         schedule_data[0]["nickname"] = "Test Student"
-        
+
         schedule = Schedule(**schedule_data[0])
-        
+
         # Collect detailed statistics
         total_links = 0
         total_attachments = 0
         attachment_details = []
-        
+
         for day in schedule.days:
             for lesson in day.lessons:
                 # Count topic attachments
                 topic_attachments = len(lesson.topic_attachments)
                 if topic_attachments > 0:
-                    attachment_details.append(f"Lesson {lesson.index} topic: {topic_attachments} attachments")
+                    attachment_details.append(
+                        f"Lesson {lesson.index} topic: {topic_attachments} attachments"
+                    )
                 total_attachments += topic_attachments
-                
+
                 if lesson.homework:
                     total_links += len(lesson.homework.links)
                     homework_attachments = len(lesson.homework.attachments)
                     if homework_attachments > 0:
-                        attachment_details.append(f"Lesson {lesson.index} homework: {homework_attachments} attachments")
+                        attachment_details.append(
+                            f"Lesson {lesson.index} homework: {homework_attachments} attachments"
+                        )
                     total_attachments += homework_attachments
-        
+
         # Collect detailed link information
         link_details = []
         for day in schedule.days:
@@ -298,19 +305,21 @@ async def test_multiple_schedules_data_comparison(db_session):
                         f"{[link.original_url for link in lesson.homework.links]}"
                     )
 
-        results.append({
-            "filename": filename,
-            "days": len(schedule.days),
-            "links": total_links,
-            "attachments": total_attachments,
-            "attachment_details": attachment_details,
-            "link_details": link_details,
-            "schedule": schedule
-        })
-        
+        results.append(
+            {
+                "filename": filename,
+                "days": len(schedule.days),
+                "links": total_links,
+                "attachments": total_attachments,
+                "attachment_details": attachment_details,
+                "link_details": link_details,
+                "schedule": schedule,
+            }
+        )
+
         # Save to database to verify data integrity
         await repository.save_schedule(schedule)
-    
+
     # Print detailed comparison results
     print("\nDetailed Schedule Data Comparison:")
     print("-" * 50)
@@ -320,29 +329,45 @@ async def test_multiple_schedules_data_comparison(db_session):
         print(f"Total Links: {result['links']}")
         print(f"Total Attachments: {result['attachments']}")
         print("Link Details:")
-        for detail in result['link_details']:
+        for detail in result["link_details"]:
             print(f"  {detail}")
         print("Attachment Details:")
-        for detail in result['attachment_details']:
+        for detail in result["attachment_details"]:
             print(f"  {detail}")
-    
+
     # Verify basic expectations for all files
     for result in results:
         assert result["days"] > 0, f"No days found in {result['filename']}"
         assert result["links"] >= 0, f"Invalid link count in {result['filename']}"
-        assert result["attachments"] >= 0, f"Invalid attachment count in {result['filename']}"
+        assert (
+            result["attachments"] >= 0
+        ), f"Invalid attachment count in {result['filename']}"
 
     # Specific assertions for test_ekdg_20240212.html
     feb_result = next(r for r in results if r["filename"] == "test_ekdg_20240212.html")
-    assert feb_result["links"] == 1, "Expected exactly 1 link (typingclub.com) in February schedule"
-    assert feb_result["attachments"] == 5, "Expected exactly 5 attachments (.pptx, .docx, .ppt files) in February schedule"
+    assert (
+        feb_result["links"] == 1
+    ), "Expected exactly 1 link (typingclub.com) in February schedule"
+    assert (
+        feb_result["attachments"] == 5
+    ), "Expected exactly 5 attachments (.pptx, .docx, .ppt files) in February schedule"
 
     # Specific assertions for test_ekdg_20241118.html
-    nov18_result = next(r for r in results if r["filename"] == "test_ekdg_20241118.html")
+    nov18_result = next(
+        r for r in results if r["filename"] == "test_ekdg_20241118.html"
+    )
     assert nov18_result["links"] == 0, "Expected no links in November 18th schedule"
-    assert nov18_result["attachments"] == 9, "Expected exactly 9 attachments in November 18th schedule"
+    assert (
+        nov18_result["attachments"] == 9
+    ), "Expected exactly 9 attachments in November 18th schedule"
 
     # Specific assertions for test_ekdg_20241125.html
-    nov25_result = next(r for r in results if r["filename"] == "test_ekdg_20241125.html")
-    assert nov25_result["links"] == 1, "Expected exactly 1 link in November 25th schedule"
-    assert nov25_result["attachments"] == 12, "Expected exactly 12 attachments in November 25th schedule"
+    nov25_result = next(
+        r for r in results if r["filename"] == "test_ekdg_20241125.html"
+    )
+    assert (
+        nov25_result["links"] == 1
+    ), "Expected exactly 1 link in November 25th schedule"
+    assert (
+        nov25_result["attachments"] == 12
+    ), "Expected exactly 12 attachments in November 25th schedule"

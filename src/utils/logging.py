@@ -3,9 +3,10 @@ import sys
 import logging
 import logging.config
 
+
 class InterceptHandler(logging.Handler):
     """Intercepts standard library logging and redirects to loguru."""
-    
+
     def emit(self, record):
         # Get corresponding Loguru level if it exists
         try:
@@ -23,6 +24,7 @@ class InterceptHandler(logging.Handler):
             level, record.getMessage()
         )
 
+
 def setup_logging():
     """Configure logging for the entire application."""
     # Configure format
@@ -32,7 +34,7 @@ def setup_logging():
         "<cyan>{name}</cyan> | "
         "<level>{message}</level>"
     )
-    
+
     # Remove default handler and add custom one
     logger.remove()
     logger.add(
@@ -45,7 +47,7 @@ def setup_logging():
 
     # Intercept standard library logging
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-    
+
     # Explicitly configure loggers we want to intercept
     for logger_name in [
         "uvicorn",

@@ -43,26 +43,26 @@ def extract_filename_from_url(url: str) -> str:
     """Extract filename from URL, handling various URL formats"""
     try:
         parsed = urlparse(unquote(url))
-        
+
         # First check query parameters for filename
         if parsed.query:
             params = parse_qs(parsed.query)
             if "filename" in params and params["filename"]:
                 return params["filename"][0]
-        
+
         # Then try to get filename from path
         path = Path(parsed.path)
         if path.name and path.suffix:
             return path.name
-        
+
         # If no extension in path, check if there's a meaningful name
-        if path.name and not path.name.startswith(('download', 'get', 'file')):
+        if path.name and not path.name.startswith(("download", "get", "file")):
             return path.name
-            
+
         # Fall back to "link" + extension if present
         if path.suffix:
             return f"link{path.suffix}"
-            
+
         return "link"
     except Exception:
         return "link"
@@ -77,10 +77,10 @@ def generate_unique_id(
     # Clean and normalize the components
     clean_subject = subject.strip().lower()
     # Replace special characters with underscores
-    clean_subject = re.sub(r'[^a-z0-9]+', '_', clean_subject)
+    clean_subject = re.sub(r"[^a-z0-9]+", "_", clean_subject)
     # Remove trailing underscores and multiple underscores
-    clean_subject = re.sub(r'_+', '_', clean_subject.strip('_'))
-    
+    clean_subject = re.sub(r"_+", "_", clean_subject.strip("_"))
+
     clean_lesson = clean_lesson_number(lesson_number)
 
     # Combine components with underscores

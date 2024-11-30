@@ -47,7 +47,9 @@ def extract_destination_url(url: str) -> Dict[str, Optional[str]]:
             result["destination_url"] = None
         # Handle other URLs
         else:
-            clean_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
+            clean_url = (
+                url if url.startswith(("http://", "https://")) else f"https://{url}"
+            )
             result["destination_url"] = clean_url
 
     except Exception as e:
@@ -91,52 +93,58 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
         if "links" in homework:
             if not isinstance(homework["links"], list):
                 raise PreprocessingError("Invalid links format - expected list")
-            
+
             valid_links = []
             for link in homework["links"]:
                 if not isinstance(link, dict):
-                    raise PreprocessingError("Invalid link format - expected dictionary")
-                
+                    raise PreprocessingError(
+                        "Invalid link format - expected dictionary"
+                    )
+
                 # Validate URL format
                 url = link.get("url")
                 if not url:
                     continue
-                    
+
                 if not isinstance(url, str):
                     raise PreprocessingError(f"Invalid URL format: {url}")
-                
+
                 if url == "invalid-url":  # Handle the specific test case
                     raise PreprocessingError("Invalid URL format")
-                    
+
                 try:
                     processed_url = extract_destination_url(url)
                     valid_links.append(processed_url)
                 except PreprocessingError as e:
                     raise PreprocessingError(f"Failed to process URL: {str(e)}")
-                    
+
             result["links"] = valid_links
 
         # Process attachments
         if "attachments" in homework:
             if not isinstance(homework["attachments"], list):
                 raise PreprocessingError("Invalid attachments format - expected list")
-            
+
             valid_attachments = []
             for attachment in homework["attachments"]:
                 if not isinstance(attachment, dict):
-                    raise PreprocessingError("Invalid attachment format - expected dictionary")
-                
+                    raise PreprocessingError(
+                        "Invalid attachment format - expected dictionary"
+                    )
+
                 url = attachment.get("url")
                 if not url:
                     continue
-                    
+
                 if not isinstance(url, str):
                     raise PreprocessingError(f"Invalid attachment URL format: {url}")
-                    
-                valid_attachments.append({
-                    "filename": attachment.get("filename", ""),
-                    "url": url,
-                })
+
+                valid_attachments.append(
+                    {
+                        "filename": attachment.get("filename", ""),
+                        "url": url,
+                    }
+                )
             result["attachments"] = valid_attachments
 
         # Deduplicate links based on attachment URLs
@@ -158,7 +166,9 @@ def preprocess_homework(homework: Dict[str, Any]) -> Dict[str, Any]:
     except PreprocessingError:
         raise
     except Exception as e:
-        raise PreprocessingError(f"Failed to process homework data: {str(e)}", {"homework": homework})
+        raise PreprocessingError(
+            f"Failed to process homework data: {str(e)}", {"homework": homework}
+        )
 
 
 def preprocess_homeworks(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

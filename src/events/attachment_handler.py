@@ -17,6 +17,7 @@ from .types import AttachmentEvent
 from .event_types import EventTopics
 from .broker import broker
 
+
 @broker.subscriber(EventTopics.NEW_ATTACHMENT)
 async def handle_attachment(
     event: AttachmentEvent,
@@ -63,7 +64,9 @@ async def handle_attachment(
                         f"Successfully downloaded {event.filename} to {file_path}"
                     )
                 else:
-                    error_msg = f"Failed to download {event.filename}: HTTP {response.status}"
+                    error_msg = (
+                        f"Failed to download {event.filename}: HTTP {response.status}"
+                    )
                     logger.error(error_msg)
                     logger.error(f"Response text: {await response.text()}")
                     raise Exception(error_msg)
