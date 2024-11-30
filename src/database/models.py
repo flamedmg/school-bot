@@ -110,6 +110,12 @@ class Lesson(Base):
     homework: Mapped[Optional["Homework"]] = relationship(
         back_populates="lesson", cascade="all, delete-orphan", uselist=False
     )
+    topic_attachments: Mapped[List["Attachment"]] = relationship(
+        back_populates="lesson",
+        cascade="all, delete-orphan",
+        primaryjoin="and_(Lesson.id==Attachment.lesson_id, "
+                   "Attachment.homework_id.is_(None))"
+    )
 
 
 class Homework(Base):
@@ -150,9 +156,11 @@ class Attachment(Base):
     )  # Increased length for new format
     filename: Mapped[str] = mapped_column(String(255))
     url: Mapped[str] = mapped_column(String(2048))
-    homework_id: Mapped[int] = mapped_column(ForeignKey("homework.id"))
+    homework_id: Mapped[Optional[int]] = mapped_column(ForeignKey("homework.id"))
+    lesson_id: Mapped[Optional[int]] = mapped_column(ForeignKey("lessons.id"))
 
-    homework: Mapped["Homework"] = relationship(back_populates="attachments")
+    homework: Mapped[Optional["Homework"]] = relationship(back_populates="attachments")
+    lesson: Mapped[Optional["Lesson"]] = relationship(back_populates="topic_attachments")
 
     def get_file_path(self) -> Path:
         """

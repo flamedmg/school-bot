@@ -66,6 +66,7 @@ class Lesson(BaseModel):
     subject: str
     room: Optional[str] = None
     topic: Optional[str] = None
+    topic_attachments: List[Attachment] = Field(default_factory=list)
     homework: Optional[Homework] = None
     mark: Optional[int] = None
     _day: Optional["SchoolDay"] = None
@@ -74,6 +75,8 @@ class Lesson(BaseModel):
         super().__init__(**data)
         if self.homework:
             self.homework._day = self._day
+        for attachment in self.topic_attachments:
+            attachment._day = self._day
 
     @field_validator("subject")
     @classmethod
@@ -142,6 +145,9 @@ class SchoolDay(BaseModel):
         # Set parent reference for lessons and announcements
         for lesson in self.lessons:
             lesson._day = self
+            # Set parent reference for topic attachments
+            for attachment in lesson.topic_attachments:
+                attachment._day = self
             if lesson.homework:
                 lesson.homework._day = self
                 # Set parent reference for homework attachments and links

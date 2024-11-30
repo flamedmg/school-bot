@@ -105,6 +105,27 @@ def preprocess_lesson(lesson: Dict[str, Any]) -> Dict[str, Any]:
     try:
         result = lesson.copy()
 
+        # Handle topic, topic links, and topic attachments
+        if "topic" in result and isinstance(result["topic"], dict):
+            topic_data = result["topic"]
+            result["topic"] = clean_topic(topic_data.get("text", ""))
+            
+            # Handle topic links
+            if "links" in topic_data:
+                if not "homework" in result:
+                    result["homework"] = {"text": None, "links": [], "attachments": []}
+                result["homework"]["links"].extend([
+                    {"original_url": link["url"], "destination_url": None}
+                    for link in topic_data["links"]
+                ])
+            
+            # Handle topic attachments
+            if "attachments" in topic_data:
+                result["topic_attachments"] = topic_data["attachments"]
+        elif "topic" in result:
+            result["topic"] = clean_topic(result["topic"])
+            result["topic_attachments"] = []
+
         # Convert number to index if present
         if "number" in result:
             try:

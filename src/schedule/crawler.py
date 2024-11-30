@@ -289,7 +289,39 @@ JSON_SCHEMA = {
                         {"name": "number", "selector": "span.number", "type": "text"},
                         {"name": "subject", "selector": "span.title", "type": "text"},
                         {"name": "room", "selector": "span.room", "type": "text"},
-                        {"name": "topic", "selector": "td.subject p", "type": "text"},
+                        {
+                            "name": "topic",
+                            "selector": "td.subject",
+                            "type": "nested",
+                            "fields": [
+                                {"name": "text", "selector": "p", "type": "text"},
+                                {
+                                    "name": "links",
+                                    "selector": "a:not(.file)",
+                                    "type": "list",
+                                    "fields": [
+                                        {
+                                            "name": "url",
+                                            "type": "attribute",
+                                            "attribute": "href",
+                                        }
+                                    ],
+                                },
+                                {
+                                    "name": "attachments",
+                                    "selector": "a.file",
+                                    "type": "list",
+                                    "fields": [
+                                        {"name": "filename", "type": "text"},
+                                        {
+                                            "name": "url",
+                                            "type": "attribute",
+                                            "attribute": "href",
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
                         {
                             "name": "homework",
                             "type": "nested",

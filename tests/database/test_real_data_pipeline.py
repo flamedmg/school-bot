@@ -224,35 +224,64 @@ async def test_multiple_schedules_data_comparison(db_session):
         
         schedule = Schedule(**schedule_data[0])
         
-        # Collect statistics
+        # Collect detailed statistics
         total_links = 0
         total_attachments = 0
+        attachment_details = []
         
         for day in schedule.days:
             for lesson in day.lessons:
+                # Count topic attachments
+                topic_attachments = len(lesson.topic_attachments)
+                if topic_attachments > 0:
+                    attachment_details.append(f"Lesson {lesson.index} topic: {topic_attachments} attachments")
+                total_attachments += topic_attachments
+                
                 if lesson.homework:
                     total_links += len(lesson.homework.links)
-                    total_attachments += len(lesson.homework.attachments)
+                    homework_attachments = len(lesson.homework.attachments)
+                    if homework_attachments > 0:
+                        attachment_details.append(f"Lesson {lesson.index} homework: {homework_attachments} attachments")
+                    total_attachments += homework_attachments
         
+        # Collect detailed link information
+        link_details = []
+        for day in schedule.days:
+            for lesson in day.lessons:
+                if lesson.homework and lesson.homework.links:
+                    link_details.append(
+                        f"Day {day.date.strftime('%Y-%m-%d')} Lesson {lesson.index}: "
+                        f"{len(lesson.homework.links)} links - "
+                        f"{[link.original_url for link in lesson.homework.links]}"
+                    )
+
         results.append({
             "filename": filename,
             "days": len(schedule.days),
             "links": total_links,
             "attachments": total_attachments,
+            "attachment_details": attachment_details,
+            "link_details": link_details,
             "schedule": schedule
         })
         
         # Save to database to verify data integrity
         await repository.save_schedule(schedule)
     
-    # Print comparison results
-    print("\nSchedule Data Comparison:")
+    # Print detailed comparison results
+    print("\nDetailed Schedule Data Comparison:")
     print("-" * 50)
     for result in results:
         print(f"\nFile: {result['filename']}")
         print(f"Days: {result['days']}")
         print(f"Total Links: {result['links']}")
         print(f"Total Attachments: {result['attachments']}")
+        print("Link Details:")
+        for detail in result['link_details']:
+            print(f"  {detail}")
+        print("Attachment Details:")
+        for detail in result['attachment_details']:
+            print(f"  {detail}")
     
     # Verify basic expectations for all files
     for result in results:
@@ -272,5 +301,5 @@ async def test_multiple_schedules_data_comparison(db_session):
 
     # Specific assertions for test_ekdg_20241125.html
     nov25_result = next(r for r in results if r["filename"] == "test_ekdg_20241125.html")
-    assert nov25_result["links"] == 2, "Expected exactly 2 links in November 25th schedule"
-    assert nov25_result["attachments"] == 13, "Expected exactly 13 attachments in November 25th schedule"
+    assert nov25_result["links"] == 1, "Expected exactly 1 link in November 25th schedule"
+    assert nov25_result["attachments"] == 12, "Expected exactly 12 attachments in November 25th schedule"

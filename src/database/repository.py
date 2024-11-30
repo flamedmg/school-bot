@@ -341,7 +341,23 @@ class ScheduleRepository:
         db_lesson.topic = lesson.topic
         db_lesson.mark = lesson.mark
 
+        # Update topic attachments - ensure they have _day reference
+        for attachment in lesson.topic_attachments:
+            if not attachment._day and lesson._day:
+                attachment._day = lesson._day
+        db_lesson.topic_attachments = [
+            self._create_attachment(attachment) 
+            for attachment in lesson.topic_attachments
+        ]
+
         if lesson.homework:
+            # Ensure homework has _day reference
+            if not lesson.homework._day and lesson._day:
+                lesson.homework._day = lesson._day
+                # Also ensure homework's attachments have _day reference
+                for attachment in lesson.homework.attachments:
+                    if not attachment._day:
+                        attachment._day = lesson._day
             if db_lesson.homework:
                 self._update_homework(db_lesson.homework, lesson.homework)
             else:
@@ -390,7 +406,20 @@ class ScheduleRepository:
             mark=lesson.mark,
         )
 
+        # Add topic attachments - ensure they have _day reference
+        for attachment in lesson.topic_attachments:
+            if not attachment._day and lesson._day:
+                attachment._day = lesson._day
+            db_lesson.topic_attachments.append(self._create_attachment(attachment))
+
         if lesson.homework:
+            # Ensure homework has _day reference
+            if not lesson.homework._day and lesson._day:
+                lesson.homework._day = lesson._day
+                # Also ensure homework's attachments have _day reference
+                for attachment in lesson.homework.attachments:
+                    if not attachment._day:
+                        attachment._day = lesson._day
             db_lesson.homework = self._create_homework(lesson.homework)
 
         return db_lesson
