@@ -1,8 +1,7 @@
 from dataclasses import dataclass
 
-from src.schedule.schema import AnnouncementType
-
 from .enums import ChangeType
+from .models import AnnouncementType
 
 
 @dataclass

@@ -1,13 +1,11 @@
-
 import pytest
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.database.models import Base
+from src.database.models import Base, Schedule
 from src.database.repository import ScheduleRepository
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
-from src.schedule.schema import Schedule
 from tests.crawl.utils import load_test_file
 
 
@@ -53,8 +51,7 @@ async def test_prevent_incorrect_subject_change(db_session):
     # Load and process original schedule (with Balaguri)
     original_html = load_test_file("test_subject_change.html", base_dir="test_data")
     raw_data = strategy.extract(html=original_html, url="http://test.com")
-    original_data = pipeline.execute(raw_data)
-    original_schedule = Schedule(**original_data[0])
+    original_schedule = pipeline.execute(raw_data)
 
     # Verify the original schedule has Balagurchiki
     for day in original_schedule.days:
@@ -69,8 +66,7 @@ async def test_prevent_incorrect_subject_change(db_session):
     await db_session.commit()
 
     # Create updated schedule - should NOT change Balagurchiki to Matemātika F
-    updated_data = original_data.copy()
-    updated_schedule = Schedule(**updated_data[0])
+    updated_schedule = original_schedule
 
     # Get changes
     changes = await repository.get_changes(updated_schedule)
@@ -106,21 +102,45 @@ async def test_detect_actual_subject_change(db_session):
     # Load and process original schedule
     original_html = load_test_file("test_subject_change.html", base_dir="test_data")
     raw_data = strategy.extract(html=original_html, url="http://test.com")
-    original_data = pipeline.execute(raw_data)
-    original_schedule = Schedule(**original_data[0])
+    original_schedule = pipeline.execute(raw_data)
 
     # Save original schedule
     await repository.save_schedule(original_schedule)
     await db_session.commit()
 
     # Create updated schedule with actual subject changes
-    updated_data = original_data.copy()
-    # Change subject for all three days
-    for day in updated_data[0]["days"]:
-        for lesson in day["lessons"]:
-            if lesson["subject"] == "Balagurchiki":
-                lesson["subject"] = "Matemātika F"
-    updated_schedule = Schedule(**updated_data[0])
+    updated_schedule = Schedule(
+        id=original_schedule.id,
+        nickname=original_schedule.nickname,
+        days=[],
+    )
+    # Copy days and change subjects
+    for day in original_schedule.days:
+        updated_day = day.__class__(
+            id=day.id,
+            date=day.date,
+            schedule=updated_schedule,
+            lessons=[],
+            announcements=day.announcements,
+        )
+        for lesson in day.lessons:
+            updated_lesson = lesson.__class__(
+                id=lesson.id,
+                index=lesson.index,
+                subject=(
+                    "Matemātika F"
+                    if lesson.subject == "Balagurchiki"
+                    else lesson.subject
+                ),
+                room=lesson.room,
+                topic=lesson.topic,
+                mark=lesson.mark,
+                homework=lesson.homework,
+                topic_attachments=lesson.topic_attachments,
+                day=updated_day,
+            )
+            updated_day.lessons.append(updated_lesson)
+        updated_schedule.days.append(updated_day)
 
     # Get changes
     changes = await repository.get_changes(updated_schedule)

@@ -8,13 +8,11 @@ from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from loguru import logger
 from playwright.async_api import Browser, Page
 
+from src.config import settings
 from src.schedule.exceptions import FetchError, LoginError, ParseError
 
 
 class ScheduleCrawler:
-    BASE_URL = "https://www.e-klase.lv"
-    SCHEDULE_URL = "https://my.e-klase.lv/Family/Diary"
-
     def __init__(self, username: str, password: str, nickname: str):
         self.username = username
         self.password = password
@@ -96,7 +94,7 @@ class ScheduleCrawler:
 
             try:
                 logger.debug("Navigating to login page...")
-                await page.goto(self.BASE_URL)
+                await page.goto(str(settings.base_url))
                 await self._perform_login(page)
 
                 # Get cookies after successful login
@@ -118,7 +116,7 @@ class ScheduleCrawler:
             crawler_strategy=crawler_strategy,
         ) as crawler:
             try:
-                await crawler.arun(url=self.SCHEDULE_URL)
+                await crawler.arun(url=str(settings.schedule_url))
             except Exception as e:
                 raise LoginError(
                     f"Browser error: {str(e)}", student_nickname=self.nickname
@@ -131,7 +129,7 @@ class ScheduleCrawler:
         """Fetch schedule HTML for a specific week"""
         try:
             formatted_date = date.strftime("%d.%m.%Y.")
-            url = f"{self.SCHEDULE_URL}?Date={formatted_date}"
+            url = f"{settings.schedule_url}?Date={formatted_date}"
             logger.info(f"Fetching raw schedule for date: {formatted_date}")
 
             # Use crawler with stored cookies
@@ -155,7 +153,7 @@ class ScheduleCrawler:
         strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
         try:
             formatted_date = date.strftime("%d.%m.%Y.")
-            url = f"{self.SCHEDULE_URL}?Date={formatted_date}"
+            url = f"{settings.schedule_url}?Date={formatted_date}"
             logger.info(f"Fetching schedule for week of {formatted_date}")
 
             # Use crawler with stored cookies

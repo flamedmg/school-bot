@@ -3,10 +3,9 @@ from datetime import datetime
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.database.models import Base
+from src.database.models import Base, Lesson, Schedule, SchoolDay
 from src.database.repository import ScheduleRepository
 from src.schedule.preprocessors.lessons import clean_subject
-from src.schedule.schema import Lesson, Schedule, SchoolDay
 
 
 @pytest.fixture
@@ -42,17 +41,31 @@ def create_test_schedule(nickname: str, days_data: list) -> Schedule:
         # Clean the subject before creating the lesson
         cleaned_subject, room = clean_subject(subject)
         day = SchoolDay(
+            id=date.strftime("%Y%m%d"),
             date=date,
-            lessons=[
-                Lesson(
-                    index=6,  # Same index as in production issue
-                    subject=cleaned_subject,
-                    room=room or "az",  # Use extracted room or default to "az"
-                )
-            ],
+            lessons=[],
         )
+        lesson = Lesson(
+            id=f"{day.id}_6",  # Same index as in production issue
+            index=6,
+            subject=cleaned_subject,
+            room=room or "az",  # Use extracted room or default to "az"
+            day=day,
+        )
+        day.lessons = [lesson]
         days.append(day)
-    return Schedule(nickname=nickname, days=days)
+
+    # Create schedule with id from first day
+    schedule_id = days[0].id[:6] if days else "202401"
+    schedule = Schedule(
+        id=schedule_id,
+        nickname=nickname,
+        days=days,
+    )
+    # Set schedule reference for days
+    for day in days:
+        day.schedule = schedule
+    return schedule
 
 
 @pytest.mark.asyncio

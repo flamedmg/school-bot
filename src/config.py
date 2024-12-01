@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # School settings
     school_website_url: HttpUrl
     school_email_server: constr(min_length=1)
+    base_url: HttpUrl = "https://www.e-klase.lv"
+    schedule_url: HttpUrl = "https://my.e-klase.lv/Family/Diary"
 
     # Database settings
     database_url: constr(min_length=1) = "sqlite:///data/school_bot.db"
@@ -68,6 +70,8 @@ class Settings(BaseSettings):
         "telegram_bot_token",
         "school_website_url",
         "school_email_server",
+        "base_url",
+        "schedule_url",
         mode="before",
     )
     def clean_string(cls, v):  # noqa: N805

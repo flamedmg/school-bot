@@ -14,7 +14,9 @@ from .preprocessors.homework import preprocess_homeworks
 from .preprocessors.lessons import preprocess_lessons
 from .preprocessors.markdown_output import create_markdown_output_step
 from .preprocessors.marks import preprocess_marks
+from .preprocessors.to_schedule import to_schedule
 from .preprocessors.translation import preprocess_translations
+from src.database.models import Schedule
 
 
 @dataclass
@@ -33,7 +35,7 @@ class PreprocessingPipeline:
         self.steps.append(PipelineStep(name=name, function=function))
         return self
 
-    def execute(self, data: Any) -> Any:
+    def execute(self, data: Any) -> Schedule:
         result = data
         total_steps = len(self.steps)
         logger.info(f"Starting preprocessing pipeline with {total_steps} steps")
@@ -44,6 +46,11 @@ class PreprocessingPipeline:
                 # Pass base_url to attachment preprocessor
                 if step.name == "attachments" and self.base_url:
                     result = step.function(result, self.base_url)
+                # Pass nickname to to_schedule step
+                elif step.name == "to_schedule":
+                    if not self.nickname:
+                        raise ValueError("Nickname is required for to_schedule step")
+                    result = step.function(result, self.nickname)
                 else:
                     result = step.function(result)
 
@@ -69,11 +76,6 @@ class PreprocessingPipeline:
                 logger.error("Stack trace:", traceback.format_exc())
                 raise
 
-        # Add nickname to final result if provided
-        if self.nickname and isinstance(result, list) and len(result) > 0:
-            if isinstance(result[0], dict):
-                result[0]["nickname"] = self.nickname
-
         logger.info("Preprocessing pipeline completed successfully")
         return result
 
@@ -82,7 +84,7 @@ def create_default_pipeline(
     markdown_output_path: str | Path | None = None,
     nickname: str | None = None,
     base_url: str | None = None,
-):
+) -> PreprocessingPipeline:
     """Create the default preprocessing pipeline with all steps
 
     Args:
@@ -101,6 +103,7 @@ def create_default_pipeline(
         .add_step("homework", preprocess_homeworks)
         .add_step("announcements", preprocess_announcements)
         .add_step("attachments", extract_attachments)
+        .add_step("to_schedule", to_schedule)  # Add the new step
     )
 
     # Optionally add markdown output step if path is provided

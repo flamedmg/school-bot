@@ -5,14 +5,15 @@ from datetime import datetime
 from faststream.redis import RedisBroker
 from loguru import logger
 
+from src.config import settings
 from src.database.enums import ChangeType
+from src.database.models import Schedule
 from src.database.repository import ScheduleRepository
 from src.events.event_types import CrawlErrorEvent, EventTopics
 from src.events.types import AttachmentEvent
 from src.schedule.crawler import ScheduleCrawler
 from src.schedule.exceptions import CrawlError
 from src.schedule.preprocess import create_default_pipeline
-from src.schedule.schema import Schedule
 
 
 class StudentManager:
@@ -68,66 +69,84 @@ class StudentManager:
     async def _process_raw_schedules(self, raw_schedules: list[tuple]):
         """Process raw schedules through the pipeline."""
         pipeline = create_default_pipeline(
-            nickname=self.nickname, base_url=self.crawler.SCHEDULE_URL
+            nickname=self.nickname,
+            base_url=str(settings.schedule_url),  # Pass schedule URL for attachments
         )
 
         # Only process current and past week (first two items)
         for raw_data, html_content in raw_schedules:
             try:
-                processed_data = pipeline.execute(raw_data)
-                if processed_data and len(processed_data) > 0:
-                    # Process attachments from the processed data
-                    attachments = processed_data[0].get("attachments", [])
-                    cookies_dict = self._convert_cookies_to_dict(self.crawler.cookies)
+                schedule = pipeline.execute(raw_data)
+                if isinstance(schedule, Schedule):
+                    # Get existing schedule to compare changes
+                    existing_schedule = await self.repository.get_schedule_by_id(
+                        schedule.id, schedule.nickname
+                    )
 
-                    # Debug log processed data and attachments
-                    logger.debug("Processed data structure:")
-                    logger.debug(processed_data)
-                    logger.debug("Attachments from processed data:")
-                    logger.debug(attachments)
-
-                    for attachment in attachments:
-                        # Debug log attachment data before creating event
-                        logger.debug("Creating event for attachment:")
-                        logger.debug(attachment)
-
-                        event = AttachmentEvent(
-                            student_nickname=self.nickname,
-                            filename=attachment["filename"],
-                            url=attachment["url"],
-                            cookies=cookies_dict,
-                            unique_id=attachment["unique_id"],
+                    # Process changes
+                    changes = await self.repository.get_changes(schedule)
+                    if changes.has_changes() or existing_schedule is None:
+                        # Process attachments before saving
+                        cookies_dict = self._convert_cookies_to_dict(
+                            self.crawler.cookies
                         )
-                        await self.broker.publish(event, EventTopics.NEW_ATTACHMENT)
-                        logger.debug(
-                            "Emitted attachment event for {} with ID {}".format(
-                                attachment["filename"], attachment["unique_id"]
-                            )
+                        await self._process_attachments(schedule, cookies_dict)
+
+                        # Update changes summary and publish changes
+                        if changes:
+                            self._update_changes_summary(changes, schedule)
+                            await self._publish_changes(schedule, changes)
+
+                        # Save the schedule after processing
+                        await self.repository.save_schedule(schedule)
+                        self._schedules_processed += 1
+                    else:
+                        logger.info(
+                            f"No changes detected for schedule {schedule.id}, skipping update."
                         )
 
-                schedule = self._create_schedule_from_data(processed_data)
-                if schedule:
-                    await self._handle_schedule_changes(schedule)
-                self._schedules_processed += 1
             except Exception as e:
                 await self._handle_preprocessing_error(e, html_content)
                 raise
 
-    def _create_schedule_from_data(self, processed_data: list[dict]) -> Schedule:
-        """Create a Schedule object from processed data."""
-        try:
-            return Schedule(**processed_data[0])
-        except (IndexError, TypeError, AttributeError) as e:
-            logger.error(f"Invalid schedule data format: {str(e)}")
-            return None
+    async def _process_attachments(self, schedule: Schedule, cookies: dict):
+        """Process attachments from all parts of the schedule."""
+        # Process schedule-level attachments
+        if hasattr(schedule, "attachments"):
+            for attachment in schedule.attachments:
+                await self._emit_attachment_event(attachment, cookies)
 
-    async def _handle_schedule_changes(self, schedule: Schedule):
-        """Handle changes detected in a schedule."""
-        changes = await self.process_schedule_changes(schedule)
-        if changes:
-            self._update_changes_summary(changes, schedule)
-            await self._publish_changes(schedule, changes)
-            await self.save_schedule(schedule)
+        # Process attachments from days and lessons
+        for day in schedule.days:
+            for lesson in day.lessons:
+                # Process topic attachments
+                if hasattr(lesson, "topic_attachments"):
+                    for attachment in lesson.topic_attachments:
+                        await self._emit_attachment_event(attachment, cookies)
+
+                # Process homework attachments
+                if lesson.homework and hasattr(lesson.homework, "attachments"):
+                    for attachment in lesson.homework.attachments:
+                        await self._emit_attachment_event(attachment, cookies)
+
+    async def _emit_attachment_event(self, attachment, cookies: dict):
+        """Emit an attachment event."""
+
+        if not attachment.url.startswith("http"):
+            attachment.url = str(settings.schedule_url) + attachment.url
+            return
+
+        event = AttachmentEvent(
+            student_nickname=self.nickname,
+            filename=attachment.filename,
+            url=attachment.url,  # URL is already absolute from preprocessor
+            cookies=cookies,
+            unique_id=attachment.id,
+        )
+        await self.broker.publish(event, EventTopics.NEW_ATTACHMENT)
+        logger.debug(
+            f"Emitted attachment event for {attachment.filename} with ID {attachment.id}"
+        )
 
     def _update_changes_summary(self, changes, schedule: Schedule):
         """Update the summary of changes and log detailed changes."""
@@ -154,7 +173,7 @@ class StudentManager:
                 if lesson_change.subject_changed:
                     self._changes_summary["subjects_changed"] += 1
                     change_detail = {
-                        "date": schedule.unique_id[:8],
+                        "date": schedule.id[:8],
                         "lesson_id": lesson_change.lesson_id,
                         "old_subject": lesson_change.old_subject,
                         "new_subject": lesson_change.new_subject,
@@ -192,13 +211,13 @@ class StudentManager:
 
     def _log_lesson_changes(self, schedule: Schedule):
         """Log lesson order changes."""
-        logger.info(f"Lesson order changed in schedule {schedule.unique_id}")
+        logger.info(f"Lesson order changed in schedule {schedule.id}")
 
     def _log_mark_changes(self, marks: list[dict], schedule: Schedule):
         """Log mark changes."""
         for mark in marks:
             logger.info(
-                f"Mark changed in schedule {schedule.unique_id}, "
+                f"Mark changed in schedule {schedule.id}, "
                 f"lesson {mark['lesson_id']}: {mark['old']} → {mark['new']}"
             )
 
@@ -206,7 +225,7 @@ class StudentManager:
         """Log subject changes."""
         for subject in subjects:
             logger.info(
-                f"Subject changed in schedule {schedule.unique_id}, "
+                f"Subject changed in schedule {schedule.id}, "
                 f"lesson {subject['lesson_id']}: {subject['old']} → {subject['new']}"
             )
 
@@ -216,7 +235,7 @@ class StudentManager:
         """Log announcement changes."""
         logger.info(
             f"{change_type.capitalize()} announcements in schedule "
-            f"{schedule.unique_id}: {', '.join(announcements)}"
+            f"{schedule.id}: {', '.join(announcements)}"
         )
 
     def _log_processing_summary(self):
@@ -246,7 +265,7 @@ class StudentManager:
         await self.broker.publish(
             {
                 "student_nickname": self.nickname,
-                "schedule_id": schedule.unique_id,
+                "schedule_id": schedule.id,
                 "changes": changes,
             },
             "schedule.change_detected",
@@ -289,11 +308,6 @@ class StudentManager:
 
     async def process_schedule_changes(self, schedule: Schedule) -> dict:
         """Process changes for a single schedule using the repository."""
-        logger.info(f"Processing changes for schedule {schedule.unique_id}...")
+        logger.info(f"Processing changes for schedule {schedule.id}...")
         changes = await self.repository.get_changes(schedule)
         return changes
-
-    async def save_schedule(self, schedule: Schedule):
-        """Save a single schedule to the repository."""
-        logger.info(f"Saving schedule {schedule.unique_id} to the repository...")
-        await self.repository.save_schedule(schedule)

@@ -4,15 +4,15 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.database.enums import ChangeType
-from src.database.models import Base
-from src.database.repository import ScheduleRepository
-from src.schedule.schema import (
+from src.database.models import (
     Announcement,
     AnnouncementType,
+    Base,
     Lesson,
     Schedule,
     SchoolDay,
 )
+from src.database.repository import ScheduleRepository
 
 
 @pytest.fixture
@@ -58,15 +58,19 @@ def make_lesson():
     """Factory to create lessons with proper parent references"""
 
     def _make_lesson(index, subject, mark=None, day=None, room="101"):
-        # Create unique_id based on day and index
-        day_id = day.date.strftime("%Y%m%d") if day else "20240101"
-        unique_id = f"{day_id}_{index}"
+        # Create id based on day and index
+        day_id = day.id if day else "20240101"
+        day_num = day.date.strftime("%d") if day else "01"
+        id = f"{day_id}_{day_num}_{index}"
 
         lesson = Lesson(
-            index=index, subject=subject, mark=mark, room=room, unique_id=unique_id
+            id=id,
+            index=index,
+            subject=subject,
+            mark=mark,
+            room=room,
+            day=day,
         )
-        if day:
-            lesson._day = day
         return lesson
 
     return _make_lesson
@@ -78,19 +82,11 @@ def make_school_day():
 
     def _make_school_day(date, lessons=None, announcements=None):
         day = SchoolDay(
-            date=date, lessons=lessons or [], announcements=announcements or []
+            id=date.strftime("%Y%m%d"),
+            date=date,
+            lessons=lessons or [],
+            announcements=announcements or [],
         )
-        # Set parent references
-        for lesson in day.lessons:
-            lesson._day = day
-            if lesson.homework:
-                lesson.homework._day = day
-                for attachment in lesson.homework.attachments:
-                    attachment._day = day
-                for link in lesson.homework.links:
-                    link._day = day
-        for announcement in day.announcements:
-            announcement._day = day
         return day
 
     return _make_school_day
@@ -109,34 +105,39 @@ def make_announcement():
         subject=None,
         day=None,
     ):
-        # Create unique_id based on day and type
-        day_id = day.date.strftime("%Y%m%d") if day else "20240101"
-        unique_id = f"{day_id}_{type.value}"
+        # Create id based on day and type
+        day_id = day.id if day else "20240101"
+        day_num = day.date.strftime("%d") if day else "01"
+
+        # Generate hash from content
+        content = f"{type.value}:{text or ''}:{behavior_type or ''}:{description or ''}"
+        content_hash = f"{''.join(c for c in content if c.isalnum())[:6]}"
+        id = f"{day_id}_{day_num}_{type.value}_{content_hash}"
 
         if type == AnnouncementType.BEHAVIOR:
             # Ensure all required fields are present for behavior announcements
             announcement = Announcement(
-                unique_id=unique_id,
+                id=id,
                 type=type,
                 text=text,
                 behavior_type=behavior_type or "Good",
                 description=description or "Active participation",
                 rating=rating or "positive",
                 subject=subject or "Math",
+                day=day,
             )
         else:
             # For general announcements, only text is required
             announcement = Announcement(
-                unique_id=unique_id,
+                id=id,
                 type=type,
                 text=text or "General announcement",
                 behavior_type=behavior_type,
                 description=description,
                 rating=rating,
                 subject=subject,
+                day=day,
             )
-        if day:
-            announcement._day = day
         return announcement
 
     return _make_announcement
@@ -147,10 +148,18 @@ def make_schedule():
     """Factory to create schedules"""
 
     def _make_schedule(days, nickname="test_student"):
+        # Get first day to generate schedule id
+        first_day = days[0] if days else None
+        schedule_id = first_day.id[:6] if first_day else "202401"
+
         schedule = Schedule(
+            id=schedule_id,
             days=days,
             nickname=nickname,
         )
+        # Set schedule reference for days
+        for day in days:
+            day.schedule = schedule
         return schedule
 
     return _make_schedule
@@ -296,15 +305,13 @@ async def test_detect_announcement_changes(
     assert removed[0].old_type == AnnouncementType.BEHAVIOR
 
     # Verify the specific announcements
-    assert removed[0].announcement_id == announcement.unique_id
-    assert added[0].announcement_id == new_announcement.unique_id
+    assert removed[0].announcement_id == announcement.id
+    assert added[0].announcement_id == new_announcement.id
 
     # Verify removed announcement details
-    assert removed[0].announcement_id == announcement.unique_id
-    assert removed[0].old_type == AnnouncementType.BEHAVIOR.value
-    assert (
-        removed[0].old_text == "Active participation"
-    )  # Now checking the description field
+    assert removed[0].announcement_id == announcement.id
+    assert removed[0].old_type == AnnouncementType.BEHAVIOR
+    assert removed[0].old_text == "Active participation"
 
 
 @pytest.mark.asyncio
@@ -363,7 +370,7 @@ async def test_detect_multiple_changes(
     assert lesson_change.new_subject == "Advanced Math"
 
     # Check announcement changes
-    removed = [a for a in day_changes.announcements if a.type == "removed"]
+    removed = [a for a in day_changes.announcements if a.type == ChangeType.REMOVED]
     assert len(removed) == 1
     assert removed[0].old_type == AnnouncementType.BEHAVIOR
 
@@ -399,13 +406,21 @@ async def test_detect_announcement_removal(
 
     # Create modified schedule with one announcement removed
     modified_day = make_school_day(date=sample_date)
-    modified_day.announcements = [announcement1]  # Only keep the first announcement
+    modified_announcement = make_announcement(
+        type=AnnouncementType.BEHAVIOR,
+        behavior_type="Good",
+        description="Active participation",
+        rating="positive",
+        subject="Math",
+        day=modified_day,
+    )
+    modified_day.announcements = [modified_announcement]
     modified_schedule = make_schedule(days=[modified_day])
 
     # Check changes
     changes = await repository.get_changes(modified_schedule)
     assert len(changes.days) == 1
     day_changes = changes.days[0]
-    removed = [a for a in day_changes.announcements if a.type == "removed"]
+    removed = [a for a in day_changes.announcements if a.type == ChangeType.REMOVED]
     assert len(removed) == 1
-    assert removed[0].announcement_id == announcement2.unique_id
+    assert removed[0].announcement_id == announcement2.id

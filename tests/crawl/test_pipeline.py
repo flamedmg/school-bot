@@ -3,25 +3,37 @@ from pathlib import Path
 
 import pytest
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
-from src.schedule.crawler import JSON_SCHEMA
-from src.schedule.preprocess import create_default_pipeline
-from src.schedule.schema import (
+from src.database.models import (
     Announcement,
     AnnouncementType,
     Attachment,
+    Base,
     Homework,
     Lesson,
     Link,
     Schedule,
     SchoolDay,
 )
+from src.schedule.crawler import JSON_SCHEMA
+from src.schedule.preprocess import create_default_pipeline
 
 from .utils import load_test_file
 
 
-def test_schedule_pipeline_output(capsys):
-    """Test full pipeline processing and validate using Pydantic models"""
+@pytest.fixture
+def db():
+    """Create a test database"""
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+
+def test_schedule_pipeline_output(db, capsys):
+    """Test full pipeline processing and validate using database models"""
     # Extract data using strategy
     strategy = JsonCssExtractionStrategy(JSON_SCHEMA)
     html = load_test_file("schedule_test1_full.html", base_dir="test_data")
@@ -37,53 +49,53 @@ def test_schedule_pipeline_output(capsys):
     # Execute pipeline without capturing output
     with capsys.disabled():
         print("\nExecuting pipeline steps:")
-        final_data = pipeline.execute(raw_data)
+        schedule = pipeline.execute(raw_data)
 
-    # Validate pipeline output using Pydantic models
-    assert final_data is not None
-    assert isinstance(final_data, list)
-    assert len(final_data) > 0
+    # Validate pipeline output using database models
+    assert schedule is not None
+    assert isinstance(schedule, Schedule)
 
     try:
-        # Create Schedule object from pipeline output
-        schedule = Schedule(**final_data[0])
+        # Add to database to trigger ID generation and validations
+        db.add(schedule)
+        db.flush()
 
         # Validate Schedule
         assert len(schedule.days) > 0
-        assert isinstance(schedule.unique_id, str)
-        assert len(schedule.unique_id) == 6  # YYYYWW format (6 characters)
+        assert isinstance(schedule.id, str)
+        assert len(schedule.id) == 6  # YYYYWW format (6 characters)
         assert schedule.nickname == "test_student"  # Validate nickname
 
         # Validate each day
         for day in schedule.days:
             assert isinstance(day, SchoolDay)
             assert isinstance(day.date, datetime)
-            assert isinstance(day.unique_id, str)
-            assert len(day.unique_id) == 8  # YYYYMMDD format
+            assert isinstance(day.id, str)
+            assert len(day.id) == 8  # YYYYMMDD format
 
             # Validate lessons
             for lesson in day.lessons:
                 assert isinstance(lesson, Lesson)
                 assert isinstance(lesson.index, int) or lesson.index is None
                 assert isinstance(lesson.subject, str)
-                assert lesson.unique_id.startswith(day.unique_id)
+                assert lesson.id.startswith(day.id)
 
                 # Validate homework if present
                 if lesson.homework:
                     assert isinstance(lesson.homework, Homework)
-                    assert lesson.homework.unique_id.startswith(day.unique_id)
+                    assert lesson.homework.id.startswith(day.id)
 
                     # Validate homework attachments
                     for attachment in lesson.homework.attachments:
                         assert isinstance(attachment, Attachment)
-                        assert attachment.unique_id.startswith(day.unique_id)
+                        assert attachment.id.startswith(day.id)
                         assert isinstance(attachment.filename, str)
                         assert isinstance(attachment.url, str)
 
                     # Validate homework links
                     for link in lesson.homework.links:
                         assert isinstance(link, Link)
-                        assert link.unique_id.startswith(day.unique_id)
+                        assert link.id.startswith(day.id)
                         assert isinstance(link.original_url, str)
 
                 # Validate mark if present
@@ -94,7 +106,7 @@ def test_schedule_pipeline_output(capsys):
             # Validate announcements
             for announcement in day.announcements:
                 assert isinstance(announcement, Announcement)
-                assert announcement.unique_id.startswith(day.unique_id)
+                assert announcement.id.startswith(day.id)
                 assert isinstance(announcement.type, AnnouncementType)
 
                 if announcement.type == AnnouncementType.BEHAVIOR:
@@ -109,7 +121,7 @@ def test_schedule_pipeline_output(capsys):
 
     except Exception as e:
         pytest.fail(
-            f"Failed to validate pipeline output with Pydantic models: {str(e)}"
+            f"Failed to validate pipeline output with database models: {str(e)}"
         )
 
     # Cleanup test output file

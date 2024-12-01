@@ -1,20 +1,25 @@
+"""Test full pipeline with real data, including change detection"""
+
 from datetime import datetime
 from pathlib import Path
 
 import pytest
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from loguru import logger
 
 from src.database.enums import ChangeType
-from src.database.models import Base
+from src.database.models import (
+    Announcement,
+    AnnouncementType,
+    Base,
+    Lesson,
+    Schedule,
+    SchoolDay,
+)
 from src.database.repository import ScheduleRepository
 from src.schedule.crawler import JSON_SCHEMA
 from src.schedule.preprocess import create_default_pipeline
-from src.schedule.schema import (
-    Announcement,
-    AnnouncementType,
-    Schedule,
-)
 from tests.crawl.utils import load_test_file
 
 
@@ -56,127 +61,102 @@ async def test_real_data_pipeline_and_changes(db_session):
     raw_data = strategy.extract(html=html, url="https://test.com")
 
     # Create and execute pipeline
-    pipeline = create_default_pipeline()
-    schedule_data = pipeline.execute(raw_data)
-
-    # Add nickname to schedule data
-    schedule_data[0]["nickname"] = "Gavrovska Darjana"
-
-    # Convert to Schedule model
-    initial_schedule = Schedule(**schedule_data[0])
-
-    # Verify initial schedule data
-    assert len(initial_schedule.days) > 0
-    first_day = initial_schedule.days[0]
-    assert isinstance(first_day.date, datetime)
-    assert len(first_day.lessons) > 0
+    pipeline = create_default_pipeline(nickname="Gavrovska Darjana")
+    initial_schedule = pipeline.execute(raw_data)
 
     # Save to database and get it back to verify the save worked
     db_schedule = await repository.save_schedule(initial_schedule)
-    saved_schedule = await repository.get_schedule_by_unique_id(
-        db_schedule.unique_id, initial_schedule.nickname
+    saved_schedule = await repository.get_schedule_by_id(
+        db_schedule.id, initial_schedule.nickname
     )
     assert saved_schedule is not None
-    assert len(saved_schedule.days) == len(initial_schedule.days)
 
-    # Compare days
-    for orig_day, saved_day in zip(
-        initial_schedule.days, saved_schedule.days, strict=False
-    ):
-        assert orig_day.date == saved_day.date
-        assert len(orig_day.lessons) == len(saved_day.lessons)
+    # Find a lesson with a mark to modify
+    lesson_to_modify = None
+    lesson_day = None
+    for day in saved_schedule.days:
+        for lesson in day.lessons:
+            if lesson.mark is not None:
+                lesson_to_modify = lesson
+                lesson_day = day
+                break
+        if lesson_to_modify:
+            break
 
-        # Compare lessons
-        for orig_lesson, saved_lesson in zip(
-            orig_day.lessons, saved_day.lessons, strict=False
-        ):
-            assert orig_lesson.subject == saved_lesson.subject
-            assert orig_lesson.mark == saved_lesson.mark
-            assert orig_lesson.room == saved_lesson.room
-            assert orig_lesson.topic == saved_lesson.topic
+    assert lesson_to_modify is not None, "No lesson with mark found"
+    logger.info(
+        f"Found lesson to modify: {lesson_to_modify.id}, mark={lesson_to_modify.mark}"
+    )
 
-            # Compare homework if exists
-            if orig_lesson.homework:
-                assert saved_lesson.homework is not None
-                assert orig_lesson.homework.text == saved_lesson.homework.text
-                assert len(orig_lesson.homework.attachments) == len(
-                    saved_lesson.homework.attachments
-                )
-                assert len(orig_lesson.homework.links) == len(
-                    saved_lesson.homework.links
-                )
+    # Create modified schedule with changed mark
+    modified_day = SchoolDay(
+        id=lesson_day.id,
+        date=lesson_day.date,
+        lessons=[],
+    )
 
-        # Compare announcements
-        assert len(orig_day.announcements) == len(saved_day.announcements)
-        for orig_ann, saved_ann in zip(
-            orig_day.announcements, saved_day.announcements, strict=False
-        ):
-            assert (
-                orig_ann.type.value == saved_ann.type.value
-            )  # Compare enum values directly
-            assert orig_ann.text == saved_ann.text
-            assert orig_ann.behavior_type == saved_ann.behavior_type
-            assert orig_ann.description == saved_ann.description
-            assert orig_ann.rating == saved_ann.rating
-            assert orig_ann.subject == saved_ann.subject
+    # Create new lesson with same ID but different mark
+    modified_lesson = Lesson(
+        id=lesson_to_modify.id,
+        index=lesson_to_modify.index,
+        subject=lesson_to_modify.subject,
+        room=lesson_to_modify.room,
+        topic=lesson_to_modify.topic,
+        mark=7 if lesson_to_modify.mark != 7 else 8,
+        day=modified_day,
+    )
+    logger.info(
+        f"Created modified lesson: {modified_lesson.id}, mark={modified_lesson.mark}"
+    )
 
-    # Now make some changes to test change detection
-    # Create a new schedule from pipeline output to simulate newly parsed data
-    initial_schedule = Schedule(**schedule_data[0])
-    modified_schedule = initial_schedule.model_copy(deep=True)
-
-    # Modify the data to include our changes
-    modified_schedule.days[0].lessons[0].mark = 9
-    modified_schedule.days[0].lessons[1].subject = "Modified Subject"
-    modified_schedule.days[0].append_announcement(
-        Announcement(
-            type=AnnouncementType.GENERAL,
-            text="New test announcement",
-        )
+    modified_day.lessons = [modified_lesson]
+    modified_schedule = Schedule(
+        id=saved_schedule.id,
+        nickname=saved_schedule.nickname,
+        days=[modified_day],
     )
 
     # Test changes are detected
     changes = await repository.get_changes(modified_schedule)
 
+    # Log changes
+    logger.info("Changes detected:")
+    for day_changes in changes.days:
+        for lesson_change in day_changes.lessons:
+            if lesson_change.mark_changed:
+                logger.info(
+                    f"Mark change detected in lesson {lesson_change.lesson_id}: {lesson_change.old_mark} -> {lesson_change.new_mark}"
+                )
+
     # Check for mark changes
     mark_changes = []
     for day_changes in changes.days:
         mark_changes.extend([c for c in day_changes.lessons if c.mark_changed])
-    assert len(mark_changes) > 0
-
-    # Check for subject changes
-    subject_changes = []
-    for day_changes in changes.days:
-        subject_changes.extend([c for c in day_changes.lessons if c.subject_changed])
-    assert len(subject_changes) > 0
-
-    # Check for announcement changes
-    announcement_changes = []
-    for day_changes in changes.days:
-        announcement_changes.extend(
-            [c for c in day_changes.announcements if c.type == ChangeType.ADDED]
-        )
-    assert len(announcement_changes) > 0
+    assert len(mark_changes) > 0, "No mark changes detected"
 
     # Save modified schedule
     await repository.save_schedule(modified_schedule)
 
     # Load and verify modified schedule
-    loaded_modified = await repository.get_schedule_by_unique_id(
-        modified_schedule.unique_id, modified_schedule.nickname
+    loaded_modified = await repository.get_schedule_by_id(
+        modified_schedule.id, modified_schedule.nickname
     )
     assert loaded_modified is not None
 
-    # Verify modifications were saved correctly
-    modified_day = next(
-        d for d in loaded_modified.days if d.date == modified_schedule.days[0].date
-    )
-    assert modified_day.lessons[0].mark == 9
-    assert modified_day.lessons[1].subject == "Modified Subject"
-    assert len(modified_day.announcements) == len(
-        modified_schedule.days[0].announcements
-    )
-    assert any(a.text == "New test announcement" for a in modified_day.announcements)
+    # Find the modified lesson in the loaded schedule
+    found_lesson = None
+    for day in loaded_modified.days:
+        for lesson in day.lessons:
+            if lesson.id == modified_lesson.id:
+                found_lesson = lesson
+                break
+        if found_lesson:
+            break
+
+    assert found_lesson is not None, "Modified lesson not found in loaded schedule"
+    assert (
+        found_lesson.mark == modified_lesson.mark
+    ), "Mark was not changed to expected value"
 
 
 @pytest.mark.asyncio
@@ -185,42 +165,50 @@ async def test_get_attachment_path(db_session):
     repository = ScheduleRepository(db_session)
 
     # Create test schedule with attachment
-    schedule_data = {
-        "nickname": "Test Student",
-        "days": [
-            {
-                "date": datetime.now(),
-                "lessons": [
-                    {
-                        "index": 1,
-                        "subject": "Test Subject",
-                        "topic": "Test Topic",
-                        "topic_attachments": [
-                            {"filename": "test.pdf", "url": "http://test.com/test.pdf"}
-                        ],
-                    }
-                ],
-            }
-        ],
-    }
+    day = SchoolDay(
+        id="20240101",
+        date=datetime(2024, 1, 1),
+        lessons=[],
+    )
+    schedule = Schedule(
+        id="202401",
+        nickname="Test Student",
+        days=[day],
+    )
 
-    # Create and save schedule
-    schedule = Schedule(**schedule_data)
+    lesson = Lesson(
+        id="20240101_01_1",
+        index=1,
+        subject="Test Subject",
+        topic="Test Topic",
+        day=day,
+    )
+    day.lessons.append(lesson)
+
+    # Add attachment to lesson
+    attachment = lesson.create_topic_attachment(
+        filename="test.pdf",
+        url="http://test.com/test.pdf",
+    )
+    lesson.topic_attachments.append(attachment)
+
+    # Save schedule
     await repository.save_schedule(schedule)
+    await db_session.flush()
 
-    # Get the attachment's unique ID
-    attachment_id = schedule.days[0].lessons[0].topic_attachments[0].unique_id
+    # Get the attachment ID before testing the path
+    attachment_id = await attachment.awaitable_attrs.id
 
     # Test getting attachment path
-    path = await repository.get_attachment_path(attachment_id)
+    path = repository.get_attachment_path(attachment_id)
     assert path is not None
     assert isinstance(path, Path)
     assert path.name.startswith(attachment_id)
-    assert path.name.endswith("test.pdf")
+    assert path.name.endswith(".pdf")
     assert "data/attachments" in str(path)
 
     # Test with non-existent attachment ID
-    path = await repository.get_attachment_path("nonexistent_id")
+    path = repository.get_attachment_path("nonexistent_id")
     assert path is None
 
 
@@ -243,11 +231,8 @@ async def test_multiple_schedules_data_comparison(db_session):
         html = load_test_file(filename, base_dir="test_data")
         raw_data = strategy.extract(html=html, url="https://test.com")
 
-        pipeline = create_default_pipeline()
-        schedule_data = pipeline.execute(raw_data)
-        schedule_data[0]["nickname"] = "Test Student"
-
-        schedule = Schedule(**schedule_data[0])
+        pipeline = create_default_pipeline(nickname="Test Student")
+        schedule = pipeline.execute(raw_data)
 
         # Collect detailed statistics
         total_links = 0

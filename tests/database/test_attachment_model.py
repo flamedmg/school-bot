@@ -30,7 +30,7 @@ def test_get_file_path(temp_dir, monkeypatch):
     monkeypatch.setattr("pathlib.Path", MockPath)
 
     attachment = Attachment(
-        unique_id="202401_20240101_math_1",
+        id="202401_20240101_math_1",
         filename="test.pdf",
         url="/files/test.pdf",
         homework_id=1,
@@ -40,7 +40,7 @@ def test_get_file_path(temp_dir, monkeypatch):
 
     assert isinstance(path, Path)
     assert "202401" in str(path.parent)
-    assert path.name == f"{attachment.unique_id}_{attachment.filename}"
+    assert path.name == f"{attachment.id}_{attachment.filename}"
 
 
 def test_get_file_path_creates_directory(temp_dir, monkeypatch):
@@ -57,7 +57,7 @@ def test_get_file_path_creates_directory(temp_dir, monkeypatch):
     monkeypatch.setattr("pathlib.Path", MockPath)
 
     attachment = Attachment(
-        unique_id="202401_20240101_math_1",
+        id="202401_20240101_math_1",
         filename="test.pdf",
         url="/test/url",
         homework_id=1,
@@ -71,4 +71,4 @@ def test_get_file_path_creates_directory(temp_dir, monkeypatch):
 
     # Check correct path structure
     assert "202401" in str(file_path.parent)
-    assert file_path.name == f"{attachment.unique_id}_{attachment.filename}"
+    assert file_path.name == f"{attachment.id}_{attachment.filename}"

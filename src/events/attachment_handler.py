@@ -47,14 +47,9 @@ async def handle_attachment(
             )
             return
 
-        # Ensure URL is absolute
-        url = str(event.url)
-        if not url.startswith(("http://", "https://")):
-            url = f"https://my.e-klase.lv{url}"
-
-        # Download the file
+        # Download the file (URL is already absolute from preprocessor)
         async with aiohttp.ClientSession(cookies=event.cookies) as session:
-            async with session.get(url) as response:
+            async with session.get(str(event.url)) as response:
                 if response.status == 200:
                     content = await response.read()
                     with open(file_path, "wb") as f:
@@ -64,7 +59,8 @@ async def handle_attachment(
                     )
                 else:
                     error_msg = (
-                        f"Failed to download {event.filename}: HTTP {response.status}"
+                        f"Failed to download {event.filename}: HTTP {response.status}, "
+                        f"URL: {event.url}"
                     )
                     logger.error(error_msg)
                     logger.error(f"Response text: {await response.text()}")

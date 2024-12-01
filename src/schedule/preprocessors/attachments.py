@@ -11,6 +11,7 @@ Modifications:
 - All attachments with a URL are included in the output.
 - Each attachment includes a unique_id generated from schedule_id, subject,
   lesson number, and day_id.
+- URLs are converted to absolute using the schedule base URL.
 """
 
 import re
@@ -100,11 +101,25 @@ def extract_attachments(
     Extract all attachments from homework entries into a simple list of
     filename/url pairs. Adds an 'attachments' key to the root level of
     the data structure.
+
+    Args:
+        data: The schedule data to process
+        base_url: The base URL for converting relative URLs to absolute.
+                 This should be the schedule system base URL.
     """
     try:
         if not data:
             logger.info("No data to process")
             return [{"attachments": []}]
+
+        if not base_url:
+            raise PreprocessingError(
+                "base_url is required for attachment processing",
+                {"base_url": base_url},
+            )
+
+        # Get the base URL for attachments (without any path components)
+        schedule_base = urljoin(base_url, ".")
 
         total_days = 0
         total_lessons = 0
@@ -208,9 +223,8 @@ def extract_attachments(
                         if not filename:
                             filename = extract_filename_from_url(url)
 
-                        # Convert relative URL to absolute URL if base_url is provided
-                        if base_url:
-                            url = urljoin(base_url, url)
+                        # Always convert URL to absolute using the schedule base URL
+                        url = urljoin(schedule_base, url)
 
                         # Generate unique ID
                         unique_id = generate_unique_id(

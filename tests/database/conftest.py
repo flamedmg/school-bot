@@ -4,16 +4,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.database.models import Base
-from src.schedule.schema import (
+from src.database.models import (
     Announcement,
     AnnouncementType,
+    Base,
     Homework,
     Lesson,
+    Schedule,
     SchoolDay,
-)
-from src.schedule.schema import (
-    Schedule as ScheduleModel,
 )
 
 
@@ -47,23 +45,20 @@ def create_lesson(
     day: SchoolDay | None = None,
 ) -> Lesson:
     """Create a lesson with proper parent references"""
+    # Create id based on day and index
+    day_id = day.id if day else "20240101"
+    id = f"{day_id}_{index}"
+
     lesson = Lesson(
+        id=id,
         index=index,
         subject=subject,
         mark=mark,
         room=room,
         topic=topic,
         homework=homework,
+        day=day,
     )
-    if day:
-        lesson._day = day
-        # Set day reference for homework and its nested objects if they exist
-        if homework:
-            homework._day = day
-            for link in homework.links:
-                link._day = day
-            for attachment in homework.attachments:
-                attachment._day = day
     return lesson
 
 
@@ -77,16 +72,23 @@ def create_announcement(
     day: SchoolDay | None = None,
 ) -> Announcement:
     """Create an announcement with proper parent references"""
+    # Create id based on day and type
+    day_id = day.id if day else "20240101"
+    type_prefix = "b" if type == AnnouncementType.BEHAVIOR else "g"
+    content = f"{type.value}:{text or ''}:{behavior_type or ''}:{description or ''}"
+    content_hash = f"{type_prefix}{''.join(c for c in content if c.isalnum())[:6]}"
+    id = f"{day_id}_{content_hash}"
+
     announcement = Announcement(
+        id=id,
         type=type,
         text=text,
         behavior_type=behavior_type,
         description=description,
         rating=rating,
         subject=subject,
+        day=day,
     )
-    if day:
-        announcement._day = day
     return announcement
 
 
@@ -96,38 +98,29 @@ def create_school_day(
     announcements: list[Announcement] | None = None,
 ) -> SchoolDay:
     """Create a school day with proper parent references"""
-    day = SchoolDay(date=date, lessons=lessons or [], announcements=announcements or [])
-    # Set parent references
-    for lesson in day.lessons:
-        lesson._day = day
-        if lesson.homework:
-            lesson.homework._day = day
-            for link in lesson.homework.links:
-                link._day = day
-            for attachment in lesson.homework.attachments:
-                attachment._day = day
-    for announcement in day.announcements:
-        announcement._day = day
+    day = SchoolDay(
+        id=date.strftime("%Y%m%d"),
+        date=date,
+        lessons=lessons or [],
+        announcements=announcements or [],
+    )
     return day
 
 
-def create_schedule(
-    days: list[SchoolDay], nickname: str = "test_student"
-) -> ScheduleModel:
+def create_schedule(days: list[SchoolDay], nickname: str = "test_student") -> Schedule:
     """Create a schedule with proper parent references"""
-    schedule = ScheduleModel(days=days, nickname=nickname)
-    # Ensure each day's lessons and announcements have proper references
-    for day in schedule.days:
-        for lesson in day.lessons:
-            lesson._day = day
-            if lesson.homework:
-                lesson.homework._day = day
-                for link in lesson.homework.links:
-                    link._day = day
-                for attachment in lesson.homework.attachments:
-                    attachment._day = day
-        for announcement in day.announcements:
-            announcement._day = day
+    # Get first day to generate schedule id
+    first_day = days[0] if days else None
+    schedule_id = first_day.id[:6] if first_day else "202401"
+
+    schedule = Schedule(
+        id=schedule_id,
+        days=days,
+        nickname=nickname,
+    )
+    # Set schedule reference for days
+    for day in days:
+        day.schedule = schedule
     return schedule
 
 
@@ -164,7 +157,10 @@ def sample_date():
 @pytest.fixture
 def sample_day(sample_date, make_lesson, make_announcement):
     """Create a sample day with one lesson and one announcement"""
-    day = SchoolDay(date=sample_date)
+    day = SchoolDay(
+        id=sample_date.strftime("%Y%m%d"),
+        date=sample_date,
+    )
     lesson = make_lesson(index=1, subject="Math", mark=8, day=day)
     announcement = make_announcement(
         type=AnnouncementType.GENERAL, text="Initial announcement", day=day
@@ -183,16 +179,17 @@ def sample_schedule(sample_day):
 @pytest.fixture
 def modified_day(sample_date, make_lesson):
     """Create a modified version of the sample day"""
-    day = SchoolDay(date=sample_date)
+    day = SchoolDay(
+        id=sample_date.strftime("%Y%m%d"),
+        date=sample_date,
+    )
     lesson = make_lesson(
-        index=1,  # Same index to maintain unique_id
+        index=1,  # Same index to maintain id
         subject="Advanced Math",
         mark=9,
-        day=day,  # Set parent reference
+        day=day,
     )
     day.lessons = [lesson]
-    # Ensure parent reference is set after assigning to day
-    lesson._day = day
     return day
 
 
@@ -205,7 +202,10 @@ def modified_schedule(modified_day):
 @pytest.fixture
 def lesson_order_day(sample_date, make_lesson):
     """Create a day with two lessons in a specific order"""
-    day = SchoolDay(date=sample_date)
+    day = SchoolDay(
+        id=sample_date.strftime("%Y%m%d"),
+        date=sample_date,
+    )
     lesson1 = make_lesson(index=1, subject="Math", day=day)
     lesson2 = make_lesson(index=2, subject="Physics", day=day)
     day.lessons = [lesson1, lesson2]
@@ -215,7 +215,10 @@ def lesson_order_day(sample_date, make_lesson):
 @pytest.fixture
 def reversed_lesson_order_day(sample_date, make_lesson):
     """Create a day with two lessons in reversed order"""
-    day = SchoolDay(date=sample_date)
+    day = SchoolDay(
+        id=sample_date.strftime("%Y%m%d"),
+        date=sample_date,
+    )
     lesson1 = make_lesson(index=1, subject="Math", day=day)
     lesson2 = make_lesson(index=2, subject="Physics", day=day)
     day.lessons = [lesson2, lesson1]  # Reversed order
