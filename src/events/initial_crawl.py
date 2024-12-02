@@ -9,7 +9,11 @@ from src.events.types import CrawlEvent, Student
 
 
 async def trigger_initial_crawls(broker: RedisBroker):
-    """Trigger initial crawl events for all configured students."""
+    """Trigger initial crawl events for all configured students if enabled."""
+    if not settings.enable_initial_crawl:
+        logger.info("Initial crawling is disabled. Skipping...")
+        return
+
     logger.info("Triggering initial crawls for all students...")
 
     try:

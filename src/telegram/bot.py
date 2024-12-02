@@ -1,56 +1,69 @@
-from datetime import datetime
+"""Main Telegram bot module."""
+
+from typing import List
 
 from loguru import logger
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 from telethon.errors import PeerIdInvalidError
+from datetime import datetime
 
-from src.database.kvstore import should_show_greeting
+from src.telegram.handlers.base import (
+    BaseHandler,
+    MessageHandler,
+    CommandHandler,
+    CallbackHandler,
+)
 from src.dependencies import get_kvstore
+from src.database.kvstore import should_show_greeting
+from src.telegram.handlers.messages import send_welcome_message
 
 
-async def send_welcome_message(bot: TelegramClient, chat_id: int):
-    """Send welcome message to the specified chat."""
-    try:
-        # Get KVStore instance
-        kvstore = await get_kvstore()
+class Bot:
+    """Telegram bot class."""
 
-        # Check if we should show the greeting
-        if not await should_show_greeting(kvstore):
-            logger.info("Skipping welcome message (already shown today)")
-            return
+    def __init__(self, client: TelegramClient):
+        """Initialize the bot.
 
-        logger.info(f"Sending welcome message to chat {chat_id}...")
-        await bot.send_message(
-            chat_id,
-            "🚀 Bot has started and is ready to assist you!\n\n"
-            "Available commands:\n"
-            "/schedule - View today's schedule\n"
-            "/homework - Check homework assignments\n"
-            "/grades - View recent grades\n"
-            "/notifications - Manage notification settings\n"
-            "/help - Show help message",
-        )
+        Args:
+            client: The Telegram client instance
+        """
+        self.client = client
+        self.handlers: List[BaseHandler] = [
+            MessageHandler(),
+            CommandHandler(),
+            CallbackHandler(),
+        ]
+        self.logger = logger
 
-        # Store current timestamp
-        await kvstore.set_last_greeting_time(datetime.now().timestamp())
-        logger.info("Welcome message sent successfully")
-    except PeerIdInvalidError:
-        logger.error(
-            "Failed to send welcome message: Invalid chat ID format. "
-            f"Current chat_id: {chat_id}. "
-            "Please make sure:\n"
-            "1. The bot is added to the group/channel\n"
-            "2. The bot has admin privileges in the group/channel\n"
-            "3. Send a message in the group/channel to get the correct ID\n"
-            "4. Update TELEGRAM_CHAT_ID in .env with the ID shown in logs"
-        )
-    except Exception as e:
-        logger.error(f"Failed to send welcome message: {str(e)}")
+    def setup_handlers(self) -> None:
+        """Register all message and callback handlers."""
+        # Register greeting handler with expanded patterns
+        greeting_pattern = "(?i)^(hi|hey|bot|бот)$"
+
+        @self.client.on(events.NewMessage(pattern=greeting_pattern))
+        async def handle_greeting(event):
+            await self.handlers[0].handle(event)
+
+        # Register command handler
+        @self.client.on(events.NewMessage(pattern="^/[a-zA-Z]+"))
+        async def handle_command(event):
+            await self.handlers[1].handle(event)
+
+        # Register callback handler
+        @self.client.on(events.CallbackQuery())
+        async def handle_callback(event):
+            await self.handlers[2].handle(event)
+
+        self.logger.info("All handlers registered successfully")
 
 
-def setup_handlers(bot: TelegramClient):
-    """Setup Telegram bot handlers."""
-    logger.info("Setting up Telegram bot handlers...")
-    # Here you would set up any direct Telegram event handlers
-    # that aren't handled through FastStream
-    logger.info("Telegram bot handlers registered successfully")
+def setup_handlers(bot: TelegramClient) -> None:
+    """Set up the bot handlers.
+
+    Args:
+        bot: The Telegram client instance
+    """
+    Bot(bot).setup_handlers()
+
+
+__all__ = ["setup_handlers", "send_welcome_message"]

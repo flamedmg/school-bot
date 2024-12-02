@@ -5,7 +5,6 @@ from src.events import (
     attachment_handler,
     crawl_handler,
     schedule_handler,
-    telegram_handler,
 )
 from src.events.broker import app, broker, taskiq_broker
 from src.events.event_types import CrawlErrorEvent, EventTopics
@@ -28,7 +27,6 @@ __all__ = [
     "scheduler",
     "crawl_handler",
     "schedule_handler",
-    "telegram_handler",
     "attachment_handler",
     "Student",
     "CrawlEvent",

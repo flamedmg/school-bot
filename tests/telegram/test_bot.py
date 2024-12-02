@@ -3,10 +3,17 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from fakeredis.aioredis import FakeRedis
-from telethon import TelegramClient
+from telethon import TelegramClient, events, Button
 
 from src.database.kvstore import KeyValueStore
-from src.telegram.bot import send_welcome_message
+from src.telegram.bot import (
+    send_welcome_message,
+    setup_handlers,
+    MENU_OPTIONS,
+    display_menu,
+    handle_callback,
+    log_user_selection,
+)
 
 
 @pytest.fixture
@@ -30,6 +37,16 @@ def mock_bot():
     bot = AsyncMock(spec=TelegramClient)
     bot.send_message = AsyncMock()
     return bot
+
+
+@pytest.fixture
+def mock_event():
+    """Fixture for mocked Telethon event."""
+    event = AsyncMock()
+    event.respond = AsyncMock()
+    event.answer = AsyncMock()
+    event.sender_id = 12345
+    return event
 
 
 @pytest.fixture
@@ -84,3 +101,66 @@ class TestTelegramBot:
         assert (
             await kv_store.get_last_greeting_time() is None
         )  # Should not set timestamp on error
+
+    async def test_display_menu(self, mock_event):
+        """Test menu display with correct buttons."""
+        await display_menu(mock_event)
+
+        mock_event.respond.assert_called_once()
+        call_args = mock_event.respond.call_args[0]
+        assert "Please select an option:" in call_args[0]
+
+        # Verify buttons were passed
+        buttons = mock_event.respond.call_args[1]["buttons"]
+        assert len(buttons) == len(MENU_OPTIONS)
+
+        # Verify button text matches menu options
+        button_texts = [button[0].text for button in buttons]
+        assert all(text in button_texts for text in MENU_OPTIONS.values())
+
+    async def test_handle_callback_schedule(self, mock_event):
+        """Test callback handling for schedule option."""
+        mock_event.data = b"schedule"
+        await handle_callback(mock_event)
+
+        assert mock_event.answer.called
+        mock_event.respond.assert_called_once()
+        response = mock_event.respond.call_args[0][0]
+        assert "You selected: 📅 View Schedule" in response
+        assert "show you the schedule" in response
+
+    async def test_handle_callback_homework(self, mock_event):
+        """Test callback handling for homework option."""
+        mock_event.data = b"homework"
+        await handle_callback(mock_event)
+
+        assert mock_event.answer.called
+        mock_event.respond.assert_called_once()
+        response = mock_event.respond.call_args[0][0]
+        assert "You selected: 📚 Check Homework" in response
+        assert "homework assignments" in response
+
+    async def test_log_user_selection(self, mock_event, caplog):
+        """Test user selection logging."""
+        user_id = 12345
+        selection = "schedule"
+
+        await log_user_selection(user_id, selection)
+
+        assert f"User {user_id} selected: {selection}" in caplog.text
+
+    async def test_setup_handlers(self, mock_bot):
+        """Test handler setup."""
+        setup_handlers(mock_bot)
+
+        # Verify handlers were registered
+        assert mock_bot.on.call_count >= 3  # /menu, /start, and callback handlers
+
+        # Verify patterns for command handlers
+        patterns = [
+            call.args[0].pattern
+            for call in mock_bot.on.call_args_list
+            if isinstance(call.args[0], events.NewMessage)
+        ]
+        assert "/menu" in str(patterns)
+        assert "/start" in str(patterns)

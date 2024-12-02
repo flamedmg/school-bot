@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     api_port: PositiveInt = 8000
     api_workers: PositiveInt = 1
 
+    # Crawling settings
+    enable_initial_crawl: bool = True  # Disabled by default
+
     # Field validators
     @field_validator(
         "telegram_api_id", "telegram_chat_id", "api_port", "api_workers", mode="before"
@@ -79,6 +82,13 @@ class Settings(BaseSettings):
             # Remove any comments and whitespace
             return v.split("#")[0].strip()
         return v
+
+    @field_validator("enable_initial_crawl", mode="before")
+    def parse_bool(cls, v):  # noqa: N805
+        if isinstance(v, str):
+            v = v.lower().strip()
+            return v in ("1", "true", "yes", "on")
+        return bool(v)
 
     @property
     def students(self) -> list[StudentConfig]:
